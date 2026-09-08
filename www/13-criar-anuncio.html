@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Pet</title>
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    color: #333;
+}
+.mobile-simulator {
+    width: 390px;
+    height: 844px;
+    background-color: #ffffff;
+    border-radius: 40px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.header {
+    padding: 20px;
+    text-align: center;
+    margin-top: 20px;
+}
+.header h1 {
+    margin: 0;
+    font-size: 22px;
+    color: #FF5A5F;
+    font-weight: 700;
+}
+.content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+.btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: 0.2s;
+}
+.btn-primary { background-color: #FF5A5F; color: white; }
+.btn-outline { background-color: transparent; border: 2px solid #FF5A5F; color: #FF5A5F; }
+.btn-secondary { background-color: #f0f2f5; color: #333; }
+.input-group { margin-bottom: 20px; }
+.input-group label { display: block; font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 500; }
+.input-group input, .input-group select { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
+.navbar { background-color: #ffffff; height: 80px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eaeaea; padding-bottom: 15px; }
+.nav-item { color: #ccc; font-size: 24px; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.nav-item span { font-size: 10px; }
+.nav-item.active { color: #FF5A5F; }
+.back-btn { position: absolute; left: 20px; top: 25px; font-size: 20px; text-decoration: none; color: #333; font-weight: bold; }
+/* Específicos */
+.card-choice { border: 1px solid #ddd; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; }
+.card-choice h3 { margin: 0 0 5px 0; color: #FF5A5F; }
+.card-choice p { margin: 0; font-size: 14px; color: #666; }
+.chat-list-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+.avatar { width: 50px; height: 50px; border-radius: 25px; background-color: #ddd; margin-right: 15px; object-fit: cover;}
+.chat-info h4 { margin: 0 0 5px 0; }
+.chat-info p { margin: 0; font-size: 14px; color: #888; }
+.bubble { padding: 12px 16px; border-radius: 16px; margin-bottom: 10px; max-width: 80%; font-size: 14px;}
+.bubble.received { background-color: #f0f2f5; align-self: flex-start; border-bottom-left-radius: 4px;}
+.bubble.sent { background-color: #FF5A5F; color: white; align-self: flex-end; border-bottom-right-radius: 4px;}
+.chat-area { display: flex; flex-direction: column; height: 100%; }
+.badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+.badge.pending { background-color: #fff3cd; color: #856404; }
+.badge.approved { background-color: #d4edda; color: #155724; }
+</style>
+</head>
+<body>
+    <div class="mobile-simulator">
+        
+        <a href="#" class="back-btn">←</a>
+        <div class="header"><h1>Doar um Pet</h1></div>
+        <div class="content">
+            <div style="width:100%; height:150px; background:#e0e0e0; border-radius:12px; display:flex; justify-content:center; align-items:center; margin-bottom:20px; border:2px dashed #999; color:#666; cursor:pointer;">
+                📷 Adicionar Foto
+            </div>
+            <div class="input-group">
+                <label>Nome do Animal</label>
+                <input type="text" placeholder="Ex: Rex">
+            </div>
+            <div class="input-group" style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>Espécie</label>
+                    <select><option>Cachorro</option><option>Gato</option></select>
+                </div>
+                <div style="flex:1;">
+                    <label>Idade (anos)</label>
+                    <input type="number" placeholder="2">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Descrição</label>
+                <textarea rows="4" style="width:100%; border-radius:12px; border:1px solid #ddd; padding:15px; font-family:inherit;"></textarea>
+            </div>
+            <button class="btn btn-primary">Publicar Anúncio</button>
+        </div>
+    
+    </div>
+</body>
+</html>

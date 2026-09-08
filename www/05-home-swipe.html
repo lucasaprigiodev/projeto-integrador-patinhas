@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descoberta</title>
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    color: #333;
+}
+.mobile-simulator {
+    width: 390px;
+    height: 844px;
+    background-color: #ffffff;
+    border-radius: 40px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.header {
+    padding: 20px;
+    text-align: center;
+    margin-top: 20px;
+}
+.header h1 {
+    margin: 0;
+    font-size: 22px;
+    color: #FF5A5F;
+    font-weight: 700;
+}
+.content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+.btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: 0.2s;
+}
+.btn-primary { background-color: #FF5A5F; color: white; }
+.btn-outline { background-color: transparent; border: 2px solid #FF5A5F; color: #FF5A5F; }
+.btn-secondary { background-color: #f0f2f5; color: #333; }
+.input-group { margin-bottom: 20px; }
+.input-group label { display: block; font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 500; }
+.input-group input, .input-group select { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
+.navbar { background-color: #ffffff; height: 80px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eaeaea; padding-bottom: 15px; }
+.nav-item { color: #ccc; font-size: 24px; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.nav-item span { font-size: 10px; }
+.nav-item.active { color: #FF5A5F; }
+.back-btn { position: absolute; left: 20px; top: 25px; font-size: 20px; text-decoration: none; color: #333; font-weight: bold; }
+/* Específicos */
+.card-choice { border: 1px solid #ddd; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; }
+.card-choice h3 { margin: 0 0 5px 0; color: #FF5A5F; }
+.card-choice p { margin: 0; font-size: 14px; color: #666; }
+.chat-list-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+.avatar { width: 50px; height: 50px; border-radius: 25px; background-color: #ddd; margin-right: 15px; object-fit: cover;}
+.chat-info h4 { margin: 0 0 5px 0; }
+.chat-info p { margin: 0; font-size: 14px; color: #888; }
+.bubble { padding: 12px 16px; border-radius: 16px; margin-bottom: 10px; max-width: 80%; font-size: 14px;}
+.bubble.received { background-color: #f0f2f5; align-self: flex-start; border-bottom-left-radius: 4px;}
+.bubble.sent { background-color: #FF5A5F; color: white; align-self: flex-end; border-bottom-right-radius: 4px;}
+.chat-area { display: flex; flex-direction: column; height: 100%; }
+.badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+.badge.pending { background-color: #fff3cd; color: #856404; }
+.badge.approved { background-color: #d4edda; color: #155724; }
+</style>
+</head>
+<body>
+    <div class="mobile-simulator">
+        
+        <div class="header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="width:24px;"></div>
+            <h1>Patinhas</h1>
+            <div style="font-size:20px; color:#FF5A5F; cursor:pointer;">⚙️</div>
+        </div>
+        <div class="content" style="display:flex; flex-direction:column; padding-bottom:10px;">
+            <div style="flex:1; border-radius:24px; background:url('https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80') center/cover; position:relative; overflow:hidden; box-shadow:0 10px 20px rgba(0,0,0,0.15);">
+                <div style="position:absolute; bottom:0; width:100%; padding:20px; box-sizing:border-box; background:linear-gradient(transparent, rgba(0,0,0,0.8)); color:white;">
+                    <h2 style="margin:0 0 5px; font-size:28px;">Buddy, 2</h2>
+                    <p style="margin:0 0 10px; font-size:14px; opacity:0.9;">📍 A 5km de você • ONG Patinhas</p>
+                    <div style="display:flex; gap:8px;">
+                        <span style="background:rgba(255,255,255,0.2); padding:5px 12px; border-radius:12px; font-size:12px; backdrop-filter:blur(5px);">🐶 Porte Grande</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:center; gap:30px; margin-top:25px;">
+                <button style="width:70px; height:70px; border-radius:35px; border:none; font-size:30px; background:white; color:#FF5A5F; box-shadow:0 8px 15px rgba(0,0,0,0.1);">✖</button>
+                <button style="width:70px; height:70px; border-radius:35px; border:none; font-size:30px; background:white; color:#4CAF50; box-shadow:0 8px 15px rgba(0,0,0,0.1);">❤</button>
+            </div>
+        </div>
+        <div class="navbar">
+            <a href="#" class="nav-item active">🐾 <span>Swipe</span></a>
+            <a href="#" class="nav-item">💬 <span>Chat</span></a>
+            <a href="#" class="nav-item">👤 <span>Perfil</span></a>
+        </div>
+    
+    </div>
+</body>
+</html>
