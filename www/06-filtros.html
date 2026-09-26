@@ -1,73 +1,76 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Filtros</title>
-    <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-body {
-    background-color: #f0f2f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    color: #333;
-}
-.mobile-simulator {
-    width: 390px;
-    height: 844px;
-    background-color: #ffffff;
-    border-radius: 40px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-.header { padding: 20px; text-align: center; margin-top: 20px; }
-.header h1 { margin: 0; font-size: 22px; color: #FF5A5F; font-weight: 700; }
-.content { flex: 1; padding: 20px; overflow-y: auto; }
-.btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: 0.2s; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
-.btn-primary { background-color: #FF5A5F; color: white; }
-.btn-outline { background-color: transparent; border: 2px solid #FF5A5F; color: #FF5A5F; }
-.btn-secondary { background-color: #f0f2f5; color: #333; }
-.input-group { margin-bottom: 20px; }
-.input-group label { display: block; font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 500; }
-.input-group input, .input-group select { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
-.navbar { background-color: #ffffff; height: 80px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eaeaea; padding-bottom: 15px; }
-.nav-item { color: #ccc; font-size: 24px; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.nav-item span { font-size: 10px; }
-.nav-item.active { color: #FF5A5F; }
-.back-btn { position: absolute; left: 20px; top: 25px; font-size: 20px; text-decoration: none; color: #333; font-weight: bold; }
-.card-choice { border: 1px solid #ddd; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; text-decoration: none; display: block; color: inherit; }
-.chat-list-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; text-decoration: none; color: inherit;}
-.avatar { width: 50px; height: 50px; border-radius: 25px; background-color: #ddd; margin-right: 15px; object-fit: cover;}
-.chat-info h4 { margin: 0 0 5px 0; }
-.chat-info p { margin: 0; font-size: 14px; color: #888; }
-.bubble { padding: 12px 16px; border-radius: 16px; margin-bottom: 10px; max-width: 80%; font-size: 14px;}
-.bubble.received { background-color: #f0f2f5; align-self: flex-start; border-bottom-left-radius: 4px;}
-.bubble.sent { background-color: #FF5A5F; color: white; align-self: flex-end; border-bottom-right-radius: 4px;}
-.chat-area { display: flex; flex-direction: column; height: 100%; }
-.badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-.badge.pending { background-color: #fff3cd; color: #856404; }
-.badge.approved { background-color: #d4edda; color: #155724; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Filtros · Patinhas</title>
+  <link rel="stylesheet" href="styles.css">
+  
 </head>
 <body>
-    <div class="mobile-simulator">
-        
-        <a href="javascript:history.back()" class="back-btn">✖</a>
-        <div class="header"><h1>Filtros</h1></div>
-        <div class="content">
-            <div class="input-group"><label>Espécie</label><select><option>Cachorros</option></select></div>
-            <div class="input-group"><label>Distância Máxima</label><input type="range" value="15" style="width:100%;"></div>
-            <a href="05-home-swipe.html" class="btn btn-primary" style="margin-top:40px;">Aplicar Filtros</a>
-        </div>
-    
+
+<div class="phone">
+  <div class="statusbar" style="color:var(--text-1);">
+  <span class="time">9:41</span>
+  <div class="icons">
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+    <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
+    <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+  </div>
+</div>
+  <div class="scroll-content" style="padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+      <a href="javascript:history.back()" style="display:flex;align-items:center;gap:8px;color:var(--text-2);text-decoration:none;font-size:14px;font-weight:500;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+        Filtros
+      </a>
+      <button onclick="limpar()" style="color:var(--primary);font-size:13px;font-weight:600;background:none;border:none;cursor:pointer;">Limpar tudo</button>
     </div>
-    
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:12px;">ESPÉCIE</h3>
+    <div style="display:flex;gap:8px;margin-bottom:24px;" id="especie">
+      <button onclick="toggle(this)" class="chip chip-primary" data-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">🐶 Cão</button>
+      <button onclick="toggle(this)" class="chip" style="padding:10px 18px;border:none;cursor:pointer;background:var(--surface-2);font-size:14px;">🐱 Gato</button>
+      <button onclick="toggle(this)" class="chip" style="padding:10px 18px;border:none;cursor:pointer;background:var(--surface-2);font-size:14px;">🐇 Outros</button>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:12px;">PORTE</h3>
+    <div style="display:flex;gap:8px;margin-bottom:24px;" id="porte">
+      <button onclick="toggle(this)" class="chip chip-primary" data-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Pequeno</button>
+      <button onclick="toggle(this)" class="chip chip-primary" data-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Médio</button>
+      <button onclick="toggle(this)" class="chip chip-primary" data-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Grande</button>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:12px;">DISTÂNCIA MÁXIMA <span id="distLabel" style="color:var(--primary);">15km</span></h3>
+    <input type="range" min="1" max="50" value="15" oninput="document.getElementById('distLabel').textContent=this.value+'km'" style="width:100%;accent-color:var(--primary);margin-bottom:24px;height:6px;">
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:12px;">CONDIÇÕES</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px;">
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:500;cursor:pointer;">
+        Apenas vacinados
+        <div class="toggle-wrap" style="width:48px;height:26px;background:var(--primary);border-radius:13px;position:relative;cursor:pointer;"><div style="position:absolute;right:3px;top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;"></div></div>
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:500;cursor:pointer;">
+        Apenas castrados
+        <div style="width:48px;height:26px;background:var(--surface-2);border-radius:13px;position:relative;cursor:pointer;"><div style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;"></div></div>
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:500;cursor:pointer;">
+        Ideal para crianças
+        <div style="width:48px;height:26px;background:var(--surface-2);border-radius:13px;position:relative;cursor:pointer;"><div style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;"></div></div>
+      </label>
+    </div>
+
+    <a href="05-home-swipe.html" class="btn btn-primary">Ver resultados</a>
+  </div>
+</div>
+
+<script>
+function toggle(btn) {
+  btn.dataset.active = btn.dataset.active === 'true' ? 'false' : 'true';
+  btn.className = btn.dataset.active === 'true' ? 'chip chip-primary' : 'chip';
+  btn.style.cssText = btn.dataset.active === 'true' ? 'padding:10px 18px;border:none;cursor:pointer;font-size:14px;' : 'padding:10px 18px;border:none;cursor:pointer;background:var(--surface-2);font-size:14px;';
+}
+function limpar() { document.querySelectorAll('[data-active]').forEach(b => { b.dataset.active='false'; b.className='chip'; b.style.background='var(--surface-2)'; }); }
+</script>
 </body>
 </html>

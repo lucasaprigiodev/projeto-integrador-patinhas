@@ -1,82 +1,90 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mensagens</title>
-    <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-body {
-    background-color: #f0f2f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    color: #333;
-}
-.mobile-simulator {
-    width: 390px;
-    height: 844px;
-    background-color: #ffffff;
-    border-radius: 40px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-.header { padding: 20px; text-align: center; margin-top: 20px; }
-.header h1 { margin: 0; font-size: 22px; color: #FF5A5F; font-weight: 700; }
-.content { flex: 1; padding: 20px; overflow-y: auto; }
-.btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: 0.2s; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
-.btn-primary { background-color: #FF5A5F; color: white; }
-.btn-outline { background-color: transparent; border: 2px solid #FF5A5F; color: #FF5A5F; }
-.btn-secondary { background-color: #f0f2f5; color: #333; }
-.input-group { margin-bottom: 20px; }
-.input-group label { display: block; font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 500; }
-.input-group input, .input-group select { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
-.navbar { background-color: #ffffff; height: 80px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eaeaea; padding-bottom: 15px; }
-.nav-item { color: #ccc; font-size: 24px; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.nav-item span { font-size: 10px; }
-.nav-item.active { color: #FF5A5F; }
-.back-btn { position: absolute; left: 20px; top: 25px; font-size: 20px; text-decoration: none; color: #333; font-weight: bold; }
-.card-choice { border: 1px solid #ddd; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; text-decoration: none; display: block; color: inherit; }
-.chat-list-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; text-decoration: none; color: inherit;}
-.avatar { width: 50px; height: 50px; border-radius: 25px; background-color: #ddd; margin-right: 15px; object-fit: cover;}
-.chat-info h4 { margin: 0 0 5px 0; }
-.chat-info p { margin: 0; font-size: 14px; color: #888; }
-.bubble { padding: 12px 16px; border-radius: 16px; margin-bottom: 10px; max-width: 80%; font-size: 14px;}
-.bubble.received { background-color: #f0f2f5; align-self: flex-start; border-bottom-left-radius: 4px;}
-.bubble.sent { background-color: #FF5A5F; color: white; align-self: flex-end; border-bottom-right-radius: 4px;}
-.chat-area { display: flex; flex-direction: column; height: 100%; }
-.badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-.badge.pending { background-color: #fff3cd; color: #856404; }
-.badge.approved { background-color: #d4edda; color: #155724; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Mensagens · Patinhas</title>
+  <link rel="stylesheet" href="styles.css">
+  
 </head>
 <body>
-    <div class="mobile-simulator">
-        
-        <div class="header"><h1>Mensagens</h1></div>
-        <div class="content">
-            <a href="10-chat-mensagem.html" class="chat-list-item">
-                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100" class="avatar">
-                <div class="chat-info" style="flex:1;">
-                    <h4>ONG Patinhas (Buddy)</h4><p>Olá! Vi que deu match no Buddy...</p>
-                </div>
-                <div style="width:10px; height:10px; background:#FF5A5F; border-radius:5px;"></div>
-            </a>
+
+<div class="phone">
+  <div class="statusbar" style="color:var(--text-1);">
+  <span class="time">9:41</span>
+  <div class="icons">
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+    <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
+    <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+  </div>
+</div>
+  <div style="padding:0 20px 16px;display:flex;justify-content:space-between;align-items:center;">
+    <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">Mensagens</h1>
+    <div class="chip chip-primary">3 novas</div>
+  </div>
+
+  <!-- Search -->
+  <div style="padding:0 20px 16px;">
+    <div style="position:relative;">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;">🔍</span>
+      <input type="text" placeholder="Buscar conversa..." style="width:100%;padding:12px 16px 12px 44px;background:var(--surface-2);border:none;border-radius:var(--radius-sm);font-size:14px;font-family:'Inter',sans-serif;box-sizing:border-box;">
+    </div>
+  </div>
+
+  <div class="scroll-content" style="padding:0 20px;">
+    <!-- Match alert -->
+    <div style="background:linear-gradient(135deg,rgba(255,107,53,0.1),rgba(255,107,53,0.05));border:1px solid rgba(255,107,53,0.2);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+      <div style="font-size:24px;animation:heartBeat 1.5s infinite;">❤️</div>
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--primary);">Novo Match!</div>
+        <div style="font-size:12px;color:var(--text-2);">Você e Buddy deram match. Manda oi!</div>
+      </div>
+    </div>
+
+    <!-- Conversations -->
+    <div style="display:flex;flex-direction:column;">
+      <a href="10-chat-mensagem.html" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
+        <div style="position:relative;flex-shrink:0;">
+          <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" class="avatar" style="width:56px;height:56px;">
+          <div style="position:absolute;bottom:0;right:0;width:16px;height:16px;background:var(--success);border-radius:50%;border:2px solid white;"></div>
         </div>
-        
-<div class="navbar">
-    <a href="05-home-swipe.html" class="nav-item">🐾 <span>Swipe</span></a>
-    <a href="09-chat-lista.html" class="nav-item active">💬 <span>Chat</span></a>
-    <a href="04-meu-perfil.html" class="nav-item">👤 <span>Perfil</span></a>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-weight:700;font-size:15px;">ONG Patinhas</span>
+            <span style="font-size:12px;color:var(--text-3);">agora</span>
+          </div>
+          <p style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Olá! Vi que deu match no Buddy ❤️</p>
+        </div>
+        <div style="width:10px;height:10px;background:var(--primary);border-radius:50%;flex-shrink:0;"></div>
+      </a>
+      <a href="10-chat-mensagem.html" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
+        <div style="position:relative;flex-shrink:0;">
+          <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&q=80" class="avatar" style="width:56px;height:56px;">
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-weight:700;font-size:15px;">Protetores Unidos</span>
+            <span style="font-size:12px;color:var(--text-3);">14:30</span>
+          </div>
+          <p style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Obrigada pelo interesse na Luna! 🐶</p>
+        </div>
+        <div style="width:10px;height:10px;background:var(--primary);border-radius:50%;flex-shrink:0;"></div>
+      </a>
+      <a href="10-chat-mensagem.html" style="display:flex;align-items:center;gap:14px;padding:14px 0;text-decoration:none;color:inherit;">
+        <div style="flex-shrink:0;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3bb8b0);display:flex;align-items:center;justify-content:center;font-size:22px;">🏥</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-weight:700;font-size:15px;">Gatil RN</span>
+            <span style="font-size:12px;color:var(--text-3);">ontem</span>
+          </div>
+          <p style="font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Você: Que fotos lindas! 🐱</p>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div class="navbar"><a href="05-home-swipe.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg><span>Descobrir</span></a><a href="09-chat-lista.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Mensagens</span></a><a href="04-meu-perfil.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Perfil</span></a></div>
 </div>
 
-    </div>
-    
+
 </body>
 </html>
