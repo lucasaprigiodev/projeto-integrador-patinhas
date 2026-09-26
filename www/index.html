@@ -5,64 +5,57 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Login · Patinhas</title>
   <link rel="stylesheet" href="styles.css">
-  
 </head>
 <body>
 
 <div class="phone">
-  <div style="height:100%;display:flex;flex-direction:column;background:linear-gradient(160deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);">
-    <div class="statusbar" style="color:white;">
+  <div style="height:100%; display:flex; flex-direction:column; background:white;">
+    <div class="statusbar" style="color:var(--text-1);">
   <span class="time">9:41</span>
   <div class="icons">
     <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
-    <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
     <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
   </div>
 </div>
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:32px 28px;" class="anim-fade-up">
 
-    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 28px;" class="anim-fade-up">
       <!-- Logo -->
-      <div style="text-align:center;margin-bottom:40px;">
-        <div style="width:80px;height:80px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 32px rgba(255,107,53,0.4);font-size:36px;animation:pulse 2s infinite;">🐾</div>
-        <h1 style="font-size:30px;font-weight:800;color:white;letter-spacing:-1px;">Patinhas</h1>
-        <p style="color:rgba(255,255,255,0.55);font-size:14px;margin-top:6px;">Conectando corações e patinhas</p>
+      <div style="text-align:center; margin-bottom:36px;">
+        <div style="width:80px;height:80px;background:var(--primary);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 24px rgba(255,90,95,0.35);font-size:38px;animation:pulse 2s infinite;">🐾</div>
+        <h1 style="font-size:28px;font-weight:800;color:var(--text-1);letter-spacing:-0.8px;">Patinhas</h1>
+        <p style="color:var(--text-2);font-size:14px;margin-top:6px;">Conectando corações e patinhas</p>
       </div>
 
-      <!-- Form card -->
-      <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:24px;">
-        <div class="input-group">
-          <label style="color:rgba(255,255,255,0.7);">E-mail</label>
-          <div class="input-wrap">
-            <span class="input-icon">✉️</span>
-            <input type="email" id="email" placeholder="seu@email.com" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;">
-          </div>
+      <!-- Inputs -->
+      <div class="input-group">
+        <label>E-mail</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <input type="email" id="email" placeholder="seu@email.com">
         </div>
-        <div class="input-group" style="margin-bottom:8px;">
-          <label style="color:rgba(255,255,255,0.7);">Senha</label>
-          <div class="input-wrap">
-            <span class="input-icon">🔒</span>
-            <input type="password" id="senha" placeholder="••••••••" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;">
-          </div>
-        </div>
-        <p style="color:var(--primary);font-size:13px;text-align:right;margin-bottom:20px;cursor:pointer;">Esqueci a senha</p>
-        <button class="btn btn-primary" onclick="fazerLogin()" style="font-size:16px;">Entrar</button>
       </div>
+      <div class="input-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="senha" placeholder="••••••••">
+        </div>
+      </div>
+      <p style="text-align:right;margin:-10px 0 18px;font-size:13px;color:var(--primary);font-weight:600;cursor:pointer;">Esqueci a senha</p>
 
-      <div class="divider" style="color:rgba(255,255,255,0.3);">ou continue com</div>
+      <button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
 
-      <button class="btn" onclick="window.location.href='05-home-swipe.html'" style="background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);">
+      <div class="divider">ou</div>
+
+      <button class="btn btn-ghost" onclick="window.location.href='05-home-swipe.html'">
         🌐 &nbsp;Entrar com Google
       </button>
 
-      <p style="text-align:center;color:rgba(255,255,255,0.5);font-size:14px;margin-top:24px;">
-        Não tem conta? <a href="02-cadastro-tipo.html" style="color:var(--primary);font-weight:600;">Cadastre-se</a>
+      <p style="text-align:center;color:var(--text-2);font-size:14px;margin-top:28px;">
+        Não tem conta? <a href="02-cadastro-tipo.html" style="color:var(--primary);font-weight:700;">Cadastre-se</a>
       </p>
     </div>
-
-    <!-- Dica admin -->
-    <div style="padding:0 28px 24px;text-align:center;">
-      <p style="color:rgba(255,255,255,0.25);font-size:11px;">Admin: admin@ong.com / admin</p>
-    </div>
+    <p style="text-align:center;color:var(--text-3);font-size:11px;padding-bottom:20px;">Admin: admin@ong.com / admin</p>
   </div>
 </div>
 
