@@ -27,33 +27,10 @@ body {
     display: flex;
     flex-direction: column;
 }
-.header {
-    padding: 20px;
-    text-align: center;
-    margin-top: 20px;
-}
-.header h1 {
-    margin: 0;
-    font-size: 22px;
-    color: #FF5A5F;
-    font-weight: 700;
-}
-.content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-.btn {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 15px;
-    transition: 0.2s;
-}
+.header { padding: 20px; text-align: center; margin-top: 20px; }
+.header h1 { margin: 0; font-size: 22px; color: #FF5A5F; font-weight: 700; }
+.content { flex: 1; padding: 20px; overflow-y: auto; }
+.btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: 0.2s; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
 .btn-primary { background-color: #FF5A5F; color: white; }
 .btn-outline { background-color: transparent; border: 2px solid #FF5A5F; color: #FF5A5F; }
 .btn-secondary { background-color: #f0f2f5; color: #333; }
@@ -65,11 +42,8 @@ body {
 .nav-item span { font-size: 10px; }
 .nav-item.active { color: #FF5A5F; }
 .back-btn { position: absolute; left: 20px; top: 25px; font-size: 20px; text-decoration: none; color: #333; font-weight: bold; }
-/* Específicos */
-.card-choice { border: 1px solid #ddd; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; }
-.card-choice h3 { margin: 0 0 5px 0; color: #FF5A5F; }
-.card-choice p { margin: 0; font-size: 14px; color: #666; }
-.chat-list-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+.card-choice { border: 1px solid #ddd; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; text-decoration: none; display: block; color: inherit; }
+.chat-list-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; text-decoration: none; color: inherit;}
 .avatar { width: 50px; height: 50px; border-radius: 25px; background-color: #ddd; margin-right: 15px; object-fit: cover;}
 .chat-info h4 { margin: 0 0 5px 0; }
 .chat-info p { margin: 0; font-size: 14px; color: #888; }
@@ -85,25 +59,16 @@ body {
 <body>
     <div class="mobile-simulator">
         
-        <a href="#" class="back-btn">←</a>
+        <a href="01-login.html" class="back-btn">←</a>
         <div class="header"><h1>Como você quer usar o app?</h1></div>
         <div class="content">
             <p style="color:#666; margin-bottom:30px;">Para personalizar sua experiência, nos conte qual é o seu objetivo principal.</p>
-            
-            <div class="card-choice">
-                <h3>Quero Adotar</h3>
-                <p>Estou procurando um pet para dar amor e um lar.</p>
-            </div>
-            <div class="card-choice">
-                <h3>Quero Doar / Sou Protetor</h3>
-                <p>Tenho animais resgatados precisando de uma família.</p>
-            </div>
-            <div class="card-choice">
-                <h3>Sou uma ONG</h3>
-                <p>Quero gerenciar adoções, lares temporários e doações.</p>
-            </div>
+            <a href="03-cadastro-dados.html" class="card-choice"><h3>Quero Adotar</h3><p>Estou procurando um pet para dar amor e um lar.</p></a>
+            <a href="03-cadastro-dados.html" class="card-choice"><h3>Quero Doar / Sou Protetor</h3><p>Tenho animais resgatados precisando de uma família.</p></a>
+            <a href="03-cadastro-dados.html" class="card-choice"><h3>Sou uma ONG</h3><p>Quero gerenciar adoções, lares temporários e doações.</p></a>
         </div>
     
     </div>
+    
 </body>
 </html>

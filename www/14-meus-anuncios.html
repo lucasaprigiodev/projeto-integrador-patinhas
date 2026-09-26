@@ -27,33 +27,10 @@ body {
     display: flex;
     flex-direction: column;
 }
-.header {
-    padding: 20px;
-    text-align: center;
-    margin-top: 20px;
-}
-.header h1 {
-    margin: 0;
-    font-size: 22px;
-    color: #FF5A5F;
-    font-weight: 700;
-}
-.content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-.btn {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 15px;
-    transition: 0.2s;
-}
+.header { padding: 20px; text-align: center; margin-top: 20px; }
+.header h1 { margin: 0; font-size: 22px; color: #FF5A5F; font-weight: 700; }
+.content { flex: 1; padding: 20px; overflow-y: auto; }
+.btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: 0.2s; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
 .btn-primary { background-color: #FF5A5F; color: white; }
 .btn-outline { background-color: transparent; border: 2px solid #FF5A5F; color: #FF5A5F; }
 .btn-secondary { background-color: #f0f2f5; color: #333; }
@@ -65,11 +42,8 @@ body {
 .nav-item span { font-size: 10px; }
 .nav-item.active { color: #FF5A5F; }
 .back-btn { position: absolute; left: 20px; top: 25px; font-size: 20px; text-decoration: none; color: #333; font-weight: bold; }
-/* Específicos */
-.card-choice { border: 1px solid #ddd; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; }
-.card-choice h3 { margin: 0 0 5px 0; color: #FF5A5F; }
-.card-choice p { margin: 0; font-size: 14px; color: #666; }
-.chat-list-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+.card-choice { border: 1px solid #ddd; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; text-decoration: none; display: block; color: inherit; }
+.chat-list-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; text-decoration: none; color: inherit;}
 .avatar { width: 50px; height: 50px; border-radius: 25px; background-color: #ddd; margin-right: 15px; object-fit: cover;}
 .chat-info h4 { margin: 0 0 5px 0; }
 .chat-info p { margin: 0; font-size: 14px; color: #888; }
@@ -87,30 +61,20 @@ body {
         
         <div class="header"><h1>Meus Pets</h1></div>
         <div class="content">
-            <button class="btn btn-outline" style="margin-bottom:20px;">+ Cadastrar Novo Pet</button>
-            
-            <div style="background:white; padding:15px; border-radius:12px; display:flex; align-items:center; margin-bottom:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+            <a href="13-criar-anuncio.html" class="btn btn-outline" style="margin-bottom:20px;">+ Cadastrar Pet</a>
+            <div style="background:white; padding:15px; border-radius:12px; display:flex; align-items:center; margin-bottom:15px;">
                 <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100" style="width:60px; height:60px; border-radius:8px; object-fit:cover; margin-right:15px;">
-                <div style="flex:1;">
-                    <h3 style="margin:0 0 5px;">Buddy</h3>
-                    <span class="badge approved">Aprovado e Disponível</span>
-                </div>
-            </div>
-            
-            <div style="background:white; padding:15px; border-radius:12px; display:flex; align-items:center; margin-bottom:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-                <div style="width:60px; height:60px; border-radius:8px; background:#ddd; margin-right:15px;"></div>
-                <div style="flex:1;">
-                    <h3 style="margin:0 0 5px;">Nina</h3>
-                    <span class="badge pending">Em Análise (ONG)</span>
-                </div>
+                <div style="flex:1;"><h3 style="margin:0;">Buddy</h3><span class="badge approved">Aprovado</span></div>
             </div>
         </div>
-        <div class="navbar">
-            <a href="#" class="nav-item">🐾 <span>Swipe</span></a>
-            <a href="#" class="nav-item">💬 <span>Chat</span></a>
-            <a href="#" class="nav-item active">👤 <span>Perfil</span></a>
-        </div>
-    
+        
+<div class="navbar">
+    <a href="05-home-swipe.html" class="nav-item">🐾 <span>Swipe</span></a>
+    <a href="09-chat-lista.html" class="nav-item">💬 <span>Chat</span></a>
+    <a href="04-meu-perfil.html" class="nav-item active">👤 <span>Perfil</span></a>
+</div>
+
     </div>
+    
 </body>
 </html>
