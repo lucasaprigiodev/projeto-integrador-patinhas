@@ -110,6 +110,9 @@ async function initPet() {
 
 async function queroAdotar() {
   if(!currentPet) return;
+  const btn = document.getElementById('btnQueroAdotar');
+  if(btn) { btn.innerText = 'Conectando com a ONG...'; btn.disabled = true; }
+
   const db = await loadDb();
   const uName = localStorage.getItem('userName') || 'Lucas Aprígio';
   let matchId = Date.now().toString();
@@ -133,7 +136,7 @@ async function queroAdotar() {
       text: `Olá, ${uName}! Ficamos muito felizes pelo seu interesse no(a) ${currentPet.name}! Como podemos te ajudar?`,
       time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
     });
-    saveDb(db);
+    await saveDb(db);
   } else {
     matchId = existingMatch.id;
   }
@@ -143,9 +146,10 @@ async function queroAdotar() {
   localStorage.setItem('swipedPetIds', JSON.stringify(userSwiped));
 
   localStorage.setItem('lastMatchId', matchId);
+  localStorage.setItem('lastPetId', String(currentPet.id));
   localStorage.setItem('lastPetImg', currentPet.img);
   localStorage.setItem('lastPetName', currentPet.name);
-  window.location.href = '08-match.html';
+  window.location.href = `08-match.html?matchId=${matchId}&petId=${currentPet.id}`;
 }
 
 initPet();

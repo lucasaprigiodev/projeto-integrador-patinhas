@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Chat · Patinhas</title>
   <link rel="stylesheet" href="styles.css">
-  
 </head>
 <body>
 
@@ -16,7 +15,7 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
     </a>
     <div style="position:relative;">
-      <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" class="avatar" style="width:44px;height:44px;">
+      <img id="chatHeaderAvatar" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" class="avatar" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
       <div style="position:absolute;bottom:0;right:0;width:12px;height:12px;background:var(--success);border-radius:50%;border:2px solid white;"></div>
     </div>
     <div style="flex:1;">
@@ -31,8 +30,11 @@
 
   <!-- Pet info banner -->
   <a id="petBannerLink" href="javascript:void(0)" style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(255,107,53,0.06);border-bottom:1px solid rgba(255,107,53,0.1);text-decoration:none;color:inherit;">
-    <img id="bannerPetImg" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" style="width:36px;height:36px;border-radius:10px;object-fit:cover;">
-    <div style="flex:1;"><div id="bannerPetName" style="font-size:13px;font-weight:700;">Buddy</div><div id="bannerPetDesc" style="font-size:11px;color:var(--text-2);">Golden Retriever • 2 anos</div></div>
+    <img id="bannerPetImg" src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&q=80" style="width:36px;height:36px;border-radius:10px;object-fit:cover;">
+    <div style="flex:1;">
+      <div id="bannerPetName" style="font-size:13px;font-weight:700;">Pet</div>
+      <div id="bannerPetDesc" style="font-size:11px;color:var(--text-2);">Carregando informações...</div>
+    </div>
     <span style="color:var(--primary);font-size:12px;font-weight:600;">Match de Adoção ❤️</span>
   </a>
 
@@ -90,10 +92,12 @@
 <script>
 const urlParams = new URLSearchParams(window.location.search);
 let matchId = urlParams.get('matchId') || localStorage.getItem('lastMatchId');
+let petId = urlParams.get('petId') || localStorage.getItem('lastPetId');
 const isONG = localStorage.getItem('isONG') === 'true';
 const sender = isONG ? 'ong' : 'user';
 let currentPetId = null;
 let currentDb = null;
+let lastRenderedChatCount = -1;
 
 function openCallModal() { document.getElementById('callModal').style.display = 'flex'; }
 function closeCallModal() { document.getElementById('callModal').style.display = 'none'; }
@@ -109,36 +113,80 @@ async function desfazerMatch() {
   window.location.href = '09-chat-lista.html';
 }
 
-let lastRenderedChatCount = -1;
-
 async function loadChat() {
     try {
         currentDb = await loadDb();
         const json = currentDb;
         
-        if(!matchId && (json.matches || []).length > 0) {
-            matchId = json.matches[json.matches.length - 1].id;
+        let match = null;
+        if(matchId) {
+            match = (json.matches || []).find(m => m.id == matchId);
         }
-        if(!matchId) {
+        if(!match && petId) {
+            match = (json.matches || []).find(m => String(m.petId) === String(petId));
+            if(match) matchId = match.id;
+        }
+        if(!match && (json.matches || []).length > 0) {
+            match = json.matches[json.matches.length - 1];
+            matchId = match.id;
+        }
+
+        // Se ainda assim o match não existe no banco, mas temos o petId, registra o match imediatamente
+        if(!match && petId) {
+            const petFound = (json.pets || []).find(p => String(p.id) === String(petId));
+            if(petFound) {
+                const uName = localStorage.getItem('userName') || 'Lucas Aprígio';
+                matchId = matchId || Date.now().toString();
+                match = {
+                    id: matchId,
+                    petId: petFound.id,
+                    petImg: petFound.img,
+                    petName: petFound.name,
+                    userName: uName,
+                    status: 'pendente',
+                    date: new Date().toLocaleDateString('pt-BR')
+                };
+                if(!json.matches) json.matches = [];
+                json.matches.push(match);
+                if(!json.chats) json.chats = [];
+                json.chats.push({
+                    matchId: matchId,
+                    sender: 'ong',
+                    text: `Olá, ${uName}! Ficamos muito felizes pelo seu interesse no(a) ${petFound.name}! Como podemos te ajudar no processo de adoção? 🐾`,
+                    time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+                });
+                await saveDb(json);
+            }
+        }
+        
+        if(!match && !matchId) {
             const area = document.getElementById('msgArea');
             area.innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:40px;margin-bottom:10px;">💬</div><p style="color:var(--text-3);font-size:14px;margin-bottom:16px;">Nenhum match ativo encontrado.</p><a href="05-home-swipe.html" class="btn btn-primary" style="display:inline-block;padding:10px 20px;text-decoration:none;">Ver Pets</a></div>';
             return;
         }
         
-        const match = (json.matches || []).find(m => m.id == matchId);
         if(match) {
             currentPetId = match.petId;
-            if(match.petImg && document.getElementById('bannerPetImg')) document.getElementById('bannerPetImg').src = match.petImg;
-            if(match.petName && document.getElementById('bannerPetName')) document.getElementById('bannerPetName').innerText = match.petName;
+            if(match.petImg) {
+                document.getElementById('bannerPetImg').src = match.petImg;
+                document.getElementById('chatHeaderAvatar').src = match.petImg;
+            }
+            if(match.petName) {
+                document.getElementById('bannerPetName').innerText = match.petName;
+            }
             
             document.getElementById('petBannerLink').onclick = () => { window.location.href = '07-detalhes-pet.html?id=' + match.petId; };
             document.getElementById('btnVerPetPerfil').onclick = () => { window.location.href = '07-detalhes-pet.html?id=' + match.petId; };
             
             const pet = (json.pets || []).find(p => p.id == match.petId);
             if(pet) {
-                if(document.getElementById('bannerPetDesc')) document.getElementById('bannerPetDesc').innerText = `${pet.breed || ''} • ${pet.age || ''}`;
-                if(pet.ong && document.getElementById('chatOngName')) document.getElementById('chatOngName').innerText = pet.ong;
-                if(document.getElementById('modalOngName')) document.getElementById('modalOngName').innerText = pet.ong;
+                document.getElementById('bannerPetDesc').innerText = `${pet.breed || ''} • ${pet.age || ''}`;
+                if(pet.ong) {
+                    document.getElementById('chatOngName').innerText = pet.ong;
+                    document.getElementById('modalOngName').innerText = pet.ong;
+                }
+            } else {
+                document.getElementById('bannerPetDesc').innerText = "Adoção Responsável";
             }
             
             const zapText = encodeURIComponent(`Olá! Tenho interesse na adoção do(a) ${match.petName} pelo app Patinhas!`);
@@ -192,7 +240,7 @@ async function sendMsg() {
     if(!currentDb) currentDb = await loadDb();
     if(!currentDb.chats) currentDb.chats = [];
     currentDb.chats.push({ matchId, sender, text, time });
-    saveDb(currentDb);
+    await saveDb(currentDb);
   } catch(e) { console.error('Erro ao enviar mensagem:', e); }
 }
 

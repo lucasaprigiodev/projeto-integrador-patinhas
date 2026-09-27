@@ -152,15 +152,16 @@ async function swipeCard(dir) {
           time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
       });
       
-      saveDb(dbData); // Envia para o GitHub Gist de forma assíncrona/confiável
+      await saveDb(dbData); // Envia para o GitHub Gist e AGUARDA confirmacao antes de redirecionar
     } else {
       matchId = existingMatch.id;
     }
     
     localStorage.setItem('lastMatchId', matchId);
+    localStorage.setItem('lastPetId', String(pet.id));
     localStorage.setItem('lastPetImg', pet.img);
     localStorage.setItem('lastPetName', pet.name);
-    setTimeout(() => { window.location.href = '08-match.html'; }, 300);
+    window.location.href = `08-match.html?matchId=${matchId}&petId=${pet.id}`;
     return;
   }
   
