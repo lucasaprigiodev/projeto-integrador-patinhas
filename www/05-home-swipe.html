@@ -37,27 +37,43 @@
   <!-- Action buttons -->
   <div style="display:flex;justify-content:center;align-items:center;gap:16px;padding:16px 0 4px;">
     <button id="btnSkip" onclick="swipeCard('left')" style="width:58px;height:58px;border-radius:50%;border:2px solid #FFE0E8;background:white;font-size:26px;cursor:pointer;box-shadow:var(--shadow-md);transition:all 0.2s;display:flex;align-items:center;justify-content:center;">✖</button>
-    <button onclick="window.location.href='07-detalhes-pet.html'" style="width:44px;height:44px;border-radius:50%;border:2px solid #E0F0FF;background:white;font-size:20px;cursor:pointer;box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center;">ℹ️</button>
+    <button onclick="goToDetails()" style="width:44px;height:44px;border-radius:50%;border:2px solid #E0F0FF;background:white;font-size:20px;cursor:pointer;box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center;">ℹ️</button>
     <button id="btnLike" onclick="swipeCard('right')" style="width:58px;height:58px;border-radius:50%;border:2px solid #C8F5C8;background:white;font-size:26px;cursor:pointer;box-shadow:var(--shadow-md);transition:all 0.2s;display:flex;align-items:center;justify-content:center;">❤️</button>
   </div>
 
   <div class="navbar"><a href="05-home-swipe.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg><span>Descobrir</span></a><a href="09-chat-lista.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Mensagens</span></a><a href="04-meu-perfil.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Perfil</span></a></div>
 </div>
 
-
-
+<script src="db.js"></script>
 <script>
-const DB_URL = "https://extendsclass.com/api/json-storage/bin/cfcebea";
-
 let pets = [];
 let current = 0;
+let dbData = null;
 const stack = document.getElementById('cardStack');
+
+function goToDetails() {
+  const pet = pets[current];
+  if(pet) {
+    window.location.href = '07-detalhes-pet.html?id=' + pet.id;
+  }
+}
 
 async function loadPets() {
   try {
-    const res = await fetch(DB_URL);
-    const json = await res.json();
-    pets = (json.pets || []).filter(p => p.status === 'disponivel');
+    dbData = await loadDb();
+    const userSwiped = new Set(JSON.parse(localStorage.getItem('swipedPetIds') || '[]').map(String));
+    const matchedIds = new Set((dbData.matches || []).map(m => String(m.petId)));
+    
+    // Filtra pets que estão disponíveis, excluindo os que já deram match ou foram vistos
+    pets = (dbData.pets || []).filter(p => p.status === 'disponivel' && !userSwiped.has(String(p.id)) && !matchedIds.has(String(p.id)));
+    
+    // Se o usuário viu todos os que não deram match, reseta apenas os ignorados para rever, mantendo os com match bloqueados
+    if(pets.length === 0) {
+      localStorage.removeItem('swipedPetIds');
+      pets = (dbData.pets || []).filter(p => p.status === 'disponivel' && !matchedIds.has(String(p.id)));
+    }
+    
+    current = 0;
     renderCards();
   } catch(e) { console.error('Erro ao carregar pets:', e); }
 }
@@ -71,9 +87,12 @@ function buildCard(pet, zIndex) {
   card.innerHTML = `
     <div id="like-badge-${zIndex}" style="position:absolute;top:32px;left:24px;background:#06D6A0;color:white;font-weight:800;font-size:22px;padding:8px 18px;border-radius:12px;border:3px solid white;opacity:0;transform:rotate(-15deg);transition:opacity 0.2s;">ADOTAR ❤️</div>
     <div id="nope-badge-${zIndex}" style="position:absolute;top:32px;right:24px;background:#EF476F;color:white;font-weight:800;font-size:22px;padding:8px 18px;border-radius:12px;border:3px solid white;opacity:0;transform:rotate(15deg);transition:opacity 0.2s;">PASSAR ✖</div>
-    <div style="position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.85));">
-      <h2 style="color:white;font-size:26px;font-weight:800;margin-bottom:4px;">${pet.name}, ${pet.age}</h2>
-      <p style="color:rgba(255,255,255,0.75);font-size:13px;margin-bottom:12px;">📍 ${pet.dist} • ${pet.ong}</p>
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.85));display:flex;justify-content:space-between;align-items:flex-end;">
+      <div>
+        <h2 style="color:white;font-size:26px;font-weight:800;margin-bottom:4px;">${pet.name}, ${pet.age}</h2>
+        <p style="color:rgba(255,255,255,0.75);font-size:13px;margin-bottom:0;">📍 ${pet.dist} • ${pet.ong}</p>
+      </div>
+      <button onclick="event.stopPropagation(); window.location.href='07-detalhes-pet.html?id=${pet.id}'" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.25);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.4);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Ver Detalhes">ℹ️</button>
     </div>`;
   return card;
 }
@@ -92,61 +111,63 @@ async function swipeCard(dir) {
   const card = document.getElementById('card-0');
   if(!card) return;
   const pet = pets[current];
+  if(!pet) return;
+
   const tx = dir==='right' ? 600 : -600;
   card.style.transition = 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.4s';
   card.style.transform = `translateX(${tx}px) rotate(${dir==='right'?20:-20}deg)`;
   card.style.opacity = '0';
   
+  // Registra que este pet ja foi visto para nao repetir
+  const userSwiped = JSON.parse(localStorage.getItem('swipedPetIds') || '[]');
+  if(!userSwiped.includes(String(pet.id))) userSwiped.push(String(pet.id));
+  localStorage.setItem('swipedPetIds', JSON.stringify(userSwiped));
+
   if(dir === 'right') {
-    try {
-        const uName = localStorage.getItem('userName') || 'Lucas Aprígio';
-        const matchId = Date.now().toString();
-        
-        const res = await fetch(DB_URL);
-        const json = await res.json();
-        delete json._id;
-        if(!json.matches) json.matches = [];
-        if(!json.chats) json.chats = [];
-        
-        json.matches.push({
-            id: matchId,
-            petId: pet.id,
-            petImg: pet.img,
-            petName: pet.name,
-            userName: uName,
-            status: 'pendente',
-            date: new Date().toLocaleDateString('pt-BR')
-        });
-        
-        json.chats.push({
-            matchId: matchId,
-            sender: 'ong',
-            text: `Olá, ${uName}! Ficamos muito felizes pelo seu interesse no(a) ${pet.name}! Como podemos te ajudar no processo de adoção?`,
-            time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
-        });
-        
-        await fetch(DB_URL, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(json)
-        });
-        
-        localStorage.setItem('lastMatchId', matchId);
-        localStorage.setItem('lastPetImg', pet.img);
-        localStorage.setItem('lastPetName', pet.name);
-        setTimeout(() => window.location.href='08-match.html', 350);
-        return;
-    } catch(e) { 
-        console.error('Erro ao registrar match:', e);
-        setTimeout(() => window.location.href='08-match.html', 350);
-        return;
+    const uName = localStorage.getItem('userName') || 'Lucas Aprígio';
+    let matchId = Date.now().toString();
+    
+    // Atualiza base de dados
+    if(!dbData) dbData = await loadDb();
+    if(!dbData.matches) dbData.matches = [];
+    if(!dbData.chats) dbData.chats = [];
+    
+    // Evita duplicata de match
+    const existingMatch = dbData.matches.find(m => String(m.petId) === String(pet.id));
+    if(!existingMatch) {
+      dbData.matches.push({
+          id: matchId,
+          petId: pet.id,
+          petImg: pet.img,
+          petName: pet.name,
+          userName: uName,
+          status: 'pendente',
+          date: new Date().toLocaleDateString('pt-BR')
+      });
+      
+      dbData.chats.push({
+          matchId: matchId,
+          sender: 'ong',
+          text: `Olá, ${uName}! Ficamos muito felizes pelo seu interesse no(a) ${pet.name}! Como podemos te ajudar no processo de adoção?`,
+          time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+      });
+      
+      saveDb(dbData); // Envia para o GitHub Gist de forma assíncrona/confiável
+    } else {
+      matchId = existingMatch.id;
     }
+    
+    localStorage.setItem('lastMatchId', matchId);
+    localStorage.setItem('lastPetImg', pet.img);
+    localStorage.setItem('lastPetName', pet.name);
+    setTimeout(() => { window.location.href = '08-match.html'; }, 300);
+    return;
   }
   
   setTimeout(() => {
     current++;
     renderCards();
-  }, 400);
+  }, 350);
 }
 
 function showEmpty() {

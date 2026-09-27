@@ -20,101 +20,130 @@
 </div>
   <div style="padding:0 20px 16px;display:flex;justify-content:space-between;align-items:center;">
     <h1 style="font-size:24px;font-weight:800;letter-spacing:-0.5px;">Mensagens</h1>
-    <div class="chip chip-primary">3 novas</div>
+    <div id="chatCountBadge" class="chip chip-primary">0 conversas</div>
   </div>
 
   <!-- Search -->
   <div style="padding:0 20px 16px;">
     <div style="position:relative;">
       <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;">🔍</span>
-      <input type="text" placeholder="Buscar conversa..." style="width:100%;padding:12px 16px 12px 44px;background:var(--surface-2);border:none;border-radius:var(--radius-sm);font-size:14px;font-family:'Inter',sans-serif;box-sizing:border-box;">
+      <input type="text" id="chatSearchInput" oninput="filterChats()" placeholder="Buscar conversa..." style="width:100%;padding:12px 16px 12px 44px;background:var(--surface-2);border:none;border-radius:var(--radius-sm);font-size:14px;font-family:'Inter',sans-serif;box-sizing:border-box;">
     </div>
   </div>
 
   <div class="scroll-content" style="padding:0 20px;">
-    <!-- Match alert -->
-    <div style="background:linear-gradient(135deg,rgba(255,107,53,0.1),rgba(255,107,53,0.05));border:1px solid rgba(255,107,53,0.2);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+    <!-- Active Match Banner (dynamically injected if matches exist) -->
+    <div id="matchAlertBanner" style="display:none;background:linear-gradient(135deg,rgba(255,107,53,0.1),rgba(255,107,53,0.05));border:1px solid rgba(255,107,53,0.2);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:20px;align-items:center;gap:12px;">
       <div style="font-size:24px;animation:heartBeat 1.5s infinite;">❤️</div>
-      <div>
-        <div style="font-weight:700;font-size:14px;color:var(--primary);">Novo Match!</div>
-        <div style="font-size:12px;color:var(--text-2);">Você e Buddy deram match. Manda oi!</div>
+      <div style="flex:1;">
+        <div id="matchBannerTitle" style="font-weight:700;font-size:14px;color:var(--primary);">Novo Match!</div>
+        <div id="matchBannerSub" style="font-size:12px;color:var(--text-2);">Converse agora com a ONG.</div>
       </div>
     </div>
 
-    <!-- Conversations -->
+    <!-- Conversations Container -->
     <div style="display:flex;flex-direction:column;" id="chatListContainer">
-      <a href="10-chat-mensagem.html" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
-        <div style="position:relative;flex-shrink:0;">
-          <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" class="avatar" style="width:56px;height:56px;">
-          <div style="position:absolute;bottom:0;right:0;width:16px;height:16px;background:var(--success);border-radius:50%;border:2px solid white;"></div>
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-weight:700;font-size:15px;">ONG Patinhas</span>
-            <span style="font-size:12px;color:var(--text-3);">agora</span>
-          </div>
-          <p style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Olá! Vi que deu match no Buddy ❤️</p>
-        </div>
-        <div style="width:10px;height:10px;background:var(--primary);border-radius:50%;flex-shrink:0;"></div>
-      </a>
-      <a href="10-chat-mensagem.html" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
-        <div style="position:relative;flex-shrink:0;">
-          <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&q=80" class="avatar" style="width:56px;height:56px;">
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-weight:700;font-size:15px;">Protetores Unidos</span>
-            <span style="font-size:12px;color:var(--text-3);">14:30</span>
-          </div>
-          <p style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Obrigada pelo interesse na Luna! 🐶</p>
-        </div>
-        <div style="width:10px;height:10px;background:var(--primary);border-radius:50%;flex-shrink:0;"></div>
-      </a>
-      <a href="10-chat-mensagem.html" style="display:flex;align-items:center;gap:14px;padding:14px 0;text-decoration:none;color:inherit;">
-        <div style="flex-shrink:0;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3bb8b0);display:flex;align-items:center;justify-content:center;font-size:22px;">🏥</div>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-weight:700;font-size:15px;">Gatil RN</span>
-            <span style="font-size:12px;color:var(--text-3);">ontem</span>
-          </div>
-          <p style="font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Você: Que fotos lindas! 🐱</p>
-        </div>
-      </a>
+      <div style="text-align:center;padding:40px 20px;color:var(--text-3);">
+        <p>Carregando conversas...</p>
+      </div>
     </div>
   </div>
   <div class="navbar"><a href="05-home-swipe.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg><span>Descobrir</span></a><a href="09-chat-lista.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Mensagens</span></a><a href="04-meu-perfil.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Perfil</span></a></div>
 </div>
 
-
-
+<script src="db.js"></script>
 <script>
-const DB_URL = "https://extendsclass.com/api/json-storage/bin/cfcebea";
+let allMatches = [];
+let allChats = [];
+
+function renderMatchesList(matchesToRender) {
+    const listArea = document.getElementById('chatListContainer');
+    listArea.innerHTML = '';
+    
+    if (matchesToRender.length === 0) {
+        listArea.innerHTML = '<p style="text-align:center;color:var(--text-3);padding:30px 10px;font-size:13px;">Nenhuma conversa encontrada com esse nome.</p>';
+        return;
+    }
+
+    matchesToRender.slice().reverse().forEach(m => {
+        const petChats = allChats.filter(c => c.matchId == m.id);
+        const lastMsg = petChats.length > 0 ? petChats[petChats.length - 1].text : 'Conversa de adoção iniciada 🐾';
+        const lastTime = petChats.length > 0 && petChats[petChats.length - 1].time ? petChats[petChats.length - 1].time : 'recente';
+        
+        listArea.innerHTML += `
+        <a href="10-chat-mensagem.html?matchId=${m.id}" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
+            <div style="position:relative;flex-shrink:0;">
+              <img src="${m.petImg}" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
+              <div style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--success);border-radius:50%;border:2px solid white;"></div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-weight:700;font-size:15px;">${m.petName}</span>
+                <span style="font-size:11px;color:var(--text-3);">${lastTime}</span>
+              </div>
+              <p style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${lastMsg}
+              </p>
+            </div>
+            <div style="width:8px;height:8px;background:var(--primary);border-radius:50%;flex-shrink:0;"></div>
+        </a>`;
+    });
+}
+
+function filterChats() {
+    const q = (document.getElementById('chatSearchInput').value || '').toLowerCase().trim();
+    if(!q) {
+        renderMatchesList(allMatches);
+        return;
+    }
+    const filtered = allMatches.filter(m => (m.petName || '').toLowerCase().includes(q));
+    renderMatchesList(filtered);
+}
 
 async function loadChats() {
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
-        const matches = json.matches;
+        const db = await loadDb();
+        allMatches = db.matches || [];
+        allChats = db.chats || [];
         const listArea = document.getElementById('chatListContainer');
-        listArea.innerHTML = '';
-        matches.forEach(m => {
-            listArea.innerHTML += `
-            <a href="10-chat-mensagem.html?matchId=${m.id}" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
-                <div style="position:relative;flex-shrink:0;">
-                <img src="${m.petImg}" class="avatar" style="width:56px;height:56px;">
-                </div>
-                <div style="flex:1;min-width:0;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-weight:700;font-size:15px;">Interesse em ${m.petName}</span>
-                </div>
-                <p style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Clique para abrir a conversa com ${m.userName}</p>
-                </div>
-            </a>`;
-        });
+        const banner = document.getElementById('matchAlertBanner');
+        
+        // Update badge
+        const badge = document.getElementById('chatCountBadge');
+        if (badge) badge.innerText = `${allMatches.length} ${allMatches.length === 1 ? 'conversa' : 'conversas'}`;
+        
+        if (allMatches.length === 0) {
+            banner.style.display = 'none';
+            listArea.innerHTML = `
+              <div style="text-align:center;padding:50px 20px;">
+                <div style="font-size:50px;margin-bottom:12px;">🐾</div>
+                <h3 style="font-size:18px;font-weight:700;margin-bottom:6px;">Nenhuma conversa ainda</h3>
+                <p style="font-size:13px;color:var(--text-3);line-height:1.5;margin-bottom:20px;">
+                  Você ainda não deu match com nenhum animal.<br>Curta os pets para iniciar uma conversa com a ONG!
+                </p>
+                <a href="05-home-swipe.html" class="btn btn-primary" style="display:inline-block;padding:12px 24px;font-size:14px;border-radius:12px;text-decoration:none;">
+                  Descobrir Pets ❤️
+                </a>
+              </div>`;
+            return;
+        }
+
+        // Show banner for the latest match
+        const latest = allMatches[allMatches.length - 1];
+        banner.style.display = 'flex';
+        document.getElementById('matchBannerTitle').innerText = `Match com ${latest.petName}!`;
+        document.getElementById('matchBannerSub').innerText = `Você e ${latest.petName} se conectaram. Diga olá!`;
+        banner.style.cursor = 'pointer';
+        banner.onclick = () => { window.location.href = `10-chat-mensagem.html?matchId=${latest.id}`; };
+
+        const q = (document.getElementById('chatSearchInput')?.value || '').trim();
+        if(!q) renderMatchesList(allMatches);
+        else filterChats();
     } catch(e) { console.error(e); }
 }
-loadChats();
 
+loadChats();
+setInterval(loadChats, 4000);
 </script>
 </body>
 </html>

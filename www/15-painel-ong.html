@@ -44,88 +44,55 @@
 
   <div class="scroll-content" style="padding:16px 20px;">
     <div id="list-pending">
-      <!-- Candidato 1 -->
-      <div class="card" style="padding:16px;margin-bottom:12px;" id="c1">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" class="avatar" style="width:50px;height:50px;">
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:15px;">Lucas Aprígio</div>
-            <div style="font-size:12px;color:var(--text-2);">Quer adotar: <strong>Buddy</strong></div>
-          </div>
-          <span class="chip" style="background:#fff3cd;color:#856404;font-size:11px;">Pendente</span>
-        </div>
-        <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:10px;margin-bottom:12px;">
-          <p style="font-size:12px;color:var(--text-2);line-height:1.6;">"Tenho quintal grande e murado, trabalho em casa e amo animais."</p>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="aprovar('c1')" style="padding:11px;font-size:13px;">✓ Aprovar</button>
-          <button class="btn btn-outline" onclick="rejeitar('c1')" style="padding:11px;font-size:13px;">✕ Rejeitar</button>
-          <a href="10-chat-mensagem.html" style="width:46px;height:46px;border-radius:var(--radius-sm);background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;flex-shrink:0;">💬</a>
-        </div>
-      </div>
-      <!-- Candidato 2 -->
-      <div class="card" style="padding:16px;margin-bottom:12px;" id="c2">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-          <div style="width:50px;height:50px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;flex-shrink:0;">M</div>
-          <div style="flex:1;"><div style="font-weight:700;font-size:15px;">Maria Silva</div><div style="font-size:12px;color:var(--text-2);">Quer adotar: <strong>Luna</strong></div></div>
-          <span class="chip" style="background:#fff3cd;color:#856404;font-size:11px;">Pendente</span>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="aprovar('c2')" style="padding:11px;font-size:13px;">✓ Aprovar</button>
-          <button class="btn btn-outline" onclick="rejeitar('c2')" style="padding:11px;font-size:13px;">✕ Rejeitar</button>
-        </div>
-      </div>
+      <p style="text-align:center;color:var(--text-3);padding:30px;">Carregando candidatos...</p>
     </div>
 
     <div id="list-pets" style="display:none;">
-      <a href="13-criar-anuncio.html" class="btn btn-outline" style="margin-bottom:14px;">+ Cadastrar novo pet</a>
-      <div class="card" style="display:flex;gap:12px;padding:14px;margin-bottom:10px;">
-        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80" style="width:64px;height:64px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;">
-        <div><h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Buddy</h3><p style="font-size:12px;color:var(--text-2);margin-bottom:8px;">Golden Retriever • 2 anos</p><span class="chip chip-success">Disponível</span></div>
-      </div>
-      <div class="card" style="display:flex;gap:12px;padding:14px;">
-        <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=200&q=80" style="width:64px;height:64px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;">
-        <div><h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Luna</h3><p style="font-size:12px;color:var(--text-2);margin-bottom:8px;">SRD • 1 ano</p><span class="chip chip-success">Disponível</span></div>
-      </div>
+      <a href="13-criar-anuncio.html" class="btn btn-outline" style="margin-bottom:14px;display:block;text-align:center;text-decoration:none;">+ Cadastrar novo pet</a>
+      <div id="petsContainer"></div>
     </div>
 
-    <div id="list-done" style="display:none;text-align:center;padding:32px 16px;">
-      <div style="font-size:48px;margin-bottom:12px;">🏆</div>
-      <div style="font-size:32px;font-weight:900;color:var(--primary);">47</div>
-      <div style="font-size:14px;color:var(--text-2);margin-top:4px;">adoções concluídas!</div>
+    <div id="list-done" style="display:none;padding:16px 0;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:48px;margin-bottom:8px;">🏆</div>
+        <div id="doneCountText" style="font-size:32px;font-weight:900;color:var(--primary);">0</div>
+        <div style="font-size:14px;color:var(--text-2);margin-top:4px;">adoções concluídas!</div>
+      </div>
+      <div id="doneContainer"></div>
     </div>
   </div>
 
   <div style="padding:8px 20px 12px;border-top:1px solid var(--border);">
-    <a href="01-login.html" class="btn btn-ghost" style="padding:12px;font-size:13px;">Sair do painel</a>
+    <a href="01-login.html" class="btn btn-ghost" style="padding:12px;font-size:13px;display:block;text-align:center;text-decoration:none;">Sair do painel</a>
   </div>
 </div>
 
-
-
+<script src="db.js"></script>
 <script>
-const DB_URL = "https://extendsclass.com/api/json-storage/bin/cfcebea";
+let appDb = null;
 
 async function loadDashboard() {
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
-        const pets = json.pets;
-        const matches = json.matches;
+        appDb = await loadDb();
+        const pets = appDb.pets || [];
+        const matches = appDb.matches || [];
         
         const pendentes = matches.filter(m => m.status === 'pendente');
         const aprovados = matches.filter(m => m.status === 'aprovado');
+        const ativos = pets.filter(p => p.status === 'disponivel');
         
-        document.getElementById('stat-pets').textContent = pets.length;
+        document.getElementById('stat-pets').textContent = ativos.length;
         document.getElementById('stat-pendentes').textContent = pendentes.length;
         document.getElementById('stat-aprovados').textContent = aprovados.length;
         document.getElementById('tab-pending').textContent = `Candidatos (${pendentes.length})`;
         
+        // Candidatos Pendentes
         const listPending = document.getElementById('list-pending');
         listPending.innerHTML = '';
-        if(pendentes.length === 0) listPending.innerHTML = '<p style="text-align:center;color:var(--text-3);padding:20px;">Nenhum candidato.</p>';
-        else {
-            pendentes.forEach(m => {
+        if(pendentes.length === 0) {
+            listPending.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:40px 20px;"><div style="font-size:36px;margin-bottom:8px;">🤝</div><p style="font-size:14px;">Nenhum candidato pendente no momento.</p></div>';
+        } else {
+            pendentes.slice().reverse().forEach(m => {
                 listPending.innerHTML += `
                 <div class="card" style="padding:16px;margin-bottom:12px;" id="c-${m.id}">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
@@ -134,40 +101,86 @@ async function loadDashboard() {
                             <div style="font-weight:700;font-size:15px;">${m.userName}</div>
                             <div style="font-size:12px;color:var(--text-2);">Quer adotar: <strong>${m.petName}</strong></div>
                         </div>
+                        <span class="chip" style="background:#fff3cd;color:#856404;font-size:11px;">Pendente</span>
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button class="btn btn-primary" onclick="setStatus('${m.id}', 'aprovado')" style="padding:11px;font-size:13px;">✓ Aprovar</button>
-                        <button class="btn btn-outline" onclick="setStatus('${m.id}', 'rejeitado')" style="padding:11px;font-size:13px;">✕ Rejeitar</button>
-                        <a href="10-chat-mensagem.html?matchId=${m.id}" style="width:46px;height:46px;border-radius:var(--radius-sm);background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;flex-shrink:0;">💬</a>
+                        <button class="btn btn-primary" onclick="setStatus('${m.id}', 'aprovado')" style="padding:10px;font-size:13px;flex:1;">✓ Aprovar</button>
+                        <button class="btn btn-outline" onclick="setStatus('${m.id}', 'rejeitado')" style="padding:10px;font-size:13px;flex:1;">✕ Rejeitar</button>
+                        <a href="10-chat-mensagem.html?matchId=${m.id}" style="width:42px;height:42px;border-radius:var(--radius-sm);background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;flex-shrink:0;">💬</a>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // Pets
+        const pCont = document.getElementById('petsContainer');
+        pCont.innerHTML = '';
+        pets.forEach(p => {
+            const isAdotado = p.status === 'adotado';
+            pCont.innerHTML += `
+            <div class="card" style="display:flex;gap:12px;padding:14px;margin-bottom:10px;align-items:center;${isAdotado ? 'opacity:0.6;' : ''}">
+                <img src="${p.img}" style="width:64px;height:64px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;">
+                <div style="flex:1;">
+                    <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">${p.name}</h3>
+                    <p style="font-size:12px;color:var(--text-2);margin-bottom:6px;">${p.breed} • ${p.age}</p>
+                    <span class="chip ${isAdotado ? '' : 'chip-success'}" style="${isAdotado ? 'background:#e2e8f0;color:#475569;' : ''}">${isAdotado ? 'Adotado' : 'Disponível'}</span>
+                </div>
+            </div>`;
+        });
+
+        // Concluídos (Adoções aprovadas)
+        document.getElementById('doneCountText').innerText = aprovados.length;
+        const dCont = document.getElementById('doneContainer');
+        dCont.innerHTML = '';
+        if(aprovados.length === 0) {
+            dCont.innerHTML = '<p style="text-align:center;color:var(--text-3);font-size:13px;">Nenhuma adoção concluída ainda.</p>';
+        } else {
+            aprovados.forEach(m => {
+                dCont.innerHTML += `
+                <div class="card" style="display:flex;gap:12px;padding:14px;margin-bottom:10px;align-items:center;background:#F0FDF4;border:1px solid #BBF7D0;">
+                    <img src="${m.petImg}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;">
+                    <div style="flex:1;">
+                        <div style="font-weight:700;font-size:14px;color:#15803D;">${m.petName} adotado(a)! 🎉</div>
+                        <div style="font-size:12px;color:#166534;">Adotante: <strong>${m.userName}</strong></div>
                     </div>
                 </div>`;
             });
         }
     } catch(e) { console.error(e); }
 }
+
 async function setStatus(matchId, status) {
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
-        const m = json.matches.find(x => x.id == matchId);
-        if(m) m.status = status;
-        await fetch(DB_URL, {
-            method: 'PUT', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(json)
-        });
-        loadDashboard();
-        if(status==='aprovado') alert('Aprovado!');
-    } catch(e) {}
+        if(!appDb) appDb = await loadDb();
+        const m = (appDb.matches || []).find(x => x.id == matchId);
+        if(m) {
+            m.status = status;
+            if(status === 'aprovado') {
+                const pet = (appDb.pets || []).find(p => p.id == m.petId);
+                if(pet) pet.status = 'adotado';
+            }
+            await saveDb(appDb);
+            await loadDashboard();
+            if(status === 'aprovado') alert(`Adoção de ${m.petName} aprovada com sucesso! 🎉`);
+        }
+    } catch(e) { console.error(e); }
 }
+
 function showTab(tab) {
   ['pending','pets','done'].forEach(t => {
-    const l=document.getElementById('list-'+t); if(l) l.style.display=t===tab?'block':'none';
-    const b=document.getElementById('tab-'+t);
-    if(b){b.style.color=t===tab?'var(--primary)':'var(--text-3)';b.style.borderBottom=t===tab?'2px solid var(--primary)':'2px solid transparent';b.style.fontWeight=t===tab?'700':'600';}
+    const l = document.getElementById('list-'+t);
+    if(l) l.style.display = t === tab ? 'block' : 'none';
+    const b = document.getElementById('tab-'+t);
+    if(b) {
+      b.style.color = t === tab ? 'var(--primary)' : 'var(--text-3)';
+      b.style.borderBottom = t === tab ? '2px solid var(--primary)' : '2px solid transparent';
+      b.style.fontWeight = t === tab ? '700' : '600';
+    }
   });
 }
+
 loadDashboard();
-setInterval(loadDashboard, 5000);
+setInterval(loadDashboard, 4000);
 
 </script>
 </body>

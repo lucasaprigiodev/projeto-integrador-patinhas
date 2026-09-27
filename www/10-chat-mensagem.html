@@ -24,13 +24,13 @@
       <div style="font-size:12px;color:var(--success);font-weight:500;">Online agora</div>
     </div>
     <div style="display:flex;gap:12px;">
-      <button style="background:none;border:none;font-size:20px;cursor:pointer;">📞</button>
-      <button style="background:none;border:none;font-size:20px;cursor:pointer;">⋯</button>
+      <button onclick="openCallModal()" style="background:none;border:none;font-size:20px;cursor:pointer;" title="Ligar">📞</button>
+      <button onclick="openMenuModal()" style="background:none;border:none;font-size:20px;cursor:pointer;" title="Mais opções">⋯</button>
     </div>
   </div>
 
   <!-- Pet info banner -->
-  <a href="javascript:void(0)" style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(255,107,53,0.06);border-bottom:1px solid rgba(255,107,53,0.1);text-decoration:none;color:inherit;">
+  <a id="petBannerLink" href="javascript:void(0)" style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(255,107,53,0.06);border-bottom:1px solid rgba(255,107,53,0.1);text-decoration:none;color:inherit;">
     <img id="bannerPetImg" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" style="width:36px;height:36px;border-radius:10px;object-fit:cover;">
     <div style="flex:1;"><div id="bannerPetName" style="font-size:13px;font-weight:700;">Buddy</div><div id="bannerPetDesc" style="font-size:11px;color:var(--text-2);">Golden Retriever • 2 anos</div></div>
     <span style="color:var(--primary);font-size:12px;font-weight:600;">Match de Adoção ❤️</span>
@@ -51,34 +51,104 @@
   </div>
 </div>
 
+<!-- MODAL: LIGAÇÃO -->
+<div id="callModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);">
+  <div style="background:white;width:100%;max-width:340px;border-radius:24px;padding:24px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+    <div style="width:60px;height:60px;background:#EBF5FF;color:#007AFF;border-radius:50%;font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">📞</div>
+    <h3 style="font-size:18px;font-weight:800;margin-bottom:6px;" id="modalOngName">ONG Patinhas</h3>
+    <p style="font-size:14px;color:var(--text-2);margin-bottom:8px;">Telefone para Contato / WhatsApp:</p>
+    <p style="font-size:18px;font-weight:700;color:var(--primary);margin-bottom:20px;" id="modalOngPhone">(84) 99876-5432</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <a id="btnCallNow" href="tel:+5584998765432" class="btn btn-primary" style="text-decoration:none;">Ligar Agora</a>
+      <a id="btnZapNow" href="https://wa.me/5584998765432" target="_blank" class="btn" style="background:#25D366;color:white;text-decoration:none;">Conversar no WhatsApp</a>
+      <button onclick="closeCallModal()" class="btn btn-ghost">Fechar</button>
+    </div>
+  </div>
+</div>
 
+<!-- MODAL: MENU DE OPÇÕES (3 PONTINHOS) -->
+<div id="optionsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:white;width:100%;max-width:400px;border-radius:24px 24px 0 0;padding:24px;box-shadow:0 -10px 40px rgba(0,0,0,0.15);">
+    <div style="width:40px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 18px;"></div>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;text-align:center;">Opções da Conversa</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button onclick="window.location.href='11-contrato.html'" style="display:flex;align-items:center;gap:12px;padding:14px;border:none;background:var(--surface-2);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+        <span>📋</span> Ver Termo de Adoção
+      </button>
+      <button id="btnVerPetPerfil" style="display:flex;align-items:center;gap:12px;padding:14px;border:none;background:var(--surface-2);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+        <span>🐶</span> Ver Perfil Completo do Pet
+      </button>
+      <button onclick="desfazerMatch()" style="display:flex;align-items:center;gap:12px;padding:14px;border:none;background:#FEE2E2;color:#DC2626;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;text-align:left;">
+        <span>🗑️</span> Cancelar Match / Adoção
+      </button>
+      <button onclick="closeMenuModal()" class="btn btn-ghost" style="margin-top:8px;">Cancelar</button>
+    </div>
+  </div>
+</div>
 
+<script src="db.js"></script>
 <script>
-const DB_URL = "https://extendsclass.com/api/json-storage/bin/cfcebea";
-
 const urlParams = new URLSearchParams(window.location.search);
 let matchId = urlParams.get('matchId') || localStorage.getItem('lastMatchId');
 const isONG = localStorage.getItem('isONG') === 'true';
 const sender = isONG ? 'ong' : 'user';
+let currentPetId = null;
+let currentDb = null;
+
+function openCallModal() { document.getElementById('callModal').style.display = 'flex'; }
+function closeCallModal() { document.getElementById('callModal').style.display = 'none'; }
+function openMenuModal() { document.getElementById('optionsModal').style.display = 'flex'; }
+function closeMenuModal() { document.getElementById('optionsModal').style.display = 'none'; }
+
+async function desfazerMatch() {
+  if(!confirm("Deseja realmente cancelar este match de adoção?")) return;
+  if(currentDb && matchId) {
+    currentDb.matches = (currentDb.matches || []).filter(m => m.id != matchId);
+    await saveDb(currentDb);
+  }
+  window.location.href = '09-chat-lista.html';
+}
+
+let lastRenderedChatCount = -1;
 
 async function loadChat() {
-    if(!matchId) return;
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
+        currentDb = await loadDb();
+        const json = currentDb;
+        
+        if(!matchId && (json.matches || []).length > 0) {
+            matchId = json.matches[json.matches.length - 1].id;
+        }
+        if(!matchId) {
+            const area = document.getElementById('msgArea');
+            area.innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:40px;margin-bottom:10px;">💬</div><p style="color:var(--text-3);font-size:14px;margin-bottom:16px;">Nenhum match ativo encontrado.</p><a href="05-home-swipe.html" class="btn btn-primary" style="display:inline-block;padding:10px 20px;text-decoration:none;">Ver Pets</a></div>';
+            return;
+        }
         
         const match = (json.matches || []).find(m => m.id == matchId);
         if(match) {
+            currentPetId = match.petId;
             if(match.petImg && document.getElementById('bannerPetImg')) document.getElementById('bannerPetImg').src = match.petImg;
             if(match.petName && document.getElementById('bannerPetName')) document.getElementById('bannerPetName').innerText = match.petName;
+            
+            document.getElementById('petBannerLink').onclick = () => { window.location.href = '07-detalhes-pet.html?id=' + match.petId; };
+            document.getElementById('btnVerPetPerfil').onclick = () => { window.location.href = '07-detalhes-pet.html?id=' + match.petId; };
+            
             const pet = (json.pets || []).find(p => p.id == match.petId);
             if(pet) {
                 if(document.getElementById('bannerPetDesc')) document.getElementById('bannerPetDesc').innerText = `${pet.breed || ''} • ${pet.age || ''}`;
                 if(pet.ong && document.getElementById('chatOngName')) document.getElementById('chatOngName').innerText = pet.ong;
+                if(document.getElementById('modalOngName')) document.getElementById('modalOngName').innerText = pet.ong;
             }
+            
+            const zapText = encodeURIComponent(`Olá! Tenho interesse na adoção do(a) ${match.petName} pelo app Patinhas!`);
+            document.getElementById('btnZapNow').href = `https://wa.me/5584998765432?text=${zapText}`;
         }
         
         const chats = (json.chats || []).filter(c => c.matchId == matchId);
+        if(chats.length === lastRenderedChatCount) return; // Não redesenha se não houve novas mensagens (evita piscar a tela)
+        lastRenderedChatCount = chats.length;
+        
         const area = document.getElementById('msgArea');
         area.innerHTML = '';
         
@@ -107,30 +177,28 @@ async function sendMsg() {
   if(!text || !matchId) return;
   inp.value = '';
   
+  const time = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+  
+  // Exibição instantânea na interface (feedback imediato!)
+  const area = document.getElementById('msgArea');
+  const div = document.createElement('div');
+  div.style.cssText = 'max-width:78%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;box-shadow:var(--shadow-sm);';
+  div.innerHTML = `<div>${text}</div><div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px;">${time}</div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+  lastRenderedChatCount++;
+
   try {
-    const res = await fetch(DB_URL);
-    const json = await res.json();
-    delete json._id;
-    if(!json.chats) json.chats = [];
-    json.chats.push({ 
-        matchId, 
-        sender, 
-        text,
-        time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
-    });
-    
-    await fetch(DB_URL, {
-        method: 'PUT', 
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(json)
-    });
-    loadChat();
+    if(!currentDb) currentDb = await loadDb();
+    if(!currentDb.chats) currentDb.chats = [];
+    currentDb.chats.push({ matchId, sender, text, time });
+    saveDb(currentDb);
   } catch(e) { console.error('Erro ao enviar mensagem:', e); }
 }
+
 document.getElementById('msgInput').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
 loadChat();
-setInterval(loadChat, 2000);
-
+setInterval(loadChat, 2500);
 </script>
 </body>
 </html>

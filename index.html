@@ -173,8 +173,8 @@
         <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-3 pointer-events-none"></div>
     </main>
 
+<script src="db.js"></script>
 <script>
-const DB_URL = "https://extendsclass.com/api/json-storage/bin/cfcebea";
 let currentMatchId = null;
 let chatInterval = null;
 let appData = { pets: [], matches: [], chats: [], users: [] };
@@ -230,8 +230,7 @@ function getStatusBadge(status) {
 
 async function fetchDashboard() {
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
+        const json = await loadDb();
         appData = json;
         
         const pets = json.pets || [];
@@ -282,7 +281,7 @@ async function fetchDashboard() {
         if(matches.length === 0) {
             dashRows = adocRows = `<tr><td colspan="4" class="text-center py-8 text-slate-500">Nenhuma adoção registrada ainda.</td></tr>`;
         } else {
-            matches.forEach(m => {
+            matches.slice().reverse().forEach(m => {
                 const rowContent = `
                     <td class="px-8 py-5 font-bold text-slate-700 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">${m.userName.charAt(0)}</div>${m.userName}</td>
                     <td class="px-8 py-5"><div class="flex items-center gap-3"><img src="${m.petImg}" class="w-10 h-10 rounded-lg object-cover shadow-sm font-medium text-slate-700"><span>${m.petName}</span></div></td>
@@ -296,7 +295,7 @@ async function fetchDashboard() {
                 adocRows += `<tr>${rowContent}
                     <td class="px-8 py-5 text-right space-x-2">
                         <button onclick="openChat('${m.id}', '${m.userName}')" class="bg-blue-50 text-blue-700 font-bold p-2.5 rounded-lg hover:bg-blue-100 transition shadow-sm" title="Chat">💬</button>
-                        <button onclick="setStatus('${m.id}', 'aprovado')" class="bg-green-50 text-green-700 font-bold p-2.5 rounded-lg hover:bg-green-100 transition shadow-sm" title="Aprovar">✓</button>
+                        <button onclick="setStatus('${m.id}', 'aprovado')" class="bg-green-50 text-green-700 font-bold p-2.5 rounded-lg hover:bg-green-100 transition shadow-sm" title="Aprovar Adoção">✓</button>
                         <button onclick="setStatus('${m.id}', 'rejeitado')" class="bg-red-50 text-red-700 font-bold p-2.5 rounded-lg hover:bg-red-100 transition shadow-sm" title="Rejeitar">✕</button>
                     </td>
                 </tr>`;
@@ -330,7 +329,6 @@ async function savePet() {
     const i = document.getElementById('p-img').value;
     const s = document.getElementById('p-status').value;
     
-    delete appData._id; // IMPORTANT FOR CRUDCRUD
     if(!appData.pets) appData.pets = [];
 
     if(id) {
@@ -339,11 +337,11 @@ async function savePet() {
         if(idx >= 0) appData.pets[idx] = { ...appData.pets[idx], name: n, age: a, breed: b, img: i, status: s };
     } else {
         // Create
-        appData.pets.push({ id: Date.now(), name: n, age: a, breed: b, img: i, ong: "ONG Patinhas", dist: "0km", status: s });
+        appData.pets.push({ id: Date.now(), name: n, age: a, breed: b, img: i, ong: "ONG Patinhas", dist: "2km", status: s });
     }
 
     try {
-        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(appData) });
+        await saveDb(appData);
         closePetModal();
         fetchDashboard();
     } catch(e) { alert("Erro ao salvar."); }
@@ -365,27 +363,25 @@ function editPet(id) {
 
 async function deletePet(id) {
     if(!confirm("Tem certeza que deseja excluir este animal permanentemente?")) return;
-    delete appData._id;
     appData.pets = appData.pets.filter(p => p.id != id);
     try {
-        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(appData) });
+        await saveDb(appData);
         fetchDashboard();
     } catch(e) { alert("Erro ao deletar."); }
 }
 
 async function setStatus(matchId, status) {
-    delete appData._id;
     const m = appData.matches.find(x => x.id == matchId);
     if(m) {
         m.status = status;
         if(status === 'aprovado') {
-            // Se aprovado, marca o pet como adotado também
             const pet = appData.pets.find(p => p.id == m.petId);
             if(pet) pet.status = 'adotado';
+            showToast(`Adoção de <strong>${m.petName}</strong> foi aprovada com sucesso! 🎉`);
         }
     }
     try {
-        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(appData) });
+        await saveDb(appData);
         fetchDashboard();
     } catch(e) {}
 }
@@ -406,7 +402,7 @@ function openChat(matchId, userName) {
     document.getElementById('chat-modal').classList.remove('opacity-0', 'pointer-events-none');
     document.getElementById('chat-panel').classList.remove('translate-x-full');
     loadChat();
-    chatInterval = setInterval(loadChat, 2000);
+    chatInterval = setInterval(loadChat, 3000);
 }
 function closeChat() {
     document.getElementById('chat-modal').classList.add('opacity-0', 'pointer-events-none');
@@ -417,8 +413,7 @@ function closeChat() {
 async function loadChat() {
     if(!currentMatchId) return;
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
+        const json = await loadDb();
         const chats = (json.chats || []).filter(c => c.matchId == currentMatchId);
         const area = document.getElementById('chat-messages');
         area.innerHTML = '';
@@ -439,19 +434,24 @@ async function sendMsg() {
     const text = document.getElementById('chat-input').value.trim();
     if(!text || !currentMatchId) return;
     document.getElementById('chat-input').value = '';
+    const time = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+    
+    // Immediate display
+    const area = document.getElementById('chat-messages');
+    area.innerHTML += `
+    <div class="flex justify-end">
+        <div class="max-w-[80%] rounded-2xl px-5 py-3 text-sm shadow-sm brand-bg text-white rounded-tr-sm">
+            <div>${text}</div>
+            <div class="text-[10px] text-red-100 text-right mt-1">${time}</div>
+        </div>
+    </div>`;
+    area.scrollTop = area.scrollHeight;
+    
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
-        delete json._id;
+        const json = await loadDb();
         if(!json.chats) json.chats = [];
-        json.chats.push({ 
-            matchId: currentMatchId, 
-            sender: 'ong', 
-            text,
-            time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
-        });
-        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
-        loadChat();
+        json.chats.push({ matchId: currentMatchId, sender: 'ong', text, time });
+        await saveDb(json);
     } catch(e) {}
 }
 
