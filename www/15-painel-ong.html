@@ -21,15 +21,15 @@
     <!-- Stats -->
     <div style="display:flex;gap:10px;">
       <div style="flex:1;background:rgba(255,255,255,0.18);border-radius:var(--radius-sm);padding:12px;">
-        <div style="font-size:24px;font-weight:900;color:white;">12</div>
+        <div id="stat-pets" style="font-size:24px;font-weight:900;color:white;">-</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.7);">Pets ativos</div>
       </div>
       <div style="flex:1;background:rgba(0,0,0,0.15);border-radius:var(--radius-sm);padding:12px;">
-        <div style="font-size:24px;font-weight:900;color:white;">3</div>
+        <div id="stat-pendentes" style="font-size:24px;font-weight:900;color:white;">-</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.7);">Candidatos</div>
       </div>
       <div style="flex:1;background:rgba(255,255,255,0.18);border-radius:var(--radius-sm);padding:12px;">
-        <div style="font-size:24px;font-weight:900;color:white;">47</div>
+        <div id="stat-aprovados" style="font-size:24px;font-weight:900;color:white;">-</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.7);">Adoções</div>
       </div>
     </div>
@@ -101,7 +101,65 @@
   </div>
 </div>
 
+
 <script>
+const API = "https://patinhas-backend-4838.loca.lt/api";
+
+async function loadDashboard() {
+    try {
+        const [petsRes, matchesRes] = await Promise.all([
+            fetch(API+'/pets', {headers: {'Bypass-Tunnel-Reminder': 'true'}}),
+            fetch(API+'/matches', {headers: {'Bypass-Tunnel-Reminder': 'true'}})
+        ]);
+        const pets = await petsRes.json();
+        const matches = await matchesRes.json();
+        
+        const pendentes = matches.filter(m => m.status === 'pendente');
+        const aprovados = matches.filter(m => m.status === 'aprovado');
+        
+        document.getElementById('stat-pets').textContent = pets.length;
+        document.getElementById('stat-pendentes').textContent = pendentes.length;
+        document.getElementById('stat-aprovados').textContent = aprovados.length;
+        document.getElementById('tab-pending').textContent = `Candidatos (${pendentes.length})`;
+        
+        const listPending = document.getElementById('list-pending');
+        listPending.innerHTML = '';
+        if(pendentes.length === 0) {
+            listPending.innerHTML = '<p style="text-align:center;color:var(--text-3);padding:20px;">Nenhum candidato pendente no momento.</p>';
+        } else {
+            pendentes.forEach(m => {
+                listPending.innerHTML += `
+                <div class="card" style="padding:16px;margin-bottom:12px;" id="c-${m.id}">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                        <img src="${m.pet.img}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;">
+                        <div style="flex:1;">
+                            <div style="font-weight:700;font-size:15px;">${m.userName}</div>
+                            <div style="font-size:12px;color:var(--text-2);">Quer adotar: <strong>${m.pet.name}</strong></div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-primary" onclick="setStatus('${m.id}', 'aprovado')" style="padding:11px;font-size:13px;">✓ Aprovar</button>
+                        <button class="btn btn-outline" onclick="setStatus('${m.id}', 'rejeitado')" style="padding:11px;font-size:13px;">✕ Rejeitar</button>
+                        <a href="10-chat-mensagem.html?matchId=${m.id}" style="width:46px;height:46px;border-radius:var(--radius-sm);background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;flex-shrink:0;">💬</a>
+                    </div>
+                </div>`;
+            });
+        }
+    } catch(e) { console.error(e); }
+}
+
+async function setStatus(matchId, status) {
+    try {
+        await fetch(API+'/matches/'+matchId+'/status', {
+            method: 'POST', headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'}, body: JSON.stringify({status})
+        });
+        const c = document.getElementById('c-'+matchId);
+        c.style.transition='all 0.4s'; c.style.opacity='0'; c.style.transform= status==='aprovado'?'translateX(60px)':'translateX(-60px)';
+        setTimeout(() => loadDashboard(), 400);
+        if(status === 'aprovado') alert('Adoção aprovada e sincronizada!');
+    } catch(e) { console.error(e); }
+}
+
 function showTab(tab) {
   ['pending','pets','done'].forEach(t => {
     const l=document.getElementById('list-'+t); if(l) l.style.display=t===tab?'block':'none';
@@ -109,16 +167,10 @@ function showTab(tab) {
     if(b){b.style.color=t===tab?'var(--primary)':'var(--text-3)';b.style.borderBottom=t===tab?'2px solid var(--primary)':'2px solid transparent';b.style.fontWeight=t===tab?'700':'600';}
   });
 }
-function aprovar(id){
-  const c=document.getElementById(id);
-  c.style.transition='all 0.4s';c.style.opacity='0';c.style.transform='translateX(60px)';
-  setTimeout(()=>{c.style.display='none';alert('✅ Candidato aprovado! Um e-mail de confirmação será enviado.');},400);
-}
-function rejeitar(id){
-  const c=document.getElementById(id);
-  c.style.transition='all 0.4s';c.style.opacity='0';c.style.transform='translateX(-60px)';
-  setTimeout(()=>c.style.display='none',400);
-}
+
+loadDashboard();
+setInterval(loadDashboard, 5000); // Poll for real-time updates!
+
 </script>
 </body>
 </html>

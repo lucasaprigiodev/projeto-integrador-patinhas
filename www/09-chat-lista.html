@@ -42,7 +42,7 @@
     </div>
 
     <!-- Conversations -->
-    <div style="display:flex;flex-direction:column;">
+    <div style="display:flex;flex-direction:column;" id="chatListContainer">
       <a href="10-chat-mensagem.html" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
         <div style="position:relative;flex-shrink:0;">
           <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" class="avatar" style="width:56px;height:56px;">
@@ -86,5 +86,33 @@
 </div>
 
 
+<script>
+const API = "https://patinhas-backend-4838.loca.lt/api";
+
+async function loadChats() {
+    try {
+        const res = await fetch(API+'/matches', {headers: {'Bypass-Tunnel-Reminder': 'true'}});
+        const matches = await res.json();
+        const listArea = document.getElementById('chatListContainer');
+        listArea.innerHTML = '';
+        matches.forEach(m => {
+            listArea.innerHTML += `
+            <a href="10-chat-mensagem.html?matchId=${m.id}" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
+                <div style="position:relative;flex-shrink:0;">
+                <img src="${m.pet.img}" class="avatar" style="width:56px;height:56px;">
+                </div>
+                <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="font-weight:700;font-size:15px;">ONG sobre ${m.pet.name}</span>
+                </div>
+                <p style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Clique para abrir a conversa</p>
+                </div>
+            </a>`;
+        });
+    } catch(e) { console.error(e); }
+}
+loadChats();
+
+</script>
 </body>
 </html>

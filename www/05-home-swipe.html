@@ -44,15 +44,21 @@
   <div class="navbar"><a href="05-home-swipe.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg><span>Descobrir</span></a><a href="09-chat-lista.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Mensagens</span></a><a href="04-meu-perfil.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Perfil</span></a></div>
 </div>
 
+
 <script>
-const pets = [
-  {name:"Buddy",age:"2 anos",breed:"Golden Retriever",ong:"ONG Patinhas",dist:"5km",img:"https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80",tags:["Vacinado","Castrado","Porte G"]},
-  {name:"Luna",age:"1 ano",breed:"SRD (Vira-lata)",ong:"Protetores Unidos",dist:"2km",img:"https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80",tags:["Vacinada","Porte M"]},
-  {name:"Mia",age:"3 anos",breed:"Siamês",ong:"Gatil RN",dist:"8km",img:"https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=800&q=80",tags:["Gato","Castrada"]},
-];
+const API = "https://patinhas-backend-4838.loca.lt/api";
+
+let pets = [];
 let current = 0;
 const stack = document.getElementById('cardStack');
-const area = document.getElementById('cardArea');
+
+async function loadPets() {
+  try {
+    const res = await fetch(API+'/pets', {headers: {'Bypass-Tunnel-Reminder': 'true'}});
+    pets = await res.json();
+    renderCards();
+  } catch(e) { console.error(e); }
+}
 
 function buildCard(pet, zIndex) {
   const scale = 1 - (zIndex * 0.04);
@@ -66,36 +72,52 @@ function buildCard(pet, zIndex) {
     <div style="position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.85));">
       <h2 style="color:white;font-size:26px;font-weight:800;margin-bottom:4px;">${pet.name}, ${pet.age}</h2>
       <p style="color:rgba(255,255,255,0.75);font-size:13px;margin-bottom:12px;">📍 ${pet.dist} • ${pet.ong}</p>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">${pet.tags.map(t=>`<span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);color:white;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;">${t}</span>`).join('')}</div>
     </div>`;
   return card;
 }
 
 function renderCards() {
+  if(!stack) return;
   stack.innerHTML = '';
   for(let i = Math.min(2, pets.length - current - 1); i >= 0; i--) {
     if(current + i < pets.length) stack.appendChild(buildCard(pets[current+i], i));
   }
-  initDrag();
+  if(pets.length - current <= 0) showEmpty();
+  else initDrag();
 }
 
-function swipeCard(dir) {
+async function swipeCard(dir) {
   const card = document.getElementById('card-0');
   if(!card) return;
+  const pet = pets[current];
   const tx = dir==='right' ? 600 : -600;
   card.style.transition = 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.4s';
   card.style.transform = `translateX(${tx}px) rotate(${dir==='right'?20:-20}deg)`;
   card.style.opacity = '0';
+  
+  if(dir === 'right') {
+    try {
+        // Register match in backend
+        const res = await fetch(API+'/swipe', {
+            method: 'POST', headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
+            body: JSON.stringify({petId: pet.id, userName: localStorage.getItem('userName') || 'Adotante'})
+        });
+        const data = await res.json();
+        localStorage.setItem('lastMatchId', data.matchId);
+        localStorage.setItem('lastPetImg', pet.img);
+        setTimeout(() => window.location.href='08-match.html', 400);
+        return;
+    } catch(e) { console.error(e); }
+  }
+  
   setTimeout(() => {
     current++;
-    if(current >= pets.length) { showEmpty(); return; }
-    if(dir==='right') window.location.href='08-match.html';
-    else renderCards();
+    renderCards();
   }, 400);
 }
 
 function showEmpty() {
-  stack.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;"><div style="font-size:60px;margin-bottom:16px;">🐾</div><h3 style="font-size:20px;font-weight:700;margin-bottom:8px;">Você viu todos!</h3><p style="color:var(--text-2);font-size:14px;">Volte mais tarde para ver novos pets.</p></div>`;
+  stack.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;"><div style="font-size:60px;margin-bottom:16px;">🐾</div><h3 style="font-size:20px;font-weight:700;margin-bottom:8px;">Você viu todos!</h3><p style="color:var(--text-2);font-size:14px;">Aguarde a ONG cadastrar mais animais.</p></div>`;
 }
 
 function initDrag() {
@@ -130,7 +152,8 @@ function initDrag() {
   card.addEventListener('touchend', e => end(e.changedTouches[0].clientX));
 }
 
-renderCards();
+loadPets();
+
 </script>
 </body>
 </html>

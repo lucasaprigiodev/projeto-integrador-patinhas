@@ -57,30 +57,65 @@
   </div>
 </div>
 
+
 <script>
-function sendMsg() {
+const API = "https://patinhas-backend-4838.loca.lt/api";
+
+const urlParams = new URLSearchParams(window.location.search);
+let matchId = urlParams.get('matchId') || localStorage.getItem('lastMatchId');
+const isONG = window.location.href.includes('ong') || localStorage.getItem('isONG') === 'true'; // hacky
+const sender = isONG ? 'ong' : 'user';
+
+async function loadChat() {
+    if(!matchId) return;
+    try {
+        const res = await fetch(API+'/chats/'+matchId, {headers: {'Bypass-Tunnel-Reminder': 'true'}});
+        const chats = await res.json();
+        const area = document.getElementById('msgArea');
+        area.innerHTML = ''; // clear
+        chats.forEach(c => {
+            const div = document.createElement('div');
+            if(c.sender === sender) {
+                // Sent by me
+                div.style.cssText = 'max-width:78%;background:var(--primary);color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;';
+            } else {
+                // Received
+                div.style.cssText = 'max-width:78%;background:var(--surface-2);color:var(--text-1);padding:12px 16px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.5;align-self:flex-start;';
+            }
+            div.textContent = c.text;
+            area.appendChild(div);
+        });
+        area.scrollTop = area.scrollHeight;
+    } catch(e) { console.error(e); }
+}
+
+async function sendMsg() {
   const inp = document.getElementById('msgInput');
   const text = inp.value.trim();
-  if(!text) return;
+  if(!text || !matchId) return;
+  
+  inp.value = '';
+  
+  // Optimistic UI update
   const area = document.getElementById('msgArea');
   const div = document.createElement('div');
-  div.style.cssText = 'max-width:78%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;animation:fadeInUp 0.2s ease;';
+  div.style.cssText = 'max-width:78%;background:var(--primary);color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;animation:fadeInUp 0.2s ease;';
   div.textContent = text;
   area.appendChild(div);
-  inp.value = '';
   area.scrollTop = area.scrollHeight;
-  // auto-reply
-  setTimeout(() => {
-    const r = document.createElement('div');
-    r.style.cssText = 'max-width:78%;background:var(--surface-2);padding:12px 16px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.5;align-self:flex-start;animation:fadeInUp 0.2s ease;';
-    r.textContent = 'Entendido! Entraremos em contato em breve 😊';
-    area.appendChild(r);
-    area.scrollTop = area.scrollHeight;
-  }, 1200);
+
+  try {
+    await fetch(API+'/chats/'+matchId, {
+        method: 'POST', headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'}, body: JSON.stringify({sender, text})
+    });
+  } catch(e) { console.error(e); }
 }
+
 document.getElementById('msgInput').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
-// scroll to bottom
-document.getElementById('msgArea').scrollTop = 999999;
+
+loadChat();
+setInterval(loadChat, 2000); // Realtime poll
+
 </script>
 </body>
 </html>

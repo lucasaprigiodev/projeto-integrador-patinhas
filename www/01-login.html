@@ -63,8 +63,8 @@
 function fazerLogin() {
   var e = document.getElementById('email').value;
   var s = document.getElementById('senha').value;
-  if(e==='admin@ong.com' && s==='admin') window.location.href='15-painel-ong.html';
-  else window.location.href='05-home-swipe.html';
+  if(e==='admin@ong.com' && s==='admin') localStorage.setItem('isONG','true');window.location.href='15-painel-ong.html';
+  else localStorage.setItem('isONG','false');localStorage.setItem('userName', e.split('@')[0]||'Adotante');window.location.href='05-home-swipe.html';
 }
 document.addEventListener('keydown', e => { if(e.key==='Enter') fazerLogin(); });
 </script>
