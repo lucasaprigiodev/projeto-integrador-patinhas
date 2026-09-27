@@ -3,87 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patinhas - Painel ONG</title>
+    <title>Patinhas - Painel ONG Advanced</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .brand-color { color: #FF5A5F; }
         .brand-bg { background-color: #FF5A5F; }
         .brand-hover:hover { background-color: #E04448; }
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active { background-color: #fef2f2; color: #FF5A5F; border-right: 3px solid #FF5A5F; font-weight: 700; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
-        <div class="h-16 flex items-center px-6 border-b border-gray-200">
-            <span class="text-2xl mr-2">🐾</span>
-            <span class="text-xl font-extrabold text-gray-800 tracking-tight">Patinhas <span class="brand-color">ONG</span></span>
+<body class="flex h-screen overflow-hidden text-slate-800">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex shrink-0">
+        <div class="h-20 flex items-center px-6 border-b border-slate-100">
+            <span class="text-3xl mr-3">🐾</span>
+            <span class="text-xl font-extrabold tracking-tight">Patinhas <span class="brand-color">ONG</span></span>
         </div>
-        <nav class="flex-1 px-4 py-6 space-y-2">
-            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-red-50 brand-color rounded-xl font-semibold">Dashboard</a>
+        <nav class="flex-1 px-4 py-8 space-y-3">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn active w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50">📊 Dashboard</button>
+            <button onclick="switchTab('animais')" id="nav-animais" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50">🐶 Animais</button>
+            <button onclick="switchTab('adocoes')" id="nav-adocoes" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50">🤝 Adoções e Matchs</button>
+            <button onclick="switchTab('adotantes')" id="nav-adotantes" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50">👥 Adotantes (Usuários)</button>
         </nav>
-        <div class="p-4 border-t border-gray-200"><p class="text-sm font-semibold">ONG Patinhas</p></div>
+        <div class="p-6 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full brand-bg text-white flex items-center justify-center font-bold">OP</div>
+                <div><p class="text-sm font-bold">ONG Patinhas</p><p class="text-xs text-green-600 font-bold">● Online</p></div>
+            </div>
+        </div>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
-            <h1 class="text-xl font-bold text-gray-800">Painel de Adoções</h1>
-            <button onclick="openPetModal()" class="brand-bg brand-hover text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-sm">+ Adicionar Animal</button>
+        <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-10 shrink-0 shadow-sm z-10">
+            <h1 class="text-2xl font-bold text-slate-800" id="header-title">Visão Geral</h1>
+            <div class="flex gap-4">
+                <button onclick="fetchDashboard()" class="text-slate-500 hover:text-slate-800 bg-slate-100 p-2.5 rounded-full" title="Atualizar Dados">🔄</button>
+                <button onclick="openPetModal()" class="brand-bg brand-hover text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all">+ Novo Animal</button>
+            </div>
         </header>
 
-        <div class="flex-1 overflow-auto p-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><p class="text-sm text-gray-500">Pets Ativos</p><p class="text-3xl font-bold" id="stat-pets">-</p></div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><p class="text-sm text-gray-500">Candidatos Pendentes</p><p class="text-3xl font-bold" id="stat-cand">-</p></div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><p class="text-sm text-gray-500">Adoções Concluídas</p><p class="text-3xl font-bold" id="stat-adop">-</p></div>
-            </div>
+        <div class="flex-1 overflow-auto p-10 bg-slate-50">
+            
+            <!-- TAB: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content active max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl mb-4">🐶</div>
+                        <p class="text-sm text-slate-500 font-medium">Animais Ativos</p>
+                        <p class="text-3xl font-extrabold text-slate-800" id="stat-pets">-</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl mb-4">⏳</div>
+                        <p class="text-sm text-slate-500 font-medium">Adoções Pendentes</p>
+                        <p class="text-3xl font-extrabold text-slate-800" id="stat-cand">-</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl mb-4">🎉</div>
+                        <p class="text-sm text-slate-500 font-medium">Animais Adotados</p>
+                        <p class="text-3xl font-extrabold text-slate-800" id="stat-adop">-</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xl mb-4">👥</div>
+                        <p class="text-sm text-slate-500 font-medium">Adotantes Registrados</p>
+                        <p class="text-3xl font-extrabold text-slate-800" id="stat-users">-</p>
+                    </div>
+                </div>
 
-            <!-- ANIMAIS CADASTRADOS -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-                <div class="px-6 py-5 border-b border-gray-100"><h2 class="text-lg font-bold">Nossos Animais (App)</h2></div>
-                <div class="p-6 grid grid-cols-2 md:grid-cols-4 gap-4" id="pets-grid">
-                    <p class="text-gray-500">Carregando...</p>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
+                        <h2 class="text-lg font-bold">Candidatos Recentes (Matchs)</h2>
+                    </div>
+                    <table class="w-full text-left">
+                        <thead><tr class="bg-slate-50 text-slate-500 text-xs tracking-wider uppercase"><th class="px-8 py-4">Adotante</th><th class="px-8 py-4">Pet Desejado</th><th class="px-8 py-4">Status</th><th class="px-8 py-4 text-right">Ação Rápida</th></tr></thead>
+                        <tbody id="dash-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-                <div class="px-6 py-5 border-b border-gray-100 flex justify-between"><h2 class="text-lg font-bold">Candidatos</h2><span class="text-sm text-green-500 font-bold">● Ao Vivo</span></div>
-                <table class="w-full text-left border-collapse">
-                    <thead><tr class="bg-gray-50 text-gray-500 text-xs uppercase"><th class="px-6 py-4">Adotante</th><th class="px-6 py-4">Pet Desejado</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Ações</th></tr></thead>
-                    <tbody id="table-body" class="divide-y divide-gray-100 text-sm"></tbody>
-                </table>
+            <!-- TAB: ANIMAIS -->
+            <div id="tab-animais" class="tab-content max-w-7xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Gestão de Animais</h2>
+                    <div class="flex gap-2">
+                        <span class="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-bold" id="badge-disponivel">0 Disponíveis</span>
+                        <span class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold" id="badge-adotado">0 Adotados</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6" id="pets-grid">
+                    <p class="text-slate-500 col-span-full">Carregando animais...</p>
+                </div>
             </div>
+
+            <!-- TAB: ADOÇÕES -->
+            <div id="tab-adocoes" class="tab-content max-w-6xl mx-auto">
+                <h2 class="text-2xl font-bold mb-6">Processos de Adoção e Chat</h2>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead><tr class="bg-slate-50 text-slate-500 text-xs tracking-wider uppercase"><th class="px-8 py-4">Adotante</th><th class="px-8 py-4">Pet</th><th class="px-8 py-4">Status</th><th class="px-8 py-4 text-right">Ações Completas</th></tr></thead>
+                        <tbody id="adocoes-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: ADOTANTES -->
+            <div id="tab-adotantes" class="tab-content max-w-6xl mx-auto">
+                <h2 class="text-2xl font-bold mb-6">Usuários Cadastrados</h2>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead><tr class="bg-slate-50 text-slate-500 text-xs tracking-wider uppercase"><th class="px-8 py-4">Nome</th><th class="px-8 py-4">E-mail</th><th class="px-8 py-4">Telefone</th><th class="px-8 py-4">Localização</th></tr></thead>
+                        <tbody id="users-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
-        <!-- NOVO PET MODAL -->
-        <div id="pet-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-            <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
-                <h2 class="text-2xl font-bold mb-6">Cadastrar Animal</h2>
-                <form onsubmit="event.preventDefault(); savePet();" class="space-y-4">
-                    <div><label class="block text-sm font-semibold mb-1">Nome</label><input required id="p-name" class="w-full border rounded-lg p-2" placeholder="Ex: Rex"></div>
-                    <div><label class="block text-sm font-semibold mb-1">Idade</label><input required id="p-age" class="w-full border rounded-lg p-2" placeholder="Ex: 2 anos"></div>
-                    <div><label class="block text-sm font-semibold mb-1">Raça / Tipo</label><input required id="p-breed" class="w-full border rounded-lg p-2" placeholder="Ex: SRD"></div>
-                    <div><label class="block text-sm font-semibold mb-1">URL da Foto (Link da Imagem)</label><input required id="p-img" class="w-full border rounded-lg p-2" placeholder="https://..."></div>
-                    <div class="flex justify-end gap-2 pt-4">
-                        <button type="button" onclick="closePetModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                        <button type="submit" class="brand-bg text-white px-6 py-2 rounded-lg font-bold">Publicar no App</button>
+        <!-- MODAL: PET (CRIAR/EDITAR) -->
+        <div id="pet-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-all">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl transform scale-100">
+                <h2 class="text-2xl font-extrabold mb-6" id="pet-modal-title">Cadastrar Animal</h2>
+                <form id="pet-form" onsubmit="event.preventDefault(); savePet();" class="space-y-5">
+                    <input type="hidden" id="p-id">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nome</label><input required id="p-name" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50" placeholder="Ex: Rex"></div>
+                        <div><label class="block text-sm font-bold text-slate-700 mb-1">Idade</label><input required id="p-age" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50" placeholder="Ex: 2 anos"></div>
+                    </div>
+                    <div><label class="block text-sm font-bold text-slate-700 mb-1">Raça / Tipo</label><input required id="p-breed" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50" placeholder="Ex: SRD"></div>
+                    <div><label class="block text-sm font-bold text-slate-700 mb-1">URL da Foto</label><input required id="p-img" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50" placeholder="https://..."></div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Status</label>
+                        <select id="p-status" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50">
+                            <option value="disponivel">Disponível para Adoção</option>
+                            <option value="adotado">Já Adotado</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
+                        <button type="button" onclick="closePetModal()" class="px-5 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-all">Cancelar</button>
+                        <button type="submit" class="brand-bg text-white px-8 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all" id="pet-modal-btn">Salvar</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- CHAT MODAL -->
-        <div id="chat-modal" class="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-end opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- CHAT MODAL (GAVETA) -->
+        <div id="chat-modal" class="fixed inset-0 bg-slate-900 bg-opacity-40 z-50 flex justify-end opacity-0 pointer-events-none transition-opacity duration-300 backdrop-blur-sm">
             <div id="chat-panel" class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300">
-                <div class="px-6 py-4 border-b border-gray-200 flex justify-between brand-bg text-white">
-                    <div><h3 class="font-bold" id="chat-title">Chat</h3><p class="text-xs" id="chat-subtitle">Online</p></div>
-                    <button onclick="closeChat()" class="text-2xl">&times;</button>
+                <div class="px-6 py-5 border-b border-slate-200 flex justify-between brand-bg text-white items-center">
+                    <div><h3 class="font-extrabold text-lg" id="chat-title">Chat</h3><p class="text-xs font-medium text-red-100" id="chat-subtitle">Comunicação ao Vivo</p></div>
+                    <button onclick="closeChat()" class="text-3xl font-light hover:scale-110 transition-transform">&times;</button>
                 </div>
-                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
-                <div class="p-4 bg-white border-t border-gray-200">
-                    <form onsubmit="event.preventDefault(); sendMsg();" class="flex gap-2">
-                        <input id="chat-input" class="flex-1 border rounded-full px-4" placeholder="Mensagem...">
-                        <button type="submit" class="brand-bg text-white rounded-full w-10 h-10 flex items-center justify-center">➤</button>
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50"></div>
+                <div class="p-4 bg-white border-t border-slate-200">
+                    <form onsubmit="event.preventDefault(); sendMsg();" class="flex gap-3">
+                        <input id="chat-input" class="flex-1 border border-slate-300 focus:border-red-400 rounded-full px-5 outline-none transition-all" placeholder="Digite uma mensagem...">
+                        <button type="submit" class="brand-bg hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-md transition-all">➤</button>
                     </form>
                 </div>
             </div>
@@ -94,75 +175,186 @@
 const DB_URL = "https://crudcrud.com/api/9b1e3dcbe2b94e8ca1b5092bb17ec113/db/6ab87a98693e4d03e87e0b35";
 let currentMatchId = null;
 let chatInterval = null;
+let appData = { pets: [], matches: [], chats: [], users: [] };
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    document.getElementById('nav-' + tabId).classList.add('active');
+    const titles = { 'dashboard': 'Visão Geral', 'animais': 'Gestão de Animais', 'adocoes': 'Adoções e Matchs', 'adotantes': 'Usuários Registrados' };
+    document.getElementById('header-title').innerText = titles[tabId];
+    fetchDashboard();
+}
+
+function getStatusBadge(status) {
+    if(status === 'aprovado' || status === 'concluido') return '<span class="px-3 py-1 bg-green-100 text-green-700 font-bold rounded-full text-xs">Aprovado</span>';
+    if(status === 'rejeitado') return '<span class="px-3 py-1 bg-red-100 text-red-700 font-bold rounded-full text-xs">Rejeitado</span>';
+    return '<span class="px-3 py-1 bg-yellow-100 text-yellow-700 font-bold rounded-full text-xs">Pendente</span>';
+}
 
 async function fetchDashboard() {
     try {
         const res = await fetch(DB_URL);
         const json = await res.json();
-        const pets = json.pets;
-        const matches = json.matches;
+        appData = json;
         
+        const pets = json.pets || [];
+        const matches = json.matches || [];
+        const users = json.users || [];
+        
+        const disponiveis = pets.filter(p => p.status === 'disponivel');
+        const adotados = pets.filter(p => p.status === 'adotado');
         const pendentes = matches.filter(m => m.status === 'pendente');
-        const aprovados = matches.filter(m => m.status === 'aprovado');
         
-        document.getElementById('stat-pets').innerText = pets.length;
+        // STATS
+        document.getElementById('stat-pets').innerText = disponiveis.length;
         document.getElementById('stat-cand').innerText = pendentes.length;
-        document.getElementById('stat-adop').innerText = aprovados.length;
+        document.getElementById('stat-adop').innerText = adotados.length;
+        document.getElementById('stat-users').innerText = users.length;
+        document.getElementById('badge-disponivel').innerText = `${disponiveis.length} Disponíveis`;
+        document.getElementById('badge-adotado').innerText = `${adotados.length} Adotados`;
         
-        // RENDER PETS
+        // RENDER PETS (CRUD)
         const pGrid = document.getElementById('pets-grid');
         pGrid.innerHTML = '';
         pets.forEach(p => {
-            pGrid.innerHTML += `<div class="rounded-xl border border-gray-200 overflow-hidden"><img src="${p.img}" class="w-full h-32 object-cover"><div class="p-3"><h4 class="font-bold text-sm">${p.name}</h4><p class="text-xs text-gray-500">${p.breed}</p></div></div>`;
+            const isAdotado = p.status === 'adotado';
+            pGrid.innerHTML += `
+            <div class="bg-white rounded-2xl border ${isAdotado ? 'border-slate-300 opacity-60' : 'border-slate-200'} overflow-hidden shadow-sm hover:shadow-md transition-all group relative">
+                ${isAdotado ? '<div class="absolute top-2 right-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-md z-10">Adotado</div>' : ''}
+                <img src="${p.img}" class="w-full h-40 object-cover ${isAdotado ? 'grayscale' : ''}">
+                <div class="p-4">
+                    <h4 class="font-extrabold text-lg text-slate-800">${p.name}</h4>
+                    <p class="text-sm text-slate-500 mb-4">${p.breed} • ${p.age}</p>
+                    <div class="flex gap-2 border-t border-slate-100 pt-3">
+                        <button onclick="editPet(${p.id})" class="flex-1 bg-blue-50 text-blue-700 font-bold py-2 rounded-lg text-sm hover:bg-blue-100 transition">✏️ Editar</button>
+                        <button onclick="deletePet(${p.id})" class="flex-1 bg-red-50 text-red-700 font-bold py-2 rounded-lg text-sm hover:bg-red-100 transition">🗑️ Excluir</button>
+                    </div>
+                </div>
+            </div>`;
         });
 
-        // RENDER MATCHES
-        const tbody = document.getElementById('table-body');
-        tbody.innerHTML = '';
-        if(pendentes.length === 0) tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8">Nenhum candidato aguardando.</td></tr>`;
-        pendentes.forEach(m => {
-            tbody.innerHTML += `<tr>
-                <td class="px-6 py-4 font-bold">${m.userName}</td>
-                <td class="px-6 py-4 flex items-center gap-2"><img src="${m.petImg}" class="w-8 h-8 rounded object-cover">${m.petName}</td>
-                <td class="px-6 py-4"><span class="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pendente</span></td>
-                <td class="px-6 py-4 text-right">
-                    <button onclick="openChat('${m.id}', '${m.userName}')" class="bg-gray-100 p-2 rounded">💬</button>
-                    <button onclick="setStatus('${m.id}', 'aprovado')" class="bg-green-100 text-green-700 font-bold p-2 rounded">Aprovar</button>
-                    <button onclick="setStatus('${m.id}', 'rejeitado')" class="bg-red-100 text-red-700 font-bold p-2 rounded">Rejeitar</button>
-                </td>
+        // RENDER MATCHES (DASHBOARD & ADOÇÕES)
+        let dashRows = '', adocRows = '';
+        if(matches.length === 0) {
+            dashRows = adocRows = `<tr><td colspan="4" class="text-center py-8 text-slate-500">Nenhuma adoção registrada ainda.</td></tr>`;
+        } else {
+            matches.forEach(m => {
+                const rowContent = `
+                    <td class="px-8 py-5 font-bold text-slate-700 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">${m.userName.charAt(0)}</div>${m.userName}</td>
+                    <td class="px-8 py-5"><div class="flex items-center gap-3"><img src="${m.petImg}" class="w-10 h-10 rounded-lg object-cover shadow-sm font-medium text-slate-700"><span>${m.petName}</span></div></td>
+                    <td class="px-8 py-5">${getStatusBadge(m.status)}</td>
+                `;
+                dashRows += `<tr>${rowContent}
+                    <td class="px-8 py-5 text-right space-x-2">
+                        <button onclick="openChat('${m.id}', '${m.userName}')" class="bg-blue-50 text-blue-700 font-bold px-4 py-2 rounded-lg hover:bg-blue-100 transition shadow-sm">💬 Chat</button>
+                    </td>
+                </tr>`;
+                adocRows += `<tr>${rowContent}
+                    <td class="px-8 py-5 text-right space-x-2">
+                        <button onclick="openChat('${m.id}', '${m.userName}')" class="bg-blue-50 text-blue-700 font-bold p-2.5 rounded-lg hover:bg-blue-100 transition shadow-sm" title="Chat">💬</button>
+                        <button onclick="setStatus('${m.id}', 'aprovado')" class="bg-green-50 text-green-700 font-bold p-2.5 rounded-lg hover:bg-green-100 transition shadow-sm" title="Aprovar">✓</button>
+                        <button onclick="setStatus('${m.id}', 'rejeitado')" class="bg-red-50 text-red-700 font-bold p-2.5 rounded-lg hover:bg-red-100 transition shadow-sm" title="Rejeitar">✕</button>
+                    </td>
+                </tr>`;
+            });
+        }
+        document.getElementById('dash-table-body').innerHTML = dashRows;
+        document.getElementById('adocoes-table-body').innerHTML = adocRows;
+
+        // RENDER USERS
+        const tbodyUsers = document.getElementById('users-table-body');
+        tbodyUsers.innerHTML = '';
+        if(users.length === 0) tbodyUsers.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500">Nenhum usuário cadastrado.</td></tr>`;
+        users.forEach(u => {
+            tbodyUsers.innerHTML += `<tr>
+                <td class="px-8 py-5 font-bold text-slate-700 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">${u.name.charAt(0)}</div>${u.name}</td>
+                <td class="px-8 py-5 text-slate-600">${u.email}</td>
+                <td class="px-8 py-5 text-slate-600">${u.phone}</td>
+                <td class="px-8 py-5 text-slate-600">${u.address}</td>
             </tr>`;
         });
-    } catch(e) {}
+
+    } catch(e) { console.error(e); }
 }
 
+// CRUD PETS
 async function savePet() {
-    const n=document.getElementById('p-name').value;
-    const a=document.getElementById('p-age').value;
-    const b=document.getElementById('p-breed').value;
-    const i=document.getElementById('p-img').value;
+    const id = document.getElementById('p-id').value;
+    const n = document.getElementById('p-name').value;
+    const a = document.getElementById('p-age').value;
+    const b = document.getElementById('p-breed').value;
+    const i = document.getElementById('p-img').value;
+    const s = document.getElementById('p-status').value;
+    
+    delete appData._id; // IMPORTANT FOR CRUDCRUD
+    if(!appData.pets) appData.pets = [];
+
+    if(id) {
+        // Edit
+        const idx = appData.pets.findIndex(p => p.id == id);
+        if(idx >= 0) appData.pets[idx] = { ...appData.pets[idx], name: n, age: a, breed: b, img: i, status: s };
+    } else {
+        // Create
+        appData.pets.push({ id: Date.now(), name: n, age: a, breed: b, img: i, ong: "ONG Patinhas", dist: "0km", status: s });
+    }
+
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
-        json.pets.push({ id: Date.now(), name: n, age: a, breed: b, img: i, ong: "ONG Patinhas", dist: "0km", status: "disponivel" });
-        delete json._id; await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
+        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(appData) });
         closePetModal();
         fetchDashboard();
-        alert("Pet cadastrado com sucesso! Ele já vai aparecer no aplicativo de todos os usuários.");
-    } catch(e) {}
+    } catch(e) { alert("Erro ao salvar."); }
+}
+
+function editPet(id) {
+    const pet = appData.pets.find(p => p.id == id);
+    if(!pet) return;
+    document.getElementById('p-id').value = pet.id;
+    document.getElementById('p-name').value = pet.name;
+    document.getElementById('p-age').value = pet.age;
+    document.getElementById('p-breed').value = pet.breed;
+    document.getElementById('p-img').value = pet.img;
+    document.getElementById('p-status').value = pet.status;
+    document.getElementById('pet-modal-title').innerText = "Editar Animal";
+    document.getElementById('pet-modal-btn').innerText = "Salvar Alterações";
+    document.getElementById('pet-modal').classList.remove('hidden');
+}
+
+async function deletePet(id) {
+    if(!confirm("Tem certeza que deseja excluir este animal permanentemente?")) return;
+    delete appData._id;
+    appData.pets = appData.pets.filter(p => p.id != id);
+    try {
+        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(appData) });
+        fetchDashboard();
+    } catch(e) { alert("Erro ao deletar."); }
 }
 
 async function setStatus(matchId, status) {
+    delete appData._id;
+    const m = appData.matches.find(x => x.id == matchId);
+    if(m) {
+        m.status = status;
+        if(status === 'aprovado') {
+            // Se aprovado, marca o pet como adotado também
+            const pet = appData.pets.find(p => p.id == m.petId);
+            if(pet) pet.status = 'adotado';
+        }
+    }
     try {
-        const res = await fetch(DB_URL);
-        const json = await res.json();
-        const m = json.matches.find(x => x.id == matchId);
-        if(m) m.status = status;
-        delete json._id; await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
+        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(appData) });
         fetchDashboard();
     } catch(e) {}
 }
 
-function openPetModal() { document.getElementById('pet-modal').classList.remove('hidden'); }
+function openPetModal() {
+    document.getElementById('pet-form').reset();
+    document.getElementById('p-id').value = '';
+    document.getElementById('pet-modal-title').innerText = "Cadastrar Animal";
+    document.getElementById('pet-modal-btn').innerText = "Publicar no App";
+    document.getElementById('pet-modal').classList.remove('hidden');
+}
 function closePetModal() { document.getElementById('pet-modal').classList.add('hidden'); }
 
 // Chat
@@ -185,12 +377,12 @@ async function loadChat() {
     try {
         const res = await fetch(DB_URL);
         const json = await res.json();
-        const chats = json.chats.filter(c => c.matchId == currentMatchId);
+        const chats = (json.chats || []).filter(c => c.matchId == currentMatchId);
         const area = document.getElementById('chat-messages');
         area.innerHTML = '';
         chats.forEach(c => {
             const isMe = c.sender === 'ong';
-            area.innerHTML += `<div class="flex ${isMe?'justify-end':'justify-start'}"><div class="max-w-[75%] rounded-xl px-4 py-2 text-sm ${isMe?'brand-bg text-white':'bg-white border text-gray-800'}">${c.text}</div></div>`;
+            area.innerHTML += `<div class="flex ${isMe?'justify-end':'justify-start'}"><div class="max-w-[80%] rounded-2xl px-5 py-3 text-sm shadow-sm ${isMe?'brand-bg text-white rounded-tr-sm':'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'}">${c.text}</div></div>`;
         });
         area.scrollTop = area.scrollHeight;
     } catch(e) {}
@@ -202,12 +394,16 @@ async function sendMsg() {
     try {
         const res = await fetch(DB_URL);
         const json = await res.json();
+        delete json._id;
+        if(!json.chats) json.chats = [];
         json.chats.push({ matchId: currentMatchId, sender: 'ong', text });
-        delete json._id; await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
+        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
         loadChat();
     } catch(e) {}
 }
 
 fetchDashboard();
 setInterval(fetchDashboard, 5000);
-</script></body></html>
+</script>
+</body>
+</html>
