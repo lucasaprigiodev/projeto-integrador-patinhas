@@ -29,16 +29,16 @@
 
     <h3 style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:12px;">ESPÉCIE</h3>
     <div style="display:flex;gap:8px;margin-bottom:24px;" id="especie">
-      <button onclick="toggle(this)" class="chip chip-primary" data-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">🐶 Cão</button>
+      <button onclick="toggle(this)" class="chip chip-primary"-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">🐶 Cão</button>
       <button onclick="toggle(this)" class="chip" style="padding:10px 18px;border:none;cursor:pointer;background:var(--surface-2);font-size:14px;">🐱 Gato</button>
       <button onclick="toggle(this)" class="chip" style="padding:10px 18px;border:none;cursor:pointer;background:var(--surface-2);font-size:14px;">🐇 Outros</button>
     </div>
 
     <h3 style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:12px;">PORTE</h3>
     <div style="display:flex;gap:8px;margin-bottom:24px;" id="porte">
-      <button onclick="toggle(this)" class="chip chip-primary" data-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Pequeno</button>
-      <button onclick="toggle(this)" class="chip chip-primary" data-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Médio</button>
-      <button onclick="toggle(this)" class="chip chip-primary" data-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Grande</button>
+      <button onclick="toggle(this)" class="chip chip-primary"-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Pequeno</button>
+      <button onclick="toggle(this)" class="chip chip-primary"-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Médio</button>
+      <button onclick="toggle(this)" class="chip chip-primary"-active="true" style="padding:10px 18px;border:none;cursor:pointer;font-size:14px;">Grande</button>
     </div>
 
     <h3 style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:12px;">DISTÂNCIA MÁXIMA <span id="distLabel" style="color:var(--primary);">15km</span></h3>
@@ -66,11 +66,11 @@
 
 <script>
 function toggle(btn) {
-  btn.dataset.active = btn.dataset.active === 'true' ? 'false' : 'true';
-  btn.className = btn.dataset.active === 'true' ? 'chip chip-primary' : 'chip';
-  btn.style.cssText = btn.dataset.active === 'true' ? 'padding:10px 18px;border:none;cursor:pointer;font-size:14px;' : 'padding:10px 18px;border:none;cursor:pointer;background:var(--surface-2);font-size:14px;';
+  btnset.active = btnset.active === 'true' ? 'false' : 'true';
+  btn.className = btnset.active === 'true' ? 'chip chip-primary' : 'chip';
+  btn.style.cssText = btnset.active === 'true' ? 'padding:10px 18px;border:none;cursor:pointer;font-size:14px;' : 'padding:10px 18px;border:none;cursor:pointer;background:var(--surface-2);font-size:14px;';
 }
-function limpar() { document.querySelectorAll('[data-active]').forEach(b => { b.dataset.active='false'; b.className='chip'; b.style.background='var(--surface-2)'; }); }
+function limpar() { document.querySelectorAll('-active]').forEach(b => { bset.active='false'; b.className='chip'; b.style.background='var(--surface-2)'; }); }
 </script>
 </body>
 </html>

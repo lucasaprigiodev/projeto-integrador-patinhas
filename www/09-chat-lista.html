@@ -88,13 +88,13 @@
 
 
 <script>
-const DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a0e097f2452125";
+const DB_URL = "https://crudcrud.com/api/9b1e3dcbe2b94e8ca1b5092bb17ec113/db/6ab87a98693e4d03e87e0b35";
 
 async function loadChats() {
     try {
         const res = await fetch(DB_URL);
         const json = await res.json();
-        const matches = json.data.matches;
+        const matches = json.matches;
         const listArea = document.getElementById('chatListContainer');
         listArea.innerHTML = '';
         matches.forEach(m => {
