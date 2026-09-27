@@ -61,12 +61,19 @@
 
 <script>
 function fazerLogin() {
-  var e = document.getElementById('email').value;
-  var s = document.getElementById('senha').value;
-  if(e==='admin@ong.com' && s==='admin') localStorage.setItem('isONG','true');window.location.href='15-painel-ong.html';
-  else localStorage.setItem('isONG','false');localStorage.setItem('userName', e.split('@')[0]||'Adotante');window.location.href='05-home-swipe.html';
+  var e = (document.getElementById('email').value || '').trim();
+  var s = (document.getElementById('senha').value || '').trim();
+  if (e === 'admin@ong.com' && s === 'admin') {
+    localStorage.setItem('isONG', 'true');
+    window.location.href = '15-painel-ong.html';
+  } else {
+    localStorage.setItem('isONG', 'false');
+    var uName = e ? e.split('@')[0] : 'Lucas Aprígio';
+    localStorage.setItem('userName', uName);
+    window.location.href = '05-home-swipe.html';
+  }
 }
-document.addEventListener('keydown', e => { if(e.key==='Enter') fazerLogin(); });
+document.addEventListener('keydown', e => { if(e.key === 'Enter') fazerLogin(); });
 </script>
 </body>
 </html>

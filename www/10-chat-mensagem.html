@@ -20,7 +20,7 @@
       <div style="position:absolute;bottom:0;right:0;width:12px;height:12px;background:var(--success);border-radius:50%;border:2px solid white;"></div>
     </div>
     <div style="flex:1;">
-      <div style="font-weight:700;font-size:16px;">ONG Patinhas</div>
+      <div id="chatOngName" style="font-weight:700;font-size:16px;">ONG Patinhas</div>
       <div style="font-size:12px;color:var(--success);font-weight:500;">Online agora</div>
     </div>
     <div style="display:flex;gap:12px;">
@@ -30,21 +30,15 @@
   </div>
 
   <!-- Pet info banner -->
-  <a href="07-detalhes-pet.html" style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(255,107,53,0.06);border-bottom:1px solid rgba(255,107,53,0.1);text-decoration:none;color:inherit;">
-    <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" style="width:36px;height:36px;border-radius:10px;object-fit:cover;">
-    <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Buddy</div><div style="font-size:11px;color:var(--text-2);">Golden Retriever • 2 anos</div></div>
-    <span style="color:var(--primary);font-size:12px;font-weight:600;">Ver perfil →</span>
+  <a href="javascript:void(0)" style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(255,107,53,0.06);border-bottom:1px solid rgba(255,107,53,0.1);text-decoration:none;color:inherit;">
+    <img id="bannerPetImg" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" style="width:36px;height:36px;border-radius:10px;object-fit:cover;">
+    <div style="flex:1;"><div id="bannerPetName" style="font-size:13px;font-weight:700;">Buddy</div><div id="bannerPetDesc" style="font-size:11px;color:var(--text-2);">Golden Retriever • 2 anos</div></div>
+    <span style="color:var(--primary);font-size:12px;font-weight:600;">Match de Adoção ❤️</span>
   </a>
 
   <!-- Messages -->
   <div id="msgArea" class="scroll-content" style="padding:16px;display:flex;flex-direction:column;gap:8px;">
-    <div style="text-align:center;"><span style="background:var(--surface-2);color:var(--text-3);font-size:11px;padding:4px 12px;border-radius:20px;">Hoje, 14:28</span></div>
-    <div style="max-width:78%;background:var(--surface-2);padding:12px 16px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.5;align-self:flex-start;">Olá! Vi que deu match no Buddy! Que ótimo 😊</div>
-    <div style="max-width:78%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;">Oi! Fiquei apaixonado pelo Buddy! 🐶❤️</div>
-    <div style="max-width:78%;background:var(--surface-2);padding:12px 16px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.5;align-self:flex-start;">Que legal! Ele está esperando por uma família carinhosa. Você tem espaço em casa?</div>
-    <div style="max-width:78%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;">Sim! Tenho um quintal grande e murado 😊</div>
-    <div style="max-width:78%;background:var(--surface-2);padding:12px 16px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.5;align-self:flex-start;">Perfeito! Gostaria de agendar uma visita?</div>
-    <div style="text-align:center;margin-top:8px;"><a href="11-contrato.html" style="background:rgba(255,107,53,0.1);color:var(--primary);font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;text-decoration:none;display:inline-block;">📋 Ver Termo de Adoção</a></div>
+    <div style="text-align:center;"><span style="background:var(--surface-2);color:var(--text-3);font-size:11px;padding:4px 12px;border-radius:20px;">Carregando mensagens...</span></div>
   </div>
 
   <!-- Input -->
@@ -72,22 +66,39 @@ async function loadChat() {
     try {
         const res = await fetch(DB_URL);
         const json = await res.json();
-        const chats = json.chats.filter(c => c.matchId == matchId);
         
+        const match = (json.matches || []).find(m => m.id == matchId);
+        if(match) {
+            if(match.petImg && document.getElementById('bannerPetImg')) document.getElementById('bannerPetImg').src = match.petImg;
+            if(match.petName && document.getElementById('bannerPetName')) document.getElementById('bannerPetName').innerText = match.petName;
+            const pet = (json.pets || []).find(p => p.id == match.petId);
+            if(pet) {
+                if(document.getElementById('bannerPetDesc')) document.getElementById('bannerPetDesc').innerText = `${pet.breed || ''} • ${pet.age || ''}`;
+                if(pet.ong && document.getElementById('chatOngName')) document.getElementById('chatOngName').innerText = pet.ong;
+            }
+        }
+        
+        const chats = (json.chats || []).filter(c => c.matchId == matchId);
         const area = document.getElementById('msgArea');
         area.innerHTML = '';
-        chats.forEach(c => {
-            const div = document.createElement('div');
-            if(c.sender === sender) {
-                div.style.cssText = 'max-width:78%;background:var(--primary);color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;';
-            } else {
-                div.style.cssText = 'max-width:78%;background:var(--surface-2);color:var(--text-1);padding:12px 16px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.5;align-self:flex-start;';
-            }
-            div.textContent = c.text;
-            area.appendChild(div);
-        });
+        
+        if(chats.length === 0) {
+            area.innerHTML = '<div style="text-align:center;color:var(--text-3);font-size:13px;padding:24px;">Envie uma mensagem para a ONG iniciar o atendimento! 🐾</div>';
+        } else {
+            chats.forEach(c => {
+                const div = document.createElement('div');
+                const isMe = c.sender === sender;
+                if(isMe) {
+                    div.style.cssText = 'max-width:78%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;box-shadow:var(--shadow-sm);';
+                } else {
+                    div.style.cssText = 'max-width:78%;background:var(--surface-2);color:var(--text-1);padding:12px 16px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.5;align-self:flex-start;';
+                }
+                div.innerHTML = `<div>${c.text}</div>${c.time ? `<div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px;">${c.time}</div>` : ''}`;
+                area.appendChild(div);
+            });
+        }
         area.scrollTop = area.scrollHeight;
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error('Erro ao carregar chat:', e); }
 }
 
 async function sendMsg() {
@@ -99,14 +110,22 @@ async function sendMsg() {
   try {
     const res = await fetch(DB_URL);
     const json = await res.json();
-    json.chats.push({ matchId, sender, text });
+    delete json._id;
+    if(!json.chats) json.chats = [];
+    json.chats.push({ 
+        matchId, 
+        sender, 
+        text,
+        time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+    });
     
     await fetch(DB_URL, {
-        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        method: 'PUT', 
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(json)
     });
     loadChat();
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error('Erro ao enviar mensagem:', e); }
 }
 document.getElementById('msgInput').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
 loadChat();
