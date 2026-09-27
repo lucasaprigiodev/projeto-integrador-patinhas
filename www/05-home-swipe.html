@@ -45,8 +45,9 @@
 </div>
 
 
+
 <script>
-const API = "https://patinhas-backend-4838.loca.lt/api";
+const DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a0e097f2452125";
 
 let pets = [];
 let current = 0;
@@ -54,8 +55,9 @@ const stack = document.getElementById('cardStack');
 
 async function loadPets() {
   try {
-    const res = await fetch(API+'/pets', {headers: {'Bypass-Tunnel-Reminder': 'true'}});
-    pets = await res.json();
+    const res = await fetch(DB_URL);
+    const json = await res.json();
+    pets = json.data.pets.filter(p => p.status === 'disponivel');
     renderCards();
   } catch(e) { console.error(e); }
 }
@@ -97,13 +99,23 @@ async function swipeCard(dir) {
   
   if(dir === 'right') {
     try {
-        // Register match in backend
-        const res = await fetch(API+'/swipe', {
-            method: 'POST', headers: {'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true'},
-            body: JSON.stringify({petId: pet.id, userName: localStorage.getItem('userName') || 'Adotante'})
+        // Read, modify, write
+        const res = await fetch(DB_URL);
+        const json = await res.json();
+        const matchId = Date.now().toString();
+        
+        json.data.matches.push({
+            id: matchId, petId: pet.id, petImg: pet.img, petName: pet.name,
+            userName: localStorage.getItem('userName') || 'Adotante', status: 'pendente'
         });
-        const data = await res.json();
-        localStorage.setItem('lastMatchId', data.matchId);
+        json.data.chats.push({ matchId, sender: 'ong', text: `Olá! Vi que deu match no nosso pet ${pet.name}. Tudo bem?` });
+        
+        await fetch(DB_URL, {
+            method: 'PUT', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(json)
+        });
+        
+        localStorage.setItem('lastMatchId', matchId);
         localStorage.setItem('lastPetImg', pet.img);
         setTimeout(() => window.location.href='08-match.html', 400);
         return;

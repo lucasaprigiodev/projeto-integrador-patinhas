@@ -11,149 +11,96 @@
         .brand-color { color: #FF5A5F; }
         .brand-bg { background-color: #FF5A5F; }
         .brand-hover:hover { background-color: #E04448; }
-        .loader { border-top-color: #FF5A5F; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Scrollbar styles */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
-
-    <!-- Sidebar -->
     <aside class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
         <div class="h-16 flex items-center px-6 border-b border-gray-200">
             <span class="text-2xl mr-2">🐾</span>
             <span class="text-xl font-extrabold text-gray-800 tracking-tight">Patinhas <span class="brand-color">ONG</span></span>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-2">
-            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-red-50 brand-color rounded-xl font-semibold transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                Dashboard
-            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-red-50 brand-color rounded-xl font-semibold">Dashboard</a>
         </nav>
-        <div class="p-4 border-t border-gray-200">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full brand-bg text-white flex items-center justify-center font-bold">O</div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-800">ONG Patinhas</p>
-                    <p class="text-xs text-gray-500">Administrador</p>
-                </div>
-            </div>
-        </div>
+        <div class="p-4 border-t border-gray-200"><p class="text-sm font-semibold">ONG Patinhas</p></div>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <!-- Topbar -->
         <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
             <h1 class="text-xl font-bold text-gray-800">Painel de Adoções</h1>
-            <div class="flex items-center gap-4">
-                <button class="brand-bg brand-hover text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-sm transition-colors">+ Novo Pet</button>
-            </div>
+            <button onclick="openPetModal()" class="brand-bg brand-hover text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-sm">+ Adicionar Animal</button>
         </header>
 
-        <!-- Content Scroll -->
         <div class="flex-1 overflow-auto p-8">
-            
-            <!-- Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
-                    <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-2xl mr-4">🐾</div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Pets Ativos</p>
-                        <p class="text-3xl font-bold text-gray-800" id="stat-pets">-</p>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center relative overflow-hidden">
-                    <div class="absolute inset-y-0 left-0 w-1 brand-bg"></div>
-                    <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center brand-color text-2xl mr-4">🔔</div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Candidatos Pendentes</p>
-                        <p class="text-3xl font-bold text-gray-800" id="stat-cand">-</p>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
-                    <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-2xl mr-4">🏆</div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Adoções Concluídas</p>
-                        <p class="text-3xl font-bold text-gray-800" id="stat-adop">-</p>
-                    </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><p class="text-sm text-gray-500">Pets Ativos</p><p class="text-3xl font-bold" id="stat-pets">-</p></div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><p class="text-sm text-gray-500">Candidatos Pendentes</p><p class="text-3xl font-bold" id="stat-cand">-</p></div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><p class="text-sm text-gray-500">Adoções Concluídas</p><p class="text-3xl font-bold" id="stat-adop">-</p></div>
+            </div>
+
+            <!-- ANIMAIS CADASTRADOS -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                <div class="px-6 py-5 border-b border-gray-100"><h2 class="text-lg font-bold">Nossos Animais (App)</h2></div>
+                <div class="p-6 grid grid-cols-2 md:grid-cols-4 gap-4" id="pets-grid">
+                    <p class="text-gray-500">Carregando...</p>
                 </div>
             </div>
 
-            <!-- Table Section -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-                <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-gray-800">Candidatos Recentes</h2>
-                    <span class="text-sm text-gray-500">Atualizando ao vivo...</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                <th class="px-6 py-4 font-semibold">Adotante</th>
-                                <th class="px-6 py-4 font-semibold">Pet Desejado</th>
-                                <th class="px-6 py-4 font-semibold">Status</th>
-                                <th class="px-6 py-4 font-semibold text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="divide-y divide-gray-100 text-sm">
-                            <tr><td colspan="4" class="text-center py-8 text-gray-400">Carregando dados...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div class="px-6 py-5 border-b border-gray-100 flex justify-between"><h2 class="text-lg font-bold">Candidatos</h2><span class="text-sm text-green-500 font-bold">● Ao Vivo</span></div>
+                <table class="w-full text-left border-collapse">
+                    <thead><tr class="bg-gray-50 text-gray-500 text-xs uppercase"><th class="px-6 py-4">Adotante</th><th class="px-6 py-4">Pet Desejado</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Ações</th></tr></thead>
+                    <tbody id="table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Chat Slide-over Modal -->
+        <!-- NOVO PET MODAL -->
+        <div id="pet-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+            <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+                <h2 class="text-2xl font-bold mb-6">Cadastrar Animal</h2>
+                <form onsubmit="event.preventDefault(); savePet();" class="space-y-4">
+                    <div><label class="block text-sm font-semibold mb-1">Nome</label><input required id="p-name" class="w-full border rounded-lg p-2" placeholder="Ex: Rex"></div>
+                    <div><label class="block text-sm font-semibold mb-1">Idade</label><input required id="p-age" class="w-full border rounded-lg p-2" placeholder="Ex: 2 anos"></div>
+                    <div><label class="block text-sm font-semibold mb-1">Raça / Tipo</label><input required id="p-breed" class="w-full border rounded-lg p-2" placeholder="Ex: SRD"></div>
+                    <div><label class="block text-sm font-semibold mb-1">URL da Foto (Link da Imagem)</label><input required id="p-img" class="w-full border rounded-lg p-2" placeholder="https://..."></div>
+                    <div class="flex justify-end gap-2 pt-4">
+                        <button type="button" onclick="closePetModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
+                        <button type="submit" class="brand-bg text-white px-6 py-2 rounded-lg font-bold">Publicar no App</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- CHAT MODAL -->
         <div id="chat-modal" class="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-end opacity-0 pointer-events-none transition-opacity duration-300">
             <div id="chat-panel" class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300">
-                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center brand-bg text-white">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-xl">💬</div>
-                        <div>
-                            <h3 class="font-bold" id="chat-title">Chat</h3>
-                            <p class="text-xs opacity-80" id="chat-subtitle">Online</p>
-                        </div>
-                    </div>
-                    <button onclick="closeChat()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between brand-bg text-white">
+                    <div><h3 class="font-bold" id="chat-title">Chat</h3><p class="text-xs" id="chat-subtitle">Online</p></div>
+                    <button onclick="closeChat()" class="text-2xl">&times;</button>
                 </div>
-                
-                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                    <!-- Messages go here -->
-                </div>
-
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
                 <div class="p-4 bg-white border-t border-gray-200">
-                    <form id="chat-form" class="flex gap-2" onsubmit="event.preventDefault(); sendMsg();">
-                        <input type="text" id="chat-input" class="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400" placeholder="Escreva uma mensagem...">
-                        <button type="submit" class="brand-bg brand-hover text-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                        </button>
+                    <form onsubmit="event.preventDefault(); sendMsg();" class="flex gap-2">
+                        <input id="chat-input" class="flex-1 border rounded-full px-4" placeholder="Mensagem...">
+                        <button type="submit" class="brand-bg text-white rounded-full w-10 h-10 flex items-center justify-center">➤</button>
                     </form>
                 </div>
             </div>
         </div>
-
     </main>
 
 <script>
-const API = "https://patinhas-backend-4838.loca.lt/api";
-const GET_HEADERS = { 'Bypass-Tunnel-Reminder': 'true' };
-const POST_HEADERS = { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' };
-
+const DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a0e097f2452125";
 let currentMatchId = null;
 let chatInterval = null;
 
 async function fetchDashboard() {
     try {
-        const [petsRes, matchesRes] = await Promise.all([
-            fetch(API+'/pets', {headers: GET_HEADERS}),
-            fetch(API+'/matches', {headers: GET_HEADERS})
-        ]);
-        const pets = await petsRes.json();
-        const matches = await matchesRes.json();
+        const res = await fetch(DB_URL);
+        const json = await res.json();
+        const pets = json.data.pets;
+        const matches = json.data.matches;
         
         const pendentes = matches.filter(m => m.status === 'pendente');
         const aprovados = matches.filter(m => m.status === 'aprovado');
@@ -162,121 +109,105 @@ async function fetchDashboard() {
         document.getElementById('stat-cand').innerText = pendentes.length;
         document.getElementById('stat-adop').innerText = aprovados.length;
         
+        // RENDER PETS
+        const pGrid = document.getElementById('pets-grid');
+        pGrid.innerHTML = '';
+        pets.forEach(p => {
+            pGrid.innerHTML += `<div class="rounded-xl border border-gray-200 overflow-hidden"><img src="${p.img}" class="w-full h-32 object-cover"><div class="p-3"><h4 class="font-bold text-sm">${p.name}</h4><p class="text-xs text-gray-500">${p.breed}</p></div></div>`;
+        });
+
+        // RENDER MATCHES
         const tbody = document.getElementById('table-body');
         tbody.innerHTML = '';
-        
-        if(pendentes.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500">Nenhum candidato aguardando avaliação no momento.</td></tr>`;
-        }
-        
+        if(pendentes.length === 0) tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8">Nenhum candidato aguardando.</td></tr>`;
         pendentes.forEach(m => {
-            tbody.innerHTML += `
-            <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-6 py-4">
-                    <div class="flex items-center">
-                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold uppercase mr-3">
-                            ${m.userName.charAt(0)}
-                        </div>
-                        <div>
-                            <div class="font-semibold text-gray-900">${m.userName}</div>
-                            <div class="text-xs text-gray-500">Match há poucos instantes</div>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center">
-                        <img class="h-10 w-10 rounded-lg object-cover mr-3" src="${m.pet.img}" alt="">
-                        <div class="font-medium text-gray-800">${m.pet.name}</div>
-                    </div>
-                </td>
-                <td class="px-6 py-4">
-                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendente</span>
-                </td>
-                <td class="px-6 py-4 text-right space-x-2">
-                    <button onclick="openChat('${m.id}', '${m.userName}', '${m.pet.name}')" class="text-gray-500 hover:text-blue-600 bg-gray-100 hover:bg-blue-50 p-2 rounded-lg transition" title="Abrir Chat">💬</button>
-                    <button onclick="setStatus('${m.id}', 'aprovado')" class="text-green-600 bg-green-50 hover:bg-green-100 p-2 rounded-lg transition font-semibold">Aprovar</button>
-                    <button onclick="setStatus('${m.id}', 'rejeitado')" class="text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition font-semibold">Rejeitar</button>
+            tbody.innerHTML += `<tr>
+                <td class="px-6 py-4 font-bold">${m.userName}</td>
+                <td class="px-6 py-4 flex items-center gap-2"><img src="${m.petImg}" class="w-8 h-8 rounded object-cover">${m.petName}</td>
+                <td class="px-6 py-4"><span class="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pendente</span></td>
+                <td class="px-6 py-4 text-right">
+                    <button onclick="openChat('${m.id}', '${m.userName}')" class="bg-gray-100 p-2 rounded">💬</button>
+                    <button onclick="setStatus('${m.id}', 'aprovado')" class="bg-green-100 text-green-700 font-bold p-2 rounded">Aprovar</button>
+                    <button onclick="setStatus('${m.id}', 'rejeitado')" class="bg-red-100 text-red-700 font-bold p-2 rounded">Rejeitar</button>
                 </td>
             </tr>`;
         });
-    } catch(e) { console.error("API error", e); }
+    } catch(e) {}
+}
+
+async function savePet() {
+    const n=document.getElementById('p-name').value;
+    const a=document.getElementById('p-age').value;
+    const b=document.getElementById('p-breed').value;
+    const i=document.getElementById('p-img').value;
+    try {
+        const res = await fetch(DB_URL);
+        const json = await res.json();
+        json.data.pets.push({ id: Date.now(), name: n, age: a, breed: b, img: i, ong: "ONG Patinhas", dist: "0km", status: "disponivel" });
+        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
+        closePetModal();
+        fetchDashboard();
+        alert("Pet cadastrado com sucesso! Ele já vai aparecer no aplicativo de todos os usuários.");
+    } catch(e) {}
 }
 
 async function setStatus(matchId, status) {
-    if(!confirm(`Deseja realmente ${status} este candidato?`)) return;
     try {
-        await fetch(API+'/matches/'+matchId+'/status', {
-            method: 'POST', headers: POST_HEADERS, body: JSON.stringify({status})
-        });
+        const res = await fetch(DB_URL);
+        const json = await res.json();
+        const m = json.data.matches.find(x => x.id == matchId);
+        if(m) m.status = status;
+        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
         fetchDashboard();
-    } catch(e) { console.error(e); }
+    } catch(e) {}
 }
 
-function openChat(matchId, userName, petName) {
+function openPetModal() { document.getElementById('pet-modal').classList.remove('hidden'); }
+function closePetModal() { document.getElementById('pet-modal').classList.add('hidden'); }
+
+// Chat
+function openChat(matchId, userName) {
     currentMatchId = matchId;
     document.getElementById('chat-title').innerText = "Chat com " + userName;
-    document.getElementById('chat-subtitle').innerText = "Interesse: " + petName;
-    
     document.getElementById('chat-modal').classList.remove('opacity-0', 'pointer-events-none');
     document.getElementById('chat-panel').classList.remove('translate-x-full');
-    
     loadChat();
     chatInterval = setInterval(loadChat, 2000);
 }
-
 function closeChat() {
     document.getElementById('chat-modal').classList.add('opacity-0', 'pointer-events-none');
     document.getElementById('chat-panel').classList.add('translate-x-full');
     currentMatchId = null;
     clearInterval(chatInterval);
 }
-
 async function loadChat() {
     if(!currentMatchId) return;
     try {
-        const res = await fetch(API+'/chats/'+currentMatchId, {headers: GET_HEADERS});
-        const chats = await res.json();
+        const res = await fetch(DB_URL);
+        const json = await res.json();
+        const chats = json.data.chats.filter(c => c.matchId == currentMatchId);
         const area = document.getElementById('chat-messages');
         area.innerHTML = '';
         chats.forEach(c => {
             const isMe = c.sender === 'ong';
-            area.innerHTML += `
-            <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                <div class="max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'brand-bg text-white rounded-br-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'}">
-                    ${c.text}
-                </div>
-            </div>`;
+            area.innerHTML += `<div class="flex ${isMe?'justify-end':'justify-start'}"><div class="max-w-[75%] rounded-xl px-4 py-2 text-sm ${isMe?'brand-bg text-white':'bg-white border text-gray-800'}">${c.text}</div></div>`;
         });
         area.scrollTop = area.scrollHeight;
     } catch(e) {}
 }
-
 async function sendMsg() {
-    const inp = document.getElementById('chat-input');
-    const text = inp.value.trim();
+    const text = document.getElementById('chat-input').value.trim();
     if(!text || !currentMatchId) return;
-    
-    inp.value = '';
-    
-    const area = document.getElementById('chat-messages');
-    area.innerHTML += `
-    <div class="flex justify-end">
-        <div class="max-w-[75%] rounded-2xl px-4 py-2 text-sm brand-bg text-white rounded-br-sm opacity-80">
-            ${text}
-        </div>
-    </div>`;
-    area.scrollTop = area.scrollHeight;
-
+    document.getElementById('chat-input').value = '';
     try {
-        await fetch(API+'/chats/'+currentMatchId, {
-            method: 'POST', headers: POST_HEADERS, body: JSON.stringify({sender: 'ong', text})
-        });
+        const res = await fetch(DB_URL);
+        const json = await res.json();
+        json.data.chats.push({ matchId: currentMatchId, sender: 'ong', text });
+        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
         loadChat();
     } catch(e) {}
 }
 
 fetchDashboard();
 setInterval(fetchDashboard, 5000);
-</script>
-</body>
-</html>
+</script></body></html>

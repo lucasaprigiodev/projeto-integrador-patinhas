@@ -35,19 +35,17 @@
 </div>
 
 
+
 <script>
-const API = "https://patinhas-backend-4838.loca.lt/api";
+const DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a0e097f2452125";
 
 setTimeout(() => {
   const mc = document.getElementById('matchContent');
   mc.style.opacity='1'; mc.style.transform='scale(1)';
 }, 100);
 
-// Load dynamic pet img
 const petImgUrl = localStorage.getItem('lastPetImg');
-if(petImgUrl) {
-    document.getElementById('matchPetImg').src = petImgUrl;
-}
+if(petImgUrl) document.getElementById('matchPetImg').src = petImgUrl;
 
 const colors=['#ffffff','#FFD700','#FF8C00','#fff9c4','#ffe082'];
 const container=document.getElementById('confetti');
@@ -59,7 +57,6 @@ for(let i=0;i<60;i++){
     container.appendChild(el);
   },i*40);
 }
-
 function goToChat() {
     window.location.href = '10-chat-mensagem.html?matchId=' + localStorage.getItem('lastMatchId');
 }
