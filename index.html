@@ -144,7 +144,7 @@ async function savePet() {
         const res = await fetch(DB_URL);
         const json = await res.json();
         json.pets.push({ id: Date.now(), name: n, age: a, breed: b, img: i, ong: "ONG Patinhas", dist: "0km", status: "disponivel" });
-        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
+        delete json._id; await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
         closePetModal();
         fetchDashboard();
         alert("Pet cadastrado com sucesso! Ele já vai aparecer no aplicativo de todos os usuários.");
@@ -157,7 +157,7 @@ async function setStatus(matchId, status) {
         const json = await res.json();
         const m = json.matches.find(x => x.id == matchId);
         if(m) m.status = status;
-        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
+        delete json._id; await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
         fetchDashboard();
     } catch(e) {}
 }
@@ -203,7 +203,7 @@ async function sendMsg() {
         const res = await fetch(DB_URL);
         const json = await res.json();
         json.chats.push({ matchId: currentMatchId, sender: 'ong', text });
-        await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
+        delete json._id; await fetch(DB_URL, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json) });
         loadChat();
     } catch(e) {}
 }
