@@ -206,12 +206,40 @@ async function loadChat() {
             chats.forEach(c => {
                 const div = document.createElement('div');
                 const isMe = c.sender === sender;
-                if(isMe) {
+                const isTermoMsg = c.isTermo || (c.text && c.text.includes('[TERMO DE ADOÇÃO RESPONSÁVEL]'));
+
+                if(isTermoMsg) {
+                    const isSigned = match && (match.status === 'termo_assinado' || match.termoAssinado);
+                    const termoPetId = c.petId || currentPetId || (match ? match.petId : '');
+                    div.style.cssText = 'max-width:88%;background:#FAF5FF;border:1.5px solid #D8B4FE;border-radius:18px;padding:16px;box-shadow:0 4px 14px rgba(147, 51, 234, 0.08);align-self:flex-start;color:#1E293B;margin:6px 0;';
+                    div.innerHTML = `
+                      <div style="display:flex;align-items:center;gap:8px;font-weight:800;color:#6B21A8;font-size:14px;margin-bottom:6px;">
+                        <span style="font-size:22px;">📋</span> Termo de Adoção Responsável
+                      </div>
+                      <p style="font-size:12px;color:#475569;margin-bottom:12px;line-height:1.5;">
+                        A ONG disponibilizou o contrato oficial de adoção para <strong>${match ? match.petName : 'o pet'}</strong>. Leia atentamente as cláusulas e assine digitalmente.
+                      </p>
+                      ${isSigned ? `
+                        <div style="background:#ECFDF5;border:1px solid #6EE7B7;color:#065F46;font-size:12px;font-weight:700;padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                          <span>✓</span> Termo Assinado Digitalmente!
+                        </div>
+                        <a href="12-acompanhamento.html?petId=${termoPetId}&matchId=${matchId}" style="display:block;text-align:center;font-size:12px;font-weight:700;color:#7C3AED;text-decoration:none;padding:6px;">
+                          Ver Acompanhamento de 7 Dias →
+                        </a>
+                      ` : `
+                        <a href="11-contrato.html?matchId=${matchId}&petId=${termoPetId}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#7C3AED;color:white;font-weight:700;font-size:13px;padding:12px;border-radius:12px;text-decoration:none;box-shadow:0 4px 10px rgba(124,58,237,0.3);text-align:center;">
+                          <span>✍️</span> Ler e Assinar Termo Digital
+                        </a>
+                      `}
+                      ${c.time ? `<div style="font-size:10px;opacity:0.6;text-align:right;margin-top:8px;">${c.time}</div>` : ''}
+                    `;
+                } else if(isMe) {
                     div.style.cssText = 'max-width:78%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;box-shadow:var(--shadow-sm);';
+                    div.innerHTML = `<div style="white-space:pre-wrap;">${c.text}</div>${c.time ? `<div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px;">${c.time}</div>` : ''}`;
                 } else {
                     div.style.cssText = 'max-width:78%;background:var(--surface-2);color:var(--text-1);padding:12px 16px;border-radius:16px 16px 16px 4px;font-size:14px;line-height:1.5;align-self:flex-start;';
+                    div.innerHTML = `<div style="white-space:pre-wrap;">${c.text}</div>${c.time ? `<div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px;">${c.time}</div>` : ''}`;
                 }
-                div.innerHTML = `<div>${c.text}</div>${c.time ? `<div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px;">${c.time}</div>` : ''}`;
                 area.appendChild(div);
             });
         }

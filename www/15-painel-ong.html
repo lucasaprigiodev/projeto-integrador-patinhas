@@ -93,6 +93,12 @@ async function loadDashboard() {
             listPending.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:40px 20px;"><div style="font-size:36px;margin-bottom:8px;">🤝</div><p style="font-size:14px;">Nenhum candidato pendente no momento.</p></div>';
         } else {
             pendentes.slice().reverse().forEach(m => {
+                let badge = '<span class="chip" style="background:#fff3cd;color:#856404;font-size:11px;">Pendente</span>';
+                if(m.status === 'termo_assinado') {
+                    badge = '<span class="chip" style="background:#d1fae5;color:#065f46;font-size:11px;">✍️ Termo Assinado</span>';
+                } else if(m.status === 'termo_enviado') {
+                    badge = '<span class="chip" style="background:#ede9fe;color:#5b21b6;font-size:11px;">📋 Termo Enviado</span>';
+                }
                 listPending.innerHTML += `
                 <div class="card" style="padding:16px;margin-bottom:12px;" id="c-${m.id}">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
@@ -101,11 +107,12 @@ async function loadDashboard() {
                             <div style="font-weight:700;font-size:15px;">${m.userName}</div>
                             <div style="font-size:12px;color:var(--text-2);">Quer adotar: <strong>${m.petName}</strong></div>
                         </div>
-                        <span class="chip" style="background:#fff3cd;color:#856404;font-size:11px;">Pendente</span>
+                        ${badge}
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button class="btn btn-primary" onclick="setStatus('${m.id}', 'aprovado')" style="padding:10px;font-size:13px;flex:1;">✓ Aprovar</button>
-                        <button class="btn btn-outline" onclick="setStatus('${m.id}', 'rejeitado')" style="padding:10px;font-size:13px;flex:1;">✕ Rejeitar</button>
+                        <button class="btn btn-outline" onclick="enviarTermo('${m.id}')" style="padding:10px;font-size:12px;flex:1.2;background:#FAF5FF;border-color:#D8B4FE;color:#6B21A8;font-weight:700;">📋 Termo</button>
+                        <button class="btn btn-primary" onclick="setStatus('${m.id}', 'aprovado')" style="padding:10px;font-size:12px;flex:1;">✓ Aprovar</button>
+                        <button class="btn btn-outline" onclick="setStatus('${m.id}', 'rejeitado')" style="padding:10px;font-size:12px;flex:1;">✕ Rejeitar</button>
                         <a href="10-chat-mensagem.html?matchId=${m.id}" style="width:42px;height:42px;border-radius:var(--radius-sm);background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;flex-shrink:0;">💬</a>
                     </div>
                 </div>`;
@@ -147,6 +154,41 @@ async function loadDashboard() {
             });
         }
     } catch(e) { console.error(e); }
+}
+
+async function enviarTermo(matchId) {
+    if(!confirm("Deseja enviar o Termo de Adoção Responsável para o candidato no chat?")) return;
+    try {
+        if(!appDb) appDb = await loadDb();
+        const m = (appDb.matches || []).find(x => x.id == matchId);
+        if(m) {
+            m.status = 'termo_enviado';
+            m.termoEnviado = true;
+            m.termoEnviadoEm = new Date().toISOString();
+            
+            const time = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            if(!appDb.chats) appDb.chats = [];
+            appDb.chats.push({
+                matchId: matchId,
+                sender: 'ong',
+                text: `Olá, ${m.userName}! Disponibilizamos o Termo Oficial de Adoção para o(a) ${m.petName}. Por favor, acesse o link abaixo para ler e assinar digitalmente! 🐾📋`,
+                time: time
+            });
+            appDb.chats.push({
+                matchId: matchId,
+                sender: 'ong',
+                text: `📄 [TERMO DE ADOÇÃO RESPONSÁVEL]\nClique no botão abaixo para ler o contrato e realizar a assinatura digital para adoção de ${m.petName}.`,
+                isTermo: true,
+                petId: m.petId,
+                petName: m.petName,
+                petImg: m.petImg,
+                time: time
+            });
+            await saveDb(appDb);
+            await loadDashboard();
+            alert("Termo de adoção enviado com sucesso! 📋");
+        }
+    } catch(e) { console.error(e); alert("Erro ao enviar termo."); }
 }
 
 async function setStatus(matchId, status) {

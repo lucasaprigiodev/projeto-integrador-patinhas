@@ -5,19 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Termo de Adoção · Patinhas</title>
   <link rel="stylesheet" href="styles.css">
-  
 </head>
 <body>
 
 <div class="phone">
   <div class="statusbar" style="color:var(--text-1);">
-  <span class="time">9:41</span>
-  <div class="icons">
-    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
-    <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
-    <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+    <span class="time">9:41</span>
+    <div class="icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+      <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+    </div>
   </div>
-</div>
   <div style="padding:0 20px 16px;display:flex;align-items:center;gap:12px;">
     <a href="javascript:history.back()" style="display:flex;align-items:center;color:var(--text-1);text-decoration:none;">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
@@ -28,54 +27,145 @@
 
   <div class="scroll-content" style="padding:0 20px 20px;">
     <!-- Pet summary -->
-    <div style="display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(255,107,53,0.03));border-radius:var(--radius-md);border:1px solid rgba(255,107,53,0.15);margin-bottom:20px;">
-      <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" style="width:56px;height:56px;border-radius:var(--radius-sm);object-fit:cover;">
-      <div>
-        <div style="font-weight:700;font-size:16px;">Buddy</div>
-        <div style="font-size:13px;color:var(--text-2);">Golden Retriever • ONG Patinhas</div>
-        <div style="font-size:12px;color:var(--primary);font-weight:600;margin-top:4px;">⏱ Período de teste: 7 dias</div>
+    <div style="display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(255,107,53,0.05));border-radius:var(--radius-md);border:1px solid rgba(124,58,237,0.2);margin-bottom:20px;">
+      <img id="petImg" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" style="width:60px;height:60px;border-radius:14px;object-fit:cover;box-shadow:var(--shadow-sm);">
+      <div style="flex:1;">
+        <div id="petName" style="font-weight:800;font-size:17px;color:var(--text-1);">Carregando...</div>
+        <div id="petDetails" style="font-size:13px;color:var(--text-2);">Adoção Responsável</div>
+        <div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:4px;">⏱ Período de adaptação: 7 dias</div>
       </div>
     </div>
 
     <!-- Contract text -->
-    <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:20px;margin-bottom:20px;height:260px;overflow-y:scroll;">
-      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;">TERMO DE RESPONSABILIDADE NA ADOÇÃO</h3>
-      <p style="font-size:13px;line-height:1.8;color:var(--text-2);">
-        Eu, abaixo assinado(a), declaro ter adotado o animal acima descrito, e me comprometo a:
+    <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:18px;margin-bottom:20px;height:240px;overflow-y:scroll;border:1px solid var(--border);">
+      <h3 style="font-size:13px;font-weight:800;margin-bottom:12px;color:var(--text-1);letter-spacing:0.5px;text-transform:uppercase;">Termo de Compromisso e Responsabilidade</h3>
+      <p style="font-size:12.5px;line-height:1.7;color:var(--text-2);">
+        Eu, <strong id="adotanteNome" style="color:var(--text-1);">Adotante</strong>, assumo voluntariamente a guarda e tutela responsável do animal <strong id="termoPetNome" style="color:var(--text-1);">Pet</strong> e firmo o compromisso solene de:
         <br><br>
-        <strong>1. Bem-estar:</strong> Fornecer alimentação adequada, água fresca diariamente e abrigo confortável, protegendo-o de intempéries.<br><br>
-        <strong>2. Saúde:</strong> Manter as vacinas em dia, garantir o acesso a atendimento veterinário quando necessário e não interromper tratamentos prescritos.<br><br>
-        <strong>3. Segurança:</strong> Manter o animal em local seguro, evitando fugas e acidentes, e não submetê-lo a maus-tratos, abandono ou negligência.<br><br>
-        <strong>4. Comunicação:</strong> Informar a ONG sobre qualquer problema de saúde grave, situação de risco ou necessidade de devolução, com antecedência mínima de 5 dias úteis.<br><br>
-        <strong>5. Período de Teste:</strong> Aceito o acompanhamento da ONG pelo período de 7 dias após a adoção, permitindo visita de avaliação do bem-estar do animal.
+        <strong>1. Bem-estar Integral:</strong> Prover alimentação balanceada, água limpa e fresca à vontade, local arejado, seco e protegido contra frio, calor e chuva.<br><br>
+        <strong>2. Saúde Preventiva e Curativa:</strong> Realizar vacinação anual, desparasitação periódica, esterilização (se ainda não realizada) e pronto atendimento médico-veterinário em caso de doença.<br><br>
+        <strong>3. Não Abandono e Segurança:</strong> Sob nenhuma hipótese abandonar ou transferir a guarda do animal a terceiros sem prévio consentimento formal da ONG parceira.<br><br>
+        <strong>4. Transparência:</strong> Notificar a ONG imediatamente em situações adversas, acidentes ou óbito do animal.<br><br>
+        <strong>5. Período de Adaptação de 7 Dias:</strong> Aceitar o acompanhamento remoto e visitas de orientação da ONG durante a semana inicial para verificar a convivência e bem-estar mútuo.
       </p>
     </div>
 
     <!-- Checklist -->
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
-      <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
-        <input type="checkbox" id="c1" style="width:20px;height:20px;accent-color:var(--primary);margin-top:2px;flex-shrink:0;">
-        <span style="font-size:13px;color:var(--text-2);line-height:1.5;">Li e compreendi todos os termos e responsabilidades acima.</span>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+      <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;background:var(--surface-2);padding:12px 14px;border-radius:12px;border:1px solid var(--border);">
+        <input type="checkbox" id="c1" style="width:20px;height:20px;accent-color:#7C3AED;margin-top:2px;flex-shrink:0;">
+        <span style="font-size:13px;color:var(--text-1);font-weight:500;line-height:1.4;">Li e compreendi integralmente todas as cláusulas e obrigações acima.</span>
       </label>
-      <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
-        <input type="checkbox" id="c2" style="width:20px;height:20px;accent-color:var(--primary);margin-top:2px;flex-shrink:0;">
-        <span style="font-size:13px;color:var(--text-2);line-height:1.5;">Concordo com o período de acompanhamento de 7 dias.</span>
+      <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;background:var(--surface-2);padding:12px 14px;border-radius:12px;border:1px solid var(--border);">
+        <input type="checkbox" id="c2" style="width:20px;height:20px;accent-color:#7C3AED;margin-top:2px;flex-shrink:0;">
+        <span style="font-size:13px;color:var(--text-1);font-weight:500;line-height:1.4;">Concordo expressamente com o período de acompanhamento de 7 dias.</span>
       </label>
     </div>
 
-    <button class="btn btn-primary" onclick="assinar()">✍️ Assinar Digitalmente</button>
-    <a href="javascript:history.back()" class="btn btn-ghost" style="margin-top:8px;">Voltar</a>
+    <button id="btnAssinar" class="btn btn-primary" onclick="assinar()" style="background:#7C3AED;border:none;box-shadow:0 4px 14px rgba(124,58,237,0.35);font-size:15px;padding:14px;">✍️ Assinar Digitalmente</button>
+    <a href="javascript:history.back()" class="btn btn-ghost" style="margin-top:8px;">Voltar ao Chat</a>
   </div>
 </div>
 
+<script src="db.js"></script>
 <script>
-function assinar() {
-  if(!document.getElementById('c1').checked || !document.getElementById('c2').checked) {
-    alert('Por favor, leia e aceite todos os termos antes de assinar.');
-    return;
-  }
-  window.location.href = '12-acompanhamento.html';
+const urlParams = new URLSearchParams(window.location.search);
+let matchId = urlParams.get('matchId') || localStorage.getItem('lastMatchId');
+let petId = urlParams.get('petId') || localStorage.getItem('lastPetId');
+let currentDb = null;
+let currentMatch = null;
+let currentPet = null;
+
+async function initContrato() {
+    try {
+        currentDb = await loadDb();
+        const json = currentDb;
+
+        if(matchId) {
+            currentMatch = (json.matches || []).find(m => m.id == matchId);
+        }
+        if(!currentMatch && petId) {
+            currentMatch = (json.matches || []).find(m => String(m.petId) === String(petId));
+            if(currentMatch) matchId = currentMatch.id;
+        }
+        if(!currentMatch && (json.matches || []).length > 0) {
+            currentMatch = json.matches[json.matches.length - 1];
+            matchId = currentMatch.id;
+        }
+
+        const resolvedPetId = (currentMatch ? currentMatch.petId : petId);
+        currentPet = (json.pets || []).find(p => p.id == resolvedPetId);
+
+        const userName = (currentMatch ? currentMatch.userName : '') || localStorage.getItem('userName') || 'Lucas Aprígio';
+        const petName = (currentMatch ? currentMatch.petName : '') || (currentPet ? currentPet.name : 'Pet');
+        const petImg = (currentMatch ? currentMatch.petImg : '') || (currentPet ? currentPet.img : 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80');
+        const petDesc = currentPet ? `${currentPet.breed} • ${currentPet.age} • ${currentPet.ong || 'ONG Patinhas'}` : 'ONG Patinhas';
+
+        document.getElementById('adotanteNome').innerText = userName;
+        document.getElementById('termoPetNome').innerText = petName;
+        document.getElementById('petName').innerText = petName;
+        document.getElementById('petImg').src = petImg;
+        document.getElementById('petDetails').innerText = petDesc;
+
+    } catch(e) {
+        console.error(e);
+    }
 }
+
+async function assinar() {
+    const c1 = document.getElementById('c1');
+    const c2 = document.getElementById('c2');
+    if(!c1.checked || !c2.checked) {
+        alert('Por favor, leia e marque as duas caixas de confirmação para assinar o termo.');
+        return;
+    }
+
+    const btn = document.getElementById('btnAssinar');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Gravando Assinatura Digital...';
+
+    try {
+        if(!currentDb) currentDb = await loadDb();
+        const json = currentDb;
+
+        if(currentMatch) {
+            currentMatch.status = 'termo_assinado';
+            currentMatch.termoAssinado = true;
+            currentMatch.termoAssinadoEm = new Date().toISOString();
+        } else if(matchId) {
+            const m = (json.matches || []).find(x => x.id == matchId);
+            if(m) {
+                m.status = 'termo_assinado';
+                m.termoAssinado = true;
+                m.termoAssinadoEm = new Date().toISOString();
+            }
+        }
+
+        // Adiciona mensagem no chat de confirmação
+        if(matchId) {
+            if(!json.chats) json.chats = [];
+            json.chats.push({
+                matchId: matchId,
+                sender: 'user',
+                text: '✍️ Termo de Adoção Responsável assinado digitalmente com sucesso! Concordo com todas as cláusulas e com o período de adaptação de 7 dias.',
+                time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+            });
+        }
+
+        await saveDb(json);
+        localStorage.setItem('termoAssinado_' + matchId, 'true');
+
+        const resolvedPetId = currentMatch ? currentMatch.petId : petId;
+        window.location.href = `12-acompanhamento.html?matchId=${matchId || ''}&petId=${resolvedPetId || ''}`;
+    } catch(e) {
+        console.error(e);
+        alert('Erro ao registrar assinatura. Tente novamente.');
+        btn.disabled = false;
+        btn.innerHTML = '✍️ Assinar Digitalmente';
+    }
+}
+
+initContrato();
 </script>
 </body>
 </html>
