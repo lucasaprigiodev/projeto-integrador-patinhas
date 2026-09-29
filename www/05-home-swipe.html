@@ -5,7 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Descobrir · Patinhas</title>
   <link rel="stylesheet" href="styles.css">
-  
+  <style>
+    .phone {
+      transform: translateZ(0);
+      will-change: transform;
+    }
+    #cardStack {
+      contain: layout paint;
+      will-change: transform;
+    }
+  </style>
 </head>
 <body>
 
@@ -162,11 +171,8 @@ async function swipeCard(dir) {
           time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
       });
       
-      try {
-        await saveDb(dbData); // Envia para o GitHub Gist e AGUARDA confirmacao antes de redirecionar
-      } catch(err) {
-        console.error("Erro ao salvar no banco:", err);
-      }
+      // Dispara persistência assíncrona no Gist; o cache local atualiza em <1ms
+      saveDb(dbData);
     } else {
       matchId = existingMatch.id;
     }
@@ -175,7 +181,11 @@ async function swipeCard(dir) {
     localStorage.setItem('lastPetId', String(pet.id));
     localStorage.setItem('lastPetImg', petImg);
     localStorage.setItem('lastPetName', pet.name);
-    window.location.href = `08-match.html?matchId=${matchId}&petId=${pet.id}`;
+
+    // Navegação ultra-rápida e fluida após o card começar a sair
+    setTimeout(() => {
+      window.location.href = `08-match.html?matchId=${matchId}&petId=${pet.id}`;
+    }, 150);
     return;
   }
   

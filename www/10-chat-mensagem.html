@@ -5,41 +5,81 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Chat · Patinhas</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Aceleração por GPU para 60fps */
+    .phone {
+      transform: translateZ(0);
+      will-change: transform;
+    }
+  </style>
 </head>
 <body>
 
 <div class="phone">
   <!-- Header -->
-  <div style="display:flex;align-items:center;gap:12px;padding:48px 16px 12px;border-bottom:1px solid var(--border);">
+  <div style="display:flex;align-items:center;gap:12px;padding:48px 16px 12px;border-bottom:1px solid var(--border);background:var(--surface);">
     <a href="javascript:history.back()" style="display:flex;align-items:center;color:var(--text-1);text-decoration:none;padding:4px;">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
     </a>
-    <div style="position:relative;">
-      <img id="chatHeaderAvatar" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80';" class="avatar" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+    
+    <!-- Ícone Oficial da ONG (Não mais a foto de um cachorro!) -->
+    <div style="position:relative;flex-shrink:0;">
+      <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#E8590C);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,53,0.3);border:2px solid white;">
+        <span style="font-size:22px;">🐾</span>
+      </div>
       <div style="position:absolute;bottom:0;right:0;width:12px;height:12px;background:var(--success);border-radius:50%;border:2px solid white;"></div>
     </div>
-    <div style="flex:1;">
-      <div id="chatOngName" style="font-weight:700;font-size:16px;">ONG Patinhas</div>
-      <div style="font-size:12px;color:var(--success);font-weight:500;">Online agora</div>
+    
+    <div style="flex:1;min-width:0;">
+      <div id="chatOngName" style="font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ONG Patinhas</div>
+      <div style="font-size:12px;color:var(--success);font-weight:600;">● Atendimento Oficial</div>
     </div>
+    
     <div style="display:flex;gap:12px;">
       <button onclick="openCallModal()" style="background:none;border:none;font-size:20px;cursor:pointer;" title="Ligar">📞</button>
       <button onclick="openMenuModal()" style="background:none;border:none;font-size:20px;cursor:pointer;" title="Mais opções">⋯</button>
     </div>
   </div>
 
-  <!-- Pet info banner -->
-  <a id="petBannerLink" href="javascript:void(0)" style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(255,107,53,0.06);border-bottom:1px solid rgba(255,107,53,0.1);text-decoration:none;color:inherit;">
-    <img id="bannerPetImg" src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&q=80" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80';" style="width:36px;height:36px;border-radius:10px;object-fit:cover;">
-    <div style="flex:1;">
-      <div id="bannerPetName" style="font-size:13px;font-weight:700;">Pet</div>
-      <div id="bannerPetDesc" style="font-size:11px;color:var(--text-2);">Carregando informações...</div>
+  <!-- Sub-banner com Foto Real do Pet em Adoção -->
+  <a id="petBannerLink" href="javascript:void(0)" style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(255,107,53,0.06);border-bottom:1px solid rgba(255,107,53,0.12);text-decoration:none;color:inherit;transition:background 0.2s;">
+    <img id="bannerPetImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23FFE4D6' width='100' height='100'/%3E%3Ctext y='55%25' x='50%25' text-anchor='middle' dy='.1em' font-size='40'%3E🐾%3C/text%3E%3C/svg%3E" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" style="width:40px;height:40px;border-radius:10px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,0.1);flex-shrink:0;">
+    <script>
+      (function() {
+        try {
+          const cImg = localStorage.getItem('lastPetImg');
+          if (cImg) document.getElementById('bannerPetImg').src = cImg;
+          const cName = localStorage.getItem('lastPetName');
+          if (cName) document.getElementById('bannerPetName').innerText = cName;
+        } catch(_) {}
+      })();
+    </script>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:10px;font-weight:800;color:var(--primary);background:rgba(255,107,53,0.15);padding:1px 6px;border-radius:4px;letter-spacing:0.5px;">PET DA CONVERSA</span>
+      </div>
+      <div id="bannerPetName" style="font-size:14px;font-weight:800;margin-top:2px;">Pet</div>
+      <div id="bannerPetDesc" style="font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Carregando informações...</div>
     </div>
-    <span style="color:var(--primary);font-size:12px;font-weight:600;">Match de Adoção ❤️</span>
+    <span style="color:var(--primary);font-size:12px;font-weight:700;">Ver Perfil ℹ️</span>
   </a>
 
+  <!-- Banner Fixo do Termo de Adoção (Visível em destaque quando enviado ou assinado) -->
+  <div id="termoPinnedBanner" style="display:none;background:linear-gradient(135deg,#FAF5FF,#F3E8FF);border-bottom:1.5px solid #D8B4FE;padding:10px 16px;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(147,51,234,0.08);">
+    <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+      <span style="font-size:22px;">📋</span>
+      <div style="min-width:0;">
+        <div id="pinnedTermoTitle" style="font-size:13px;font-weight:800;color:#6B21A8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Termo de Adoção Disponível!</div>
+        <div id="pinnedTermoSubtitle" style="font-size:11px;color:#7E22CE;">Assine digitalmente para prosseguir</div>
+      </div>
+    </div>
+    <a id="btnAssinarPinned" href="11-contrato.html" style="background:#7C3AED;color:white;font-size:12px;font-weight:700;padding:7px 14px;border-radius:10px;text-decoration:none;box-shadow:0 2px 6px rgba(124,58,237,0.3);white-space:nowrap;flex-shrink:0;">
+      Assinar ✍️
+    </a>
+  </div>
+
   <!-- Messages -->
-  <div id="msgArea" class="scroll-content" style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+  <div id="msgArea" class="scroll-content" style="padding:16px;display:flex;flex-direction:column;gap:10px;">
     <div style="text-align:center;"><span style="background:var(--surface-2);color:var(--text-3);font-size:11px;padding:4px 12px;border-radius:20px;">Carregando mensagens...</span></div>
   </div>
 
@@ -49,7 +89,7 @@
     <div style="flex:1;background:var(--surface-2);border-radius:24px;padding:10px 16px;display:flex;align-items:center;">
       <input type="text" id="msgInput" placeholder="Digite uma mensagem..." style="flex:1;border:none;background:transparent;font-size:14px;font-family:'Inter',sans-serif;outline:none;">
     </div>
-    <button id="sendBtn" onclick="sendMsg()" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border:none;color:white;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">➤</button>
+    <button id="sendBtn" onclick="sendMsg()" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border:none;color:white;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(255,107,53,0.3);">➤</button>
   </div>
 </div>
 
@@ -74,8 +114,8 @@
     <div style="width:40px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 18px;"></div>
     <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;text-align:center;">Opções da Conversa</h3>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      <button onclick="window.location.href='11-contrato.html'" style="display:flex;align-items:center;gap:12px;padding:14px;border:none;background:var(--surface-2);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
-        <span>📋</span> Ver Termo de Adoção
+      <button id="btnAbrirTermoMenu" style="display:flex;align-items:center;gap:12px;padding:14px;border:none;background:#FAF5FF;border:1px solid #D8B4FE;color:#6B21A8;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;text-align:left;">
+        <span>📋</span> Ver Termo de Adoção Oficial
       </button>
       <button id="btnVerPetPerfil" style="display:flex;align-items:center;gap:12px;padding:14px;border:none;background:var(--surface-2);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
         <span>🐶</span> Ver Perfil Completo do Pet
@@ -97,7 +137,7 @@ const isONG = localStorage.getItem('isONG') === 'true';
 const sender = isONG ? 'ong' : 'user';
 let currentPetId = null;
 let currentDb = null;
-let lastRenderedChatCount = -1;
+let lastRenderedChatKey = "";
 
 function openCallModal() { document.getElementById('callModal').style.display = 'flex'; }
 function closeCallModal() { document.getElementById('callModal').style.display = 'none'; }
@@ -107,7 +147,7 @@ function closeMenuModal() { document.getElementById('optionsModal').style.displa
 async function desfazerMatch() {
   if(!confirm("Deseja realmente cancelar este match de adoção?")) return;
   if(currentDb && matchId) {
-    currentDb.matches = (currentDb.matches || []).filter(m => m.id != matchId);
+    currentDb.matches = (currentDb.matches || []).filter(m => String(m.id) !== String(matchId));
     await saveDb(currentDb);
   }
   window.location.href = '09-chat-lista.html';
@@ -120,7 +160,7 @@ async function loadChat() {
         
         let match = null;
         if(matchId) {
-            match = (json.matches || []).find(m => m.id == matchId);
+            match = (json.matches || []).find(m => String(m.id) === String(matchId));
         }
         if(!match && petId) {
             match = (json.matches || []).find(m => String(m.petId) === String(petId));
@@ -131,7 +171,7 @@ async function loadChat() {
             matchId = match.id;
         }
 
-        // Se ainda assim o match não existe no banco, mas temos o petId, registra o match imediatamente
+        // Se o match ainda não existe no banco, cria o registro imediatamente
         if(!match && petId) {
             const petFound = (json.pets || []).find(p => String(p.id) === String(petId));
             if(petFound) {
@@ -169,7 +209,6 @@ async function loadChat() {
             currentPetId = match.petId;
             if(match.petImg) {
                 document.getElementById('bannerPetImg').src = match.petImg;
-                document.getElementById('chatHeaderAvatar').src = match.petImg;
             }
             if(match.petName) {
                 document.getElementById('bannerPetName').innerText = match.petName;
@@ -177,10 +216,13 @@ async function loadChat() {
             
             document.getElementById('petBannerLink').onclick = () => { window.location.href = '07-detalhes-pet.html?id=' + match.petId; };
             document.getElementById('btnVerPetPerfil').onclick = () => { window.location.href = '07-detalhes-pet.html?id=' + match.petId; };
+            document.getElementById('btnAbrirTermoMenu').onclick = () => { 
+              window.location.href = `11-contrato.html?matchId=${match.id}&petId=${match.petId}`; 
+            };
             
-            const pet = (json.pets || []).find(p => p.id == match.petId);
+            const pet = (json.pets || []).find(p => String(p.id) === String(match.petId));
             if(pet) {
-                document.getElementById('bannerPetDesc').innerText = `${pet.breed || ''} • ${pet.age || ''}`;
+                document.getElementById('bannerPetDesc').innerText = `${pet.breed || ''} • ${pet.age || ''} • Adoção em andamento`;
                 if(pet.ong) {
                     document.getElementById('chatOngName').innerText = pet.ong;
                     document.getElementById('modalOngName').innerText = pet.ong;
@@ -191,11 +233,65 @@ async function loadChat() {
             
             const zapText = encodeURIComponent(`Olá! Tenho interesse na adoção do(a) ${match.petName} pelo app Patinhas!`);
             document.getElementById('btnZapNow').href = `https://wa.me/5584998765432?text=${zapText}`;
+
+            // --- CONTROLE DO BANNER FIXO DO TERMO ---
+            const pinnedBanner = document.getElementById('termoPinnedBanner');
+            const pinnedTitle = document.getElementById('pinnedTermoTitle');
+            const pinnedSub = document.getElementById('pinnedTermoSubtitle');
+            const btnAssinarPinned = document.getElementById('btnAssinarPinned');
+            
+            const isSigned = match.status === 'termo_assinado' || match.termoAssinado;
+            const isSent = match.status === 'termo_enviado' || match.termoEnviado;
+
+            if (isSigned) {
+                pinnedBanner.style.display = 'flex';
+                pinnedBanner.style.background = '#ECFDF5';
+                pinnedBanner.style.borderBottom = '1.5px solid #6EE7B7';
+                pinnedTitle.innerText = 'Termo Assinado com Sucesso! ✓';
+                pinnedTitle.style.color = '#065F46';
+                pinnedSub.innerText = 'Período de adaptação de 7 dias ativo';
+                pinnedSub.style.color = '#047857';
+                btnAssinarPinned.innerText = 'Ver 7 Dias →';
+                btnAssinarPinned.style.background = '#059669';
+                btnAssinarPinned.href = `12-acompanhamento.html?petId=${currentPetId}&matchId=${match.id}`;
+            } else if (isSent) {
+                pinnedBanner.style.display = 'flex';
+                pinnedBanner.style.background = 'linear-gradient(135deg,#FAF5FF,#F3E8FF)';
+                pinnedBanner.style.borderBottom = '1.5px solid #D8B4FE';
+                pinnedTitle.innerText = 'Termo de Adoção Disponível!';
+                pinnedTitle.style.color = '#6B21A8';
+                pinnedSub.innerText = 'Assine digitalmente para prosseguir';
+                pinnedSub.style.color = '#7E22CE';
+                btnAssinarPinned.innerText = 'Assinar ✍️';
+                btnAssinarPinned.style.background = '#7C3AED';
+                btnAssinarPinned.href = `11-contrato.html?petId=${currentPetId}&matchId=${match.id}`;
+            } else {
+                pinnedBanner.style.display = 'none';
+            }
         }
         
-        const chats = (json.chats || []).filter(c => c.matchId == matchId);
-        if(chats.length === lastRenderedChatCount) return; // Não redesenha se não houve novas mensagens (evita piscar a tela)
-        lastRenderedChatCount = chats.length;
+        let chats = (json.chats || []).filter(c => String(c.matchId) === String(matchId));
+
+        // GARANTIA: Se o termo foi enviado no status mas não está em chats, sintetiza o card!
+        const isSentOrSigned = match && (match.status === 'termo_enviado' || match.termoEnviado || match.status === 'termo_assinado');
+        const hasTermoCard = chats.some(c => c.isTermo || (c.text && c.text.includes('[TERMO DE ADOÇÃO RESPONSÁVEL]')));
+        if (isSentOrSigned && !hasTermoCard) {
+            chats.push({
+                matchId: match.id,
+                sender: 'ong',
+                text: `📄 [TERMO DE ADOÇÃO RESPONSÁVEL]\nClique no botão abaixo para ler o contrato e realizar a assinatura digital para adoção de ${match.petName}.`,
+                isTermo: true,
+                petId: match.petId,
+                petName: match.petName,
+                petImg: match.petImg,
+                time: 'Oficial'
+            });
+        }
+        
+        // Evita piscar se nada mudou
+        const currentKey = chats.length + '_' + (chats[chats.length-1]?.text || '') + '_' + (match?.status || '');
+        if(currentKey === lastRenderedChatKey) return;
+        lastRenderedChatKey = currentKey;
         
         const area = document.getElementById('msgArea');
         area.innerHTML = '';
@@ -255,26 +351,25 @@ async function sendMsg() {
   
   const time = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
   
-  // Exibição instantânea na interface (feedback imediato!)
+  // Exibição instantânea na interface (0ms de latência percebida)
   const area = document.getElementById('msgArea');
   const div = document.createElement('div');
   div.style.cssText = 'max-width:78%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.5;align-self:flex-end;box-shadow:var(--shadow-sm);';
-  div.innerHTML = `<div>${text}</div><div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px;">${time}</div>`;
+  div.innerHTML = `<div style="white-space:pre-wrap;">${text}</div><div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px;">${time}</div>`;
   area.appendChild(div);
   area.scrollTop = area.scrollHeight;
-  lastRenderedChatCount++;
 
   try {
     if(!currentDb) currentDb = await loadDb();
     if(!currentDb.chats) currentDb.chats = [];
-    currentDb.chats.push({ matchId, sender, text, time });
+    currentDb.chats.push({ matchId: String(matchId), sender, text, time });
     await saveDb(currentDb);
   } catch(e) { console.error('Erro ao enviar mensagem:', e); }
 }
 
 document.getElementById('msgInput').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
 loadChat();
-setInterval(loadChat, 2500);
+setInterval(loadChat, 3000);
 </script>
 </body>
 </html>

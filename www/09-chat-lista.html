@@ -66,21 +66,26 @@ function renderMatchesList(matchesToRender) {
     }
 
     matchesToRender.slice().reverse().forEach(m => {
-        const petChats = allChats.filter(c => c.matchId == m.id);
+        const petChats = allChats.filter(c => String(c.matchId) === String(m.id));
         const lastMsg = petChats.length > 0 ? petChats[petChats.length - 1].text : 'Conversa de adoção iniciada 🐾';
         const lastTime = petChats.length > 0 && petChats[petChats.length - 1].time ? petChats[petChats.length - 1].time : 'recente';
         
         listArea.innerHTML += `
         <a href="10-chat-mensagem.html?matchId=${m.id}" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
             <div style="position:relative;flex-shrink:0;">
-              <img src="${m.petImg}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
-              <div style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--success);border-radius:50%;border:2px solid white;"></div>
+              <!-- Ícone Oficial da ONG Patinhas -->
+              <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#E8590C);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,53,0.25);border:2px solid white;">
+                <span style="font-size:24px;">🐾</span>
+              </div>
+              <!-- Miniatura do Pet em Adoção -->
+              <img src="${m.petImg}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;border:2px solid white;object-fit:cover;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
             </div>
             <div style="flex:1;min-width:0;">
-              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                <span style="font-weight:700;font-size:15px;">${m.petName}</span>
+              <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                <span style="font-weight:800;font-size:15px;color:var(--text-1);">ONG Patinhas</span>
                 <span style="font-size:11px;color:var(--text-3);">${lastTime}</span>
               </div>
+              <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:2px;">Adoção de ${m.petName} 🐶</div>
               <div style="display:flex;align-items:center;gap:6px;">
                 ${m.status === 'termo_assinado' ? '<span style="font-size:10px;font-weight:700;background:#ECFDF5;color:#065F46;padding:2px 6px;border-radius:6px;flex-shrink:0;">✍️ Assinado</span>' : (m.status === 'termo_enviado' ? '<span style="font-size:10px;font-weight:700;background:#FAF5FF;color:#6B21A8;padding:2px 6px;border-radius:6px;flex-shrink:0;">📋 Termo</span>' : '')}
                 <p style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;">
