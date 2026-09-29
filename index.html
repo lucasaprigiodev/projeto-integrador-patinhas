@@ -324,7 +324,7 @@ async function fetchDashboard() {
             pGrid.innerHTML += `
             <div class="bg-white rounded-2xl border ${isAdotado ? 'border-slate-300 opacity-60' : 'border-slate-200'} overflow-hidden shadow-sm hover:shadow-md transition-all group relative">
                 ${isAdotado ? '<div class="absolute top-2 right-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-md z-10">Adotado</div>' : ''}
-                <img src="${p.img}" class="w-full h-40 object-cover ${isAdotado ? 'grayscale' : ''}">
+                <img src="${p.img}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80'" class="w-full h-40 object-cover ${isAdotado ? 'grayscale' : ''}">
                 <div class="p-4">
                     <h4 class="font-extrabold text-lg text-slate-800">${p.name}</h4>
                     <p class="text-sm text-slate-500 mb-4">${p.breed} • ${p.age}</p>
@@ -344,7 +344,7 @@ async function fetchDashboard() {
             matches.slice().reverse().forEach(m => {
                 const rowContent = `
                     <td class="px-8 py-5 font-bold text-slate-700 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">${m.userName.charAt(0)}</div>${m.userName}</td>
-                    <td class="px-8 py-5"><div class="flex items-center gap-3"><img src="${m.petImg}" class="w-10 h-10 rounded-lg object-cover shadow-sm font-medium text-slate-700"><span>${m.petName}</span></div></td>
+                    <td class="px-8 py-5"><div class="flex items-center gap-3"><img src="${m.petImg}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80'" class="w-10 h-10 rounded-lg object-cover shadow-sm font-medium text-slate-700"><span>${m.petName}</span></div></td>
                     <td class="px-8 py-5">${getStatusBadge(m.status)}</td>
                 `;
                 dashRows += `<tr>${rowContent}

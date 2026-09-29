@@ -127,6 +127,16 @@ async function swipeCard(dir) {
     const uName = localStorage.getItem('userName') || 'Lucas Aprígio';
     let matchId = Date.now().toString();
     
+    const SAFE_FALLBACKS = {
+      "4": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=800&q=80",
+      "5": "https://images.unsplash.com/photo-1516371535707-512a1e83bb9a?w=800&q=80",
+      "8": "https://images.unsplash.com/photo-1505628346881-b72b27e84530?w=800&q=80"
+    };
+    let petImg = pet.img || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80';
+    if(petImg.includes('1589966847426') || petImg.includes('1590634331661') || petImg.includes('1537151608804')) {
+      petImg = SAFE_FALLBACKS[String(pet.id)] || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80';
+    }
+
     // Atualiza base de dados
     if(!dbData) dbData = await loadDb();
     if(!dbData.matches) dbData.matches = [];
@@ -138,7 +148,7 @@ async function swipeCard(dir) {
       dbData.matches.push({
           id: matchId,
           petId: pet.id,
-          petImg: pet.img,
+          petImg: petImg,
           petName: pet.name,
           userName: uName,
           status: 'pendente',
@@ -152,14 +162,18 @@ async function swipeCard(dir) {
           time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
       });
       
-      await saveDb(dbData); // Envia para o GitHub Gist e AGUARDA confirmacao antes de redirecionar
+      try {
+        await saveDb(dbData); // Envia para o GitHub Gist e AGUARDA confirmacao antes de redirecionar
+      } catch(err) {
+        console.error("Erro ao salvar no banco:", err);
+      }
     } else {
       matchId = existingMatch.id;
     }
     
     localStorage.setItem('lastMatchId', matchId);
     localStorage.setItem('lastPetId', String(pet.id));
-    localStorage.setItem('lastPetImg', pet.img);
+    localStorage.setItem('lastPetImg', petImg);
     localStorage.setItem('lastPetName', pet.name);
     window.location.href = `08-match.html?matchId=${matchId}&petId=${pet.id}`;
     return;
