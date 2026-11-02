@@ -133,12 +133,14 @@ function formatPetRow(row) {
     criado_em: row.criado_em,
     // Campos legados em inglês mantidos para compatibilidade imediata com todas as telas HTML
     name: row.nome,
+    species: row.especie,
     breed: row.raca,
     age: row.idade,
     size: row.porte,
     gender: row.sexo,
     dist: row.distancia,
     desc: row.descricao,
+    about: row.descricao,
     img: row.foto_url,
     ong: row.ong_nome
   };
@@ -821,14 +823,36 @@ app.post('/api/matches/:id/messages', authenticateToken, (req, res) => {
 // 5. PONTE DE SINCRONIZAÇÃO DE ESTADO COMPLETO (/api/state)
 // Permite que o módulo cliente (db.js) sincronize e persista alterações no SQLite
 // ============================================================================
+function buildFullStatePayload() {
+  const petRows = db.prepare('SELECT * FROM animais ORDER BY id ASC').all();
+  const matchRows = db.prepare('SELECT * FROM adocoes_matches ORDER BY id ASC').all();
+  const formattedMatches = matchRows.map(formatMatchRow);
+  const flatChats = [];
+  for (const m of formattedMatches) {
+    for (const msg of (m.messages || [])) {
+      flatChats.push({
+        id: msg.id,
+        matchId: String(m.id),
+        sender: msg.sender,
+        text: msg.text,
+        isTermo: Boolean(msg.isTermo),
+        petId: m.petId,
+        petName: m.petName,
+        petImg: m.petImg,
+        time: msg.time
+      });
+    }
+  }
+  return {
+    pets: petRows.map(formatPetRow),
+    matches: formattedMatches,
+    chats: flatChats
+  };
+}
+
 app.get('/api/state', (req, res) => {
   try {
-    const petRows = db.prepare('SELECT * FROM animais ORDER BY id DESC').all();
-    const matchRows = db.prepare('SELECT * FROM adocoes_matches ORDER BY id DESC').all();
-    return res.status(200).json({
-      pets: petRows.map(formatPetRow),
-      matches: matchRows.map(formatMatchRow)
-    });
+    return res.status(200).json(buildFullStatePayload());
   } catch (err) {
     return res.status(500).json({ erro: 'Erro ao carregar estado do banco.', detalhes: err.message });
   }
@@ -836,7 +860,7 @@ app.get('/api/state', (req, res) => {
 
 app.put('/api/state', (req, res) => {
   try {
-    const { pets, matches } = req.body || {};
+    const { pets, matches, chats } = req.body || {};
     const ongRow = db.prepare("SELECT id FROM usuarios WHERE perfil = 'ong' ORDER BY id ASC LIMIT 1").get();
     const defaultOngId = ongRow ? ongRow.id : 1;
     const adopterRow = db.prepare("SELECT id FROM usuarios WHERE perfil = 'adotante' ORDER BY id ASC LIMIT 1").get();
@@ -854,16 +878,21 @@ app.put('/api/state', (req, res) => {
       for (const p of pets) {
         const existing = db.prepare('SELECT id FROM animais WHERE id = ?').get(Number(p.id));
         const nome = p.nome || p.name || 'Pet';
-        const especie = p.especie || 'Cachorro';
+        const rawSpecies = p.especie || p.species || 'Cachorro';
+        const especie = ['Cachorro', 'Gato', 'Outro'].includes(rawSpecies)
+          ? rawSpecies
+          : (String(rawSpecies).toLowerCase().includes('gat') ? 'Gato' : 'Cachorro');
         const raca = p.raca || p.breed || 'SRD';
         const idade = p.idade || p.age || '1 ano';
-        const porte = p.porte || p.size || 'Médio';
-        const sexo = p.sexo || p.gender || 'Macho';
+        const rawSize = p.porte || p.size || 'Médio';
+        const porte = ['Pequeno', 'Médio', 'Grande'].includes(rawSize) ? rawSize : 'Médio';
+        const rawGender = p.sexo || p.gender || 'Macho';
+        const sexo = ['Macho', 'Fêmea'].includes(rawGender) ? rawGender : 'Macho';
         const distancia = p.distancia || p.dist || '3km';
-        const descricao = p.descricao || p.desc || 'Animal resgatado disponível para adoção responsável.';
+        const descricao = p.descricao || p.about || p.desc || 'Animal resgatado disponível para adoção responsável.';
         const foto_url = p.foto_url || p.img || '';
         const status = ['disponivel', 'em_processo', 'adotado'].includes(p.status) ? p.status : 'disponivel';
-        const ong_nome = p.ong_nome || p.ong || 'ONG Patinhas';
+        const ong_nome = p.ong_nome || p.ong || 'ONG Patinhas Natal';
 
         if (existing) {
           db.prepare(`
@@ -896,8 +925,8 @@ app.put('/api/state', (req, res) => {
         if (!petExists) continue;
 
         const adopterId = Number(m.adotante_id || m.userId) || defaultAdopterId;
-        const termoEnviado = m.termo_enviado || m.termoEnviado ? 1 : 0;
-        const termoAssinado = m.termo_assinado || m.termoAssinado ? 1 : 0;
+        const termoEnviado = (m.termo_enviado || m.termoEnviado || m.status === 'termo_enviado' || m.status === 'termo_assinado' || m.status === 'aprovado') ? 1 : 0;
+        const termoAssinado = (m.termo_assinado || m.termoAssinado || m.status === 'termo_assinado' || m.status === 'aprovado') ? 1 : 0;
         let status = m.status || 'pendente';
         if (status === 'pendente' && termoAssinado) status = 'termo_assinado';
         else if (status === 'pendente' && termoEnviado) status = 'termo_enviado';
@@ -911,14 +940,13 @@ app.put('/api/state', (req, res) => {
           `).run(
             status,
             termoEnviado,
-            m.termo_enviado_em || m.termoEnviadoAt || null,
+            m.termo_enviado_em || m.termoEnviadoAt || m.termoEnviadoEm || null,
             termoAssinado,
             m.assinatura_digital || m.assinaturaNome || null,
-            m.termo_assinado_em || m.termoAssinadoAt || null,
+            m.termo_assinado_em || m.termoAssinadoAt || m.termoAssinadoEm || null,
             matchId
           );
         } else {
-          // Evita violação de UNIQUE(animal_id, adotante_id)
           const dup = db.prepare('SELECT id FROM adocoes_matches WHERE animal_id = ? AND adotante_id = ?').get(petId, adopterId);
           if (!dup) {
             db.prepare(`
@@ -930,31 +958,37 @@ app.put('/api/state', (req, res) => {
               adopterId,
               status,
               termoEnviado,
-              m.termo_enviado_em || m.termoEnviadoAt || null,
+              m.termo_enviado_em || m.termoEnviadoAt || m.termoEnviadoEm || null,
               termoAssinado,
               m.assinatura_digital || m.assinaturaNome || null,
-              m.termo_assinado_em || m.termoAssinadoAt || null,
+              m.termo_assinado_em || m.termoAssinadoAt || m.termoAssinadoEm || null,
               m.data_match || m.date || new Date().toLocaleDateString('pt-BR')
             );
           }
         }
 
         const targetMatchRow = db.prepare('SELECT id FROM adocoes_matches WHERE id = ? OR (animal_id = ? AND adotante_id = ?)').get(matchId, petId, adopterId);
-        if (targetMatchRow && Array.isArray(m.messages)) {
+        const matchMessages = Array.isArray(chats)
+          ? chats.filter(c => String(c.matchId) === String(m.id) || String(c.matchId) === String(targetMatchRow?.id))
+          : (Array.isArray(m.messages) ? m.messages : null);
+
+        if (targetMatchRow && Array.isArray(matchMessages)) {
           db.prepare('DELETE FROM mensagens WHERE match_id = ?').run(targetMatchRow.id);
           const insertMsg = db.prepare(`
             INSERT INTO mensagens (match_id, remetente_id, remetente_perfil, texto, is_termo, horario)
             VALUES (?, ?, ?, ?, ?, ?)
           `);
-          for (const msg of m.messages) {
+          for (const msg of matchMessages) {
             const sender = msg.sender === 'ong' || msg.remetente_perfil === 'ong' ? 'ong' : 'user';
             const senderId = sender === 'ong' ? defaultOngId : adopterId;
+            const txt = String(msg.text || msg.texto || '').trim();
+            if (!txt) continue;
             insertMsg.run(
               targetMatchRow.id,
               senderId,
               sender,
-              msg.text || msg.texto || '',
-              msg.isTermo || msg.is_termo ? 1 : 0,
+              txt,
+              msg.isTermo || msg.is_termo || txt.includes('[TERMO DE ADOÇÃO RESPONSÁVEL]') ? 1 : 0,
               msg.time || msg.horario || '12:00'
             );
           }
@@ -962,12 +996,9 @@ app.put('/api/state', (req, res) => {
       }
     }
 
-    const updatedPets = db.prepare('SELECT * FROM animais ORDER BY id DESC').all();
-    const updatedMatches = db.prepare('SELECT * FROM adocoes_matches ORDER BY id DESC').all();
     return res.status(200).json({
       sucesso: true,
-      pets: updatedPets.map(formatPetRow),
-      matches: updatedMatches.map(formatMatchRow)
+      ...buildFullStatePayload()
     });
   } catch (err) {
     console.error('[PUT /api/state]', err);

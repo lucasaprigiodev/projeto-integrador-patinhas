@@ -6,13 +6,25 @@
   <title>Descobrir · Patinhas</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    .phone {
-      transform: translateZ(0);
-      will-change: transform;
+    .phone { transform: translateZ(0); will-change: transform; }
+    #cardStack { contain: layout paint; will-change: transform; }
+    .filter-pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text-2);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
     }
-    #cardStack {
-      contain: layout paint;
-      will-change: transform;
+    .filter-pill.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 3px 10px rgba(255,107,53,0.28);
     }
   </style>
 </head>
@@ -20,22 +32,32 @@
 
 <div class="phone">
   <div class="statusbar" style="color:var(--text-1);">
-  <span class="time">9:41</span>
-  <div class="icons">
-    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
-    <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
-    <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+    <span class="time">9:41</span>
+    <div class="icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+      <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+    </div>
   </div>
-</div>
+
   <!-- Header -->
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 20px 12px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 20px 8px;">
     <div>
       <h1 style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">Descobrir 🐾</h1>
-      <p style="font-size:12px;color:var(--text-3);margin-top:2px;">Natal, RN • 3 pets perto de você</p>
+      <p id="petCounterLabel" style="font-size:12px;color:var(--text-3);margin-top:2px;">Natal, RN • Carregando pets...</p>
     </div>
     <div style="display:flex;gap:8px;">
-      <a href="06-filtros.html" style="width:40px;height:40px;border-radius:12px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;">⚙️</a>
+      <button onclick="resetarVistos()" title="Rever todos os pets" style="width:38px;height:38px;border-radius:12px;background:var(--surface-2);border:none;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">🔄</button>
+      <a href="06-filtros.html" style="width:38px;height:38px;border-radius:12px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:17px;">⚙️</a>
     </div>
+  </div>
+
+  <!-- Quick Filter Bar (Inovação Pet-Tech) -->
+  <div style="display:flex;gap:8px;padding:0 20px 10px;overflow-x:auto;scrollbar-width:none;">
+    <button class="filter-pill active" data-filter="todos" onclick="setQuickFilter('todos', this)">🐾 Todos</button>
+    <button class="filter-pill" data-filter="Cachorro" onclick="setQuickFilter('Cachorro', this)">🐶 Cães</button>
+    <button class="filter-pill" data-filter="Gato" onclick="setQuickFilter('Gato', this)">🐱 Gatos</button>
+    <button class="filter-pill" data-filter="Pequeno" onclick="setQuickFilter('Pequeno', this)">📏 Porte Pequeno</button>
   </div>
 
   <!-- Card stack -->
@@ -44,10 +66,10 @@
   </div>
 
   <!-- Action buttons -->
-  <div style="display:flex;justify-content:center;align-items:center;gap:16px;padding:16px 0 4px;">
-    <button id="btnSkip" onclick="swipeCard('left')" style="width:58px;height:58px;border-radius:50%;border:2px solid #FFE0E8;background:white;font-size:26px;cursor:pointer;box-shadow:var(--shadow-md);transition:all 0.2s;display:flex;align-items:center;justify-content:center;">✖</button>
-    <button onclick="goToDetails()" style="width:44px;height:44px;border-radius:50%;border:2px solid #E0F0FF;background:white;font-size:20px;cursor:pointer;box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center;">ℹ️</button>
-    <button id="btnLike" onclick="swipeCard('right')" style="width:58px;height:58px;border-radius:50%;border:2px solid #C8F5C8;background:white;font-size:26px;cursor:pointer;box-shadow:var(--shadow-md);transition:all 0.2s;display:flex;align-items:center;justify-content:center;">❤️</button>
+  <div style="display:flex;justify-content:center;align-items:center;gap:16px;padding:12px 0 4px;">
+    <button id="btnSkip" onclick="swipeCard('left')" style="width:56px;height:56px;border-radius:50%;border:2px solid #FFE0E8;background:white;font-size:24px;cursor:pointer;box-shadow:var(--shadow-md);transition:all 0.2s;display:flex;align-items:center;justify-content:center;">✖</button>
+    <button onclick="goToDetails()" style="width:44px;height:44px;border-radius:50%;border:2px solid #E0F0FF;background:white;font-size:19px;cursor:pointer;box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center;" title="Ficha Completa">ℹ️</button>
+    <button id="btnLike" onclick="swipeCard('right')" style="width:56px;height:56px;border-radius:50%;border:2px solid #C8F5C8;background:white;font-size:24px;cursor:pointer;box-shadow:var(--shadow-md);transition:all 0.2s;display:flex;align-items:center;justify-content:center;">❤️</button>
   </div>
 
   <div class="navbar"><a href="05-home-swipe.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg><span>Descobrir</span></a><a href="09-chat-lista.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Mensagens</span></a><a href="04-meu-perfil.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Perfil</span></a></div>
@@ -55,184 +77,254 @@
 
 <script src="db.js"></script>
 <script>
+let allAvailablePets = [];
 let pets = [];
 let current = 0;
 let dbData = null;
+let activeQuickFilter = localStorage.getItem('patinhas_quick_filter') || 'todos';
 const stack = document.getElementById('cardStack');
 
 function goToDetails() {
   const pet = pets[current];
-  if(pet) {
+  if (pet) {
     window.location.href = '07-detalhes-pet.html?id=' + pet.id;
   }
 }
 
-async function loadPets() {
+function setQuickFilter(filterValue, btnEl) {
+  activeQuickFilter = filterValue;
+  localStorage.setItem('patinhas_quick_filter', filterValue);
+  document.querySelectorAll('.filter-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === filterValue);
+  });
+  applyFilterAndRender();
+}
+
+function resetarVistos() {
+  localStorage.removeItem('swipedPetIds');
+  localStorage.removeItem('patinhas_quick_filter');
+  activeQuickFilter = 'todos';
+  document.querySelectorAll('.filter-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === 'todos');
+  });
+  loadPets(true);
+}
+
+function applyFilterAndRender() {
+  const userSwiped = new Set(JSON.parse(localStorage.getItem('swipedPetIds') || '[]').map(String));
+  const matchedIds = new Set(((dbData && dbData.matches) || []).map(m => String(m.petId)));
+
+  let baseList = allAvailablePets.filter(p => !userSwiped.has(String(p.id)) && !matchedIds.has(String(p.id)));
+  if (baseList.length === 0 && allAvailablePets.length > 0) {
+    localStorage.removeItem('swipedPetIds');
+    baseList = allAvailablePets.filter(p => !matchedIds.has(String(p.id)));
+  }
+
+  if (activeQuickFilter === 'Cachorro') {
+    pets = baseList.filter(p => (p.species || p.especie || 'Cachorro').toLowerCase().includes('cachorr') || (p.species || p.especie || '').toLowerCase().includes('cão'));
+  } else if (activeQuickFilter === 'Gato') {
+    pets = baseList.filter(p => (p.species || p.especie || '').toLowerCase().includes('gat'));
+  } else if (activeQuickFilter === 'Pequeno') {
+    pets = baseList.filter(p => (p.size || p.porte || '').toLowerCase().includes('pequeno'));
+  } else {
+    pets = baseList;
+  }
+
+  current = 0;
+  const counterEl = document.getElementById('petCounterLabel');
+  if (counterEl) {
+    counterEl.textContent = `Natal, RN • ${pets.length} ${pets.length === 1 ? 'pet disponível' : 'pets perto de você'}`;
+  }
+  renderCards();
+}
+
+async function loadPets(force = false) {
   try {
-    dbData = await loadDb();
-    const userSwiped = new Set(JSON.parse(localStorage.getItem('swipedPetIds') || '[]').map(String));
-    const matchedIds = new Set((dbData.matches || []).map(m => String(m.petId)));
-    
-    // Filtra pets que estão disponíveis, excluindo os que já deram match ou foram vistos
-    pets = (dbData.pets || []).filter(p => p.status === 'disponivel' && !userSwiped.has(String(p.id)) && !matchedIds.has(String(p.id)));
-    
-    // Se o usuário viu todos os que não deram match, reseta apenas os ignorados para rever, mantendo os com match bloqueados
-    if(pets.length === 0) {
-      localStorage.removeItem('swipedPetIds');
-      pets = (dbData.pets || []).filter(p => p.status === 'disponivel' && !matchedIds.has(String(p.id)));
-    }
-    
-    current = 0;
-    renderCards();
-  } catch(e) { console.error('Erro ao carregar pets:', e); }
+    dbData = await loadDb(force);
+    allAvailablePets = (dbData.pets || []).filter(p => p.status === 'disponivel');
+
+    // Sincroniza pílula ativa
+    document.querySelectorAll('.filter-pill').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === activeQuickFilter);
+    });
+
+    applyFilterAndRender();
+  } catch (e) { console.error('Erro ao carregar pets:', e); }
+}
+
+function getMatchScore(pet) {
+  if (pet.matchScore) return pet.matchScore;
+  const scores = [98, 96, 95, 94, 97, 92, 93, 95, 96, 99];
+  return scores[(Number(pet.id) || 1) % scores.length];
 }
 
 function buildCard(pet, zIndex) {
   const scale = 1 - (zIndex * 0.04);
   const translateY = zIndex * 10;
+  const score = getMatchScore(pet);
+  const speciesIcon = (pet.species || pet.especie || '').toLowerCase().includes('gat') ? '🐱' : '🐶';
+  const sizeLabel = pet.size || pet.porte || 'Médio';
+  const breedLabel = pet.breed || pet.raca || 'SRD';
+
   const card = document.createElement('div');
   card.id = 'card-' + zIndex;
-  card.style.cssText = `position:absolute;inset:0;border-radius:24px;background:url('${pet.img}') center/cover;box-shadow:0 12px 40px rgba(0,0,0,0.2);transform:scale(${scale}) translateY(${translateY}px);transition:transform 0.3s ease;cursor:${zIndex===0?'grab':'default'};user-select:none;z-index:${10-zIndex};overflow:hidden;`;
+  card.style.cssText = `position:absolute;inset:0;border-radius:24px;background:url('${pet.img}') center/cover;box-shadow:0 12px 36px rgba(0,0,0,0.22);transform:scale(${scale}) translateY(${translateY}px);transition:transform 0.3s ease;cursor:${zIndex===0?'grab':'default'};user-select:none;z-index:${10-zIndex};overflow:hidden;`;
   card.innerHTML = `
-    <div id="like-badge-${zIndex}" style="position:absolute;top:32px;left:24px;background:#06D6A0;color:white;font-weight:800;font-size:22px;padding:8px 18px;border-radius:12px;border:3px solid white;opacity:0;transform:rotate(-15deg);transition:opacity 0.2s;">ADOTAR ❤️</div>
-    <div id="nope-badge-${zIndex}" style="position:absolute;top:32px;right:24px;background:#EF476F;color:white;font-weight:800;font-size:22px;padding:8px 18px;border-radius:12px;border:3px solid white;opacity:0;transform:rotate(15deg);transition:opacity 0.2s;">PASSAR ✖</div>
-    <div style="position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.85));display:flex;justify-content:space-between;align-items:flex-end;">
-      <div>
-        <h2 style="color:white;font-size:26px;font-weight:800;margin-bottom:4px;">${pet.name}, ${pet.age}</h2>
-        <p style="color:rgba(255,255,255,0.75);font-size:13px;margin-bottom:0;">📍 ${pet.dist} • ${pet.ong}</p>
+    <!-- Top Badges: Compatibilidade IA + Porte -->
+    <div style="position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;">
+      <span style="background:rgba(16,185,129,0.92);backdrop-filter:blur(6px);color:white;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+        ✨ ${score}% Compatível
+      </span>
+      <span style="background:rgba(15,23,42,0.72);backdrop-filter:blur(6px);color:white;font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;">
+        ${speciesIcon} ${sizeLabel}
+      </span>
+    </div>
+
+    <div id="like-badge-${zIndex}" style="position:absolute;top:52px;left:24px;background:#06D6A0;color:white;font-weight:800;font-size:22px;padding:8px 18px;border-radius:12px;border:3px solid white;opacity:0;transform:rotate(-15deg);transition:opacity 0.2s;">ADOTAR ❤️</div>
+    <div id="nope-badge-${zIndex}" style="position:absolute;top:52px;right:24px;background:#EF476F;color:white;font-weight:800;font-size:22px;padding:8px 18px;border-radius:12px;border:3px solid white;opacity:0;transform:rotate(15deg);transition:opacity 0.2s;">PASSAR ✖</div>
+
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.7) 40%,rgba(0,0,0,0.92));display:flex;justify-content:space-between;align-items:flex-end;">
+      <div style="flex:1;min-width:0;padding-right:10px;">
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+          <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">💉 Vacinado</span>
+          <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">✂️ Castrado</span>
+          <span style="background:rgba(255,107,53,0.85);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">${breedLabel}</span>
+        </div>
+        <h2 style="color:white;font-size:25px;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${pet.name}, ${pet.age}</h2>
+        <p style="color:rgba(255,255,255,0.82);font-size:12.5px;margin-bottom:0;">📍 ${pet.dist || '3km'} • ${pet.ong || 'ONG Patinhas'}</p>
       </div>
-      <button onclick="event.stopPropagation(); window.location.href='07-detalhes-pet.html?id=${pet.id}'" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.25);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.4);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Ver Detalhes">ℹ️</button>
+      <button onclick="event.stopPropagation(); window.location.href='07-detalhes-pet.html?id=${pet.id}'" style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.25);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.5);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Ver Ficha Completa">ℹ️</button>
     </div>`;
   return card;
 }
 
 function renderCards() {
-  if(!stack) return;
+  if (!stack) return;
   stack.innerHTML = '';
-  for(let i = Math.min(2, pets.length - current - 1); i >= 0; i--) {
-    if(current + i < pets.length) stack.appendChild(buildCard(pets[current+i], i));
+  for (let i = Math.min(2, pets.length - current - 1); i >= 0; i--) {
+    if (current + i < pets.length) stack.appendChild(buildCard(pets[current + i], i));
   }
-  if(pets.length - current <= 0) showEmpty();
+  const counterEl = document.getElementById('petCounterLabel');
+  const remaining = Math.max(0, pets.length - current);
+  if (counterEl) {
+    counterEl.textContent = `Natal, RN • ${remaining} ${remaining === 1 ? 'pet disponível' : 'pets perto de você'}`;
+  }
+  if (remaining <= 0) showEmpty();
   else initDrag();
 }
 
 async function swipeCard(dir) {
   const card = document.getElementById('card-0');
-  if(!card) return;
+  if (!card) return;
   const pet = pets[current];
-  if(!pet) return;
+  if (!pet) return;
 
-  const tx = dir==='right' ? 600 : -600;
-  card.style.transition = 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.4s';
-  card.style.transform = `translateX(${tx}px) rotate(${dir==='right'?20:-20}deg)`;
+  const tx = dir === 'right' ? 600 : -600;
+  card.style.transition = 'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.35s';
+  card.style.transform = `translateX(${tx}px) rotate(${dir === 'right' ? 20 : -20}deg)`;
   card.style.opacity = '0';
-  
-  // Registra que este pet ja foi visto para nao repetir
+
   const userSwiped = JSON.parse(localStorage.getItem('swipedPetIds') || '[]');
-  if(!userSwiped.includes(String(pet.id))) userSwiped.push(String(pet.id));
+  if (!userSwiped.includes(String(pet.id))) userSwiped.push(String(pet.id));
   localStorage.setItem('swipedPetIds', JSON.stringify(userSwiped));
 
-  if(dir === 'right') {
+  if (dir === 'right') {
     const uName = localStorage.getItem('userName') || 'Lucas Aprígio';
     let matchId = Date.now().toString();
-    
-    const SAFE_FALLBACKS = {
-      "4": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=800&q=80",
-      "5": "https://images.unsplash.com/photo-1516371535707-512a1e83bb9a?w=800&q=80",
-      "8": "https://images.unsplash.com/photo-1505628346881-b72b27e84530?w=800&q=80"
-    };
     let petImg = pet.img || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80';
-    if(petImg.includes('1589966847426') || petImg.includes('1590634331661') || petImg.includes('1537151608804')) {
-      petImg = SAFE_FALLBACKS[String(pet.id)] || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80';
-    }
 
-    // Atualiza base de dados
-    if(!dbData) dbData = await loadDb();
-    if(!dbData.matches) dbData.matches = [];
-    if(!dbData.chats) dbData.chats = [];
-    
-    // Evita duplicata de match
+    if (!dbData) dbData = await loadDb();
+    if (!dbData.matches) dbData.matches = [];
+    if (!dbData.chats) dbData.chats = [];
+
     const existingMatch = dbData.matches.find(m => String(m.petId) === String(pet.id));
-    if(!existingMatch) {
+    if (!existingMatch) {
       dbData.matches.push({
-          id: matchId,
-          petId: pet.id,
-          petImg: petImg,
-          petName: pet.name,
-          userName: uName,
-          status: 'pendente',
-          date: new Date().toLocaleDateString('pt-BR')
+        id: matchId,
+        petId: pet.id,
+        petImg: petImg,
+        petName: pet.name,
+        userName: uName,
+        status: 'pendente',
+        date: new Date().toLocaleDateString('pt-BR')
       });
-      
+
       dbData.chats.push({
-          matchId: matchId,
-          sender: 'ong',
-          text: `Olá, ${uName}! Ficamos muito felizes pelo seu interesse no(a) ${pet.name}! Como podemos te ajudar no processo de adoção?`,
-          time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+        matchId: matchId,
+        sender: 'ong',
+        text: `Olá, ${uName}! Ficamos muito felizes pelo seu interesse no(a) ${pet.name}! Como podemos te ajudar no processo de adoção? 🐾`,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       });
-      
-      // Dispara persistência assíncrona no Gist; o cache local atualiza em <1ms
+
       saveDb(dbData);
     } else {
       matchId = existingMatch.id;
     }
-    
+
     localStorage.setItem('lastMatchId', matchId);
     localStorage.setItem('lastPetId', String(pet.id));
     localStorage.setItem('lastPetImg', petImg);
     localStorage.setItem('lastPetName', pet.name);
 
-    // Navegação ultra-rápida e fluida após o card começar a sair
     setTimeout(() => {
       window.location.href = `08-match.html?matchId=${matchId}&petId=${pet.id}`;
     }, 150);
     return;
   }
-  
+
   setTimeout(() => {
     current++;
     renderCards();
-  }, 350);
+  }, 300);
 }
 
 function showEmpty() {
-  stack.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;"><div style="font-size:60px;margin-bottom:16px;">🐾</div><h3 style="font-size:20px;font-weight:700;margin-bottom:8px;">Você viu todos!</h3><p style="color:var(--text-2);font-size:14px;">Aguarde a ONG cadastrar mais animais.</p></div>`;
+  stack.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;">
+      <div style="font-size:56px;margin-bottom:12px;">🐾</div>
+      <h3 style="font-size:20px;font-weight:800;margin-bottom:6px;">Você viu todos os pets deste filtro!</h3>
+      <p style="color:var(--text-2);font-size:13.5px;margin-bottom:18px;line-height:1.5;">
+        Quer rever os animais disponíveis ou trocar o filtro de busca?
+      </p>
+      <button onclick="resetarVistos()" class="btn btn-primary" style="max-width:240px;padding:12px 20px;font-size:14px;">
+        🔄 Rever Pets Disponíveis
+      </button>
+    </div>`;
 }
 
 function initDrag() {
   const card = document.getElementById('card-0');
-  if(!card) return;
+  if (!card) return;
   let startX, startY, isDragging = false;
   const likeBadge = card.querySelector('[id^="like-badge"]');
   const nopeBadge = card.querySelector('[id^="nope-badge"]');
 
-  function start(x, y) { startX=x; startY=y; isDragging=true; card.style.transition='none'; }
+  function start(x, y) { startX = x; startY = y; isDragging = true; card.style.transition = 'none'; }
   function move(x, y) {
-    if(!isDragging) return;
-    const dx=x-startX, dy=y-startY, rot=dx*0.08;
-    card.style.transform=`translateX(${dx}px) translateY(${dy}px) rotate(${rot}deg)`;
-    const pct = Math.min(Math.abs(dx)/80,1);
-    if(dx>0) { likeBadge.style.opacity=pct; nopeBadge.style.opacity=0; }
-    else { nopeBadge.style.opacity=pct; likeBadge.style.opacity=0; }
+    if (!isDragging) return;
+    const dx = x - startX, dy = y - startY, rot = dx * 0.08;
+    card.style.transform = `translateX(${dx}px) translateY(${dy}px) rotate(${rot}deg)`;
+    const pct = Math.min(Math.abs(dx) / 80, 1);
+    if (dx > 0) { likeBadge.style.opacity = pct; nopeBadge.style.opacity = 0; }
+    else { nopeBadge.style.opacity = pct; likeBadge.style.opacity = 0; }
   }
   function end(x) {
-    if(!isDragging) return;
-    isDragging=false;
-    const dx=x-startX;
-    if(dx > 80) swipeCard('right');
-    else if(dx < -80) swipeCard('left');
-    else { card.style.transition='transform 0.4s'; card.style.transform=''; likeBadge.style.opacity=0; nopeBadge.style.opacity=0; }
+    if (!isDragging) return;
+    isDragging = false;
+    const dx = x - startX;
+    if (dx > 80) swipeCard('right');
+    else if (dx < -80) swipeCard('left');
+    else { card.style.transition = 'transform 0.35s'; card.style.transform = ''; likeBadge.style.opacity = 0; nopeBadge.style.opacity = 0; }
   }
   card.addEventListener('mousedown', e => start(e.clientX, e.clientY));
-  document.addEventListener('mousemove', e => { if(isDragging) move(e.clientX, e.clientY); });
+  document.addEventListener('mousemove', e => { if (isDragging) move(e.clientX, e.clientY); });
   document.addEventListener('mouseup', e => end(e.clientX));
-  card.addEventListener('touchstart', e => start(e.touches[0].clientX, e.touches[0].clientY), {passive:true});
-  card.addEventListener('touchmove', e => move(e.touches[0].clientX, e.touches[0].clientY), {passive:true});
+  card.addEventListener('touchstart', e => start(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+  card.addEventListener('touchmove', e => move(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
   card.addEventListener('touchend', e => end(e.changedTouches[0].clientX));
 }
 
 loadPets();
-
 </script>
 </body>
 </html>

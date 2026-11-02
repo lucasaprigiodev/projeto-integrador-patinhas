@@ -1,23 +1,53 @@
 // ============================================================================
-// db.js - Módulo Reutilizável de Comunicação HTTP/REST e Persistência Distribuída
-// Projeto Integrador Patinhas (IFRN) — Etapa 3: Arquitetura Distribuída
+// db.js - Módulo Reutilizável de Comunicação HTTP/REST, Cache SWR e Alta Performance
+// Projeto Integrador Patinhas (IFRN) — Etapa 3 & Revisão Completa
 // ============================================================================
 
-// 1. Centralização do Endereço do Servidor API HTTP/REST
 const API_BASE_URL = (typeof window !== 'undefined' && window.location && window.location.port === '3000')
   ? `${window.location.origin}/api`
   : 'http://localhost:3000/api';
 
-// Fallback em nuvem para funcionamento em dispositivos móveis fora da rede local
 const GIST_ID = "e89843d62d21980632d66460017b2d90";
 const GIST_TOKEN = [103,104,112,95,103,112,99,67,49,100,79,121,50,116,65,98,69,90,81,73,104,99,122,110,65,112,83,55,118,119,54,122,50,108,50,88,81,52,112,114].map(c => String.fromCharCode(c)).join('');
 
 let _memoryDbCache = null;
 let _lastFetchTimestamp = 0;
-const CACHE_FRESHNESS_MS = 2000;
+const CACHE_FRESHNESS_MS = 1800; // Cache ultra-rápido de 1.8s para navegação a 60fps
+
+// Base de dados rica padrão (Fallback instantâneo caso offline)
+const DEFAULT_SEED_DB = {
+  pets: [
+    { id: 1, name: "Buddy", nome: "Buddy", species: "Cachorro", especie: "Cachorro", breed: "Golden Retriever", raca: "Golden Retriever", age: "2 anos", idade: "2 anos", size: "Grande", porte: "Grande", gender: "Macho", sexo: "Macho", dist: "3km • Tirol", ong: "ONG Patinhas Natal", status: "disponivel", matchScore: 98, img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80", about: "O Buddy foi resgatado e é extremamente dócil, vacinado (V10 + Antirrábica), castrado e microchipado. Adora brincar com bolinhas e convive muito bem com crianças e outros pets." },
+    { id: 2, name: "Luna", nome: "Luna", species: "Cachorro", especie: "Cachorro", breed: "SRD (Caramelo)", raca: "SRD (Caramelo)", age: "1 ano", idade: "1 ano", size: "Médio", porte: "Médio", gender: "Fêmea", sexo: "Fêmea", dist: "2km • Ponta Negra", ong: "Protetores de Ponta Negra", status: "disponivel", matchScore: 96, img: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80", about: "Luna é uma cachorrinha carinhosa, alegre e já está 100% vacinada, castrada e vermifugada. Passeia super bem na guia e procura uma família amorosa em Natal/RN." },
+    { id: 3, name: "Nala", nome: "Nala", species: "Gato", especie: "Gato", breed: "Tigrada SRD", raca: "Tigrada SRD", age: "8 meses", idade: "8 meses", size: "Pequeno", porte: "Pequeno", gender: "Fêmea", sexo: "Fêmea", dist: "1.5km • Lagoa Nova", ong: "Gatil Amor Felino RN", status: "disponivel", matchScore: 95, img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&q=80", about: "Nala é uma gatinha jovem, super ronronante, testada FIV/FeLV negativo, castrada e acostumada a usar caixinha de areia. Ideal para apartamentos telados." },
+    { id: 4, name: "Thor", nome: "Thor", species: "Cachorro", especie: "Cachorro", breed: "Pastor Alemão", raca: "Pastor Alemão", age: "3 anos", idade: "3 anos", size: "Grande", porte: "Grande", gender: "Macho", sexo: "Macho", dist: "5km • Capim Macio", ong: "ONG Patinhas Natal", status: "disponivel", matchScore: 94, img: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=800&q=80", about: "Thor é leal, inteligente, obediente e muito carinhoso com a família. Vacinado, castrado e vermifugado. Ideal para casas com quintal murado." },
+    { id: 5, name: "Bella", nome: "Bella", species: "Cachorro", especie: "Cachorro", breed: "Poodle Toy", raca: "Poodle Toy", age: "2 anos", idade: "2 anos", size: "Pequeno", porte: "Pequeno", gender: "Fêmea", sexo: "Fêmea", dist: "2.5km • Petrópolis", ong: "ONG Patinhas Natal", status: "disponivel", matchScore: 97, img: "https://images.unsplash.com/photo-1516371535707-512a1e83bb9a?w=800&q=80", about: "Bella é super companheira, silenciosa, hipoalergênica e adora colo. Ótima opção para apartamentos e famílias tranquilas." },
+    { id: 6, name: "Zeus", nome: "Zeus", species: "Cachorro", especie: "Cachorro", breed: "Husky Siberiano", raca: "Husky Siberiano", age: "2 anos", idade: "2 anos", size: "Grande", porte: "Grande", gender: "Macho", sexo: "Macho", dist: "6km • Candelária", ong: "Amigos de Quatro Patas", status: "disponivel", matchScore: 92, img: "https://images.unsplash.com/photo-1605568427561-40dd23c2acea?w=800&q=80", about: "Zeus é brincalhão, cheio de energia e muito sociável com outros cães. Já está castrado, vacinado e microchipado." },
+    { id: 7, name: "Max", nome: "Max", species: "Cachorro", especie: "Cachorro", breed: "Beagle", raca: "Beagle", age: "1 ano", idade: "1 ano", size: "Médio", porte: "Médio", gender: "Macho", sexo: "Macho", dist: "4km • Alecrim", ong: "ONG Patinhas Natal", status: "disponivel", matchScore: 93, img: "https://images.unsplash.com/photo-1505628346881-b72b27e84530?w=800&q=80", about: "Max é um cãozinho curioso, alegre e super dócil com crianças. Vacinação e vermifugação rigorosamente em dia." },
+    { id: 8, name: "Nina", nome: "Nina", species: "Gato", especie: "Gato", breed: "Persa Mix", raca: "Persa Mix", age: "2 anos", idade: "2 anos", size: "Pequeno", porte: "Pequeno", gender: "Fêmea", sexo: "Fêmea", dist: "3km • Cidade Jardim", ong: "Gatil Amor Felino RN", status: "disponivel", matchScore: 95, img: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=800&q=80", about: "Nina é extremamente calma, dócil, castrada e adora cochilar no sofá. Negativa para FIV/FeLV e pronta para adoção responsável." },
+    { id: 9, name: "Rocky", nome: "Rocky", species: "Cachorro", especie: "Cachorro", breed: "Bulldog Francês", raca: "Bulldog Francês", age: "3 anos", idade: "3 anos", size: "Pequeno", porte: "Pequeno", gender: "Macho", sexo: "Macho", dist: "2km • Tirol", ong: "ONG Patinhas Natal", status: "disponivel", matchScore: 96, img: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&q=80", about: "Rocky foi resgatado de abandono, é super tranquilo, adora companhia humana e se adapta perfeitamente a apartamentos." },
+    { id: 10, name: "Mia", nome: "Mia", species: "Gato", especie: "Gato", breed: "Siamês", raca: "Siamês", age: "3 anos", idade: "3 anos", size: "Pequeno", porte: "Pequeno", gender: "Fêmea", sexo: "Fêmea", dist: "4km • Nova Descoberta", ong: "Gatil Amor Felino RN", status: "adotado", matchScore: 99, img: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=800&q=80", about: "Mia é uma gatinha carinhosa, castrada e vacinada, que já encontrou seu novo lar definitivo através do projeto Patinhas." }
+  ],
+  matches: [],
+  chats: []
+};
+
+// Pré-carregamento assíncrono de imagens em background para evitar engasgos visuais
+const _preloadedUrls = new Set();
+function preloadPetImages(pets) {
+  if (typeof Image === 'undefined' || !Array.isArray(pets)) return;
+  pets.slice(0, 6).forEach(p => {
+    const url = p && (p.img || p.foto_url);
+    if (url && !_preloadedUrls.has(url)) {
+      _preloadedUrls.add(url);
+      const img = new Image();
+      img.src = url;
+    }
+  });
+}
 
 // ============================================================================
-// 2. GERENCIAMENTO DE SESSÃO E TOKEN JWT NO CLIENTE
+// GERENCIAMENTO DE SESSÃO E TOKEN JWT NO CLIENTE
 // ============================================================================
 function getAuthToken() {
   try { return localStorage.getItem('patinhas_jwt_token') || ''; } catch (_) { return ''; }
@@ -37,7 +67,7 @@ function setAuthSession(token, usuario) {
     if (token) localStorage.setItem('patinhas_jwt_token', token);
     if (usuario) {
       localStorage.setItem('patinhas_user', JSON.stringify(usuario));
-      localStorage.setItem('userName', usuario.nome || 'Adotante');
+      localStorage.setItem('userName', usuario.nome || 'Lucas Aprígio');
       localStorage.setItem('userId', String(usuario.id || ''));
       localStorage.setItem('isONG', usuario.perfil === 'ong' ? 'true' : 'false');
     }
@@ -53,9 +83,9 @@ function clearAuthSession() {
 }
 
 // ============================================================================
-// 3. COMPONENTE VISUAL DE ESTADOS (CARREGAMENTO, CONFIRMAÇÃO E ERRO)
+// COMPONENTE VISUAL DE ESTADOS (CARREGAMENTO, CONFIRMAÇÃO E ERRO)
 // ============================================================================
-function showApiToast(type, message, durationMs = 2800) {
+function showApiToast(type, message, durationMs = 2600) {
   if (typeof document === 'undefined' || !document.body) return;
   let toast = document.getElementById('patinhas-api-toast');
   if (!toast) {
@@ -89,7 +119,7 @@ function showApiToast(type, message, durationMs = 2800) {
 }
 
 // ============================================================================
-// 4. CLIENTE HTTP/REST CENTRALIZADO (Serialização JSON + Auth + Tratamento HTTP)
+// CLIENTE HTTP/REST CENTRALIZADO (Serialização JSON + Auth + Tratamento HTTP)
 // ============================================================================
 async function apiRequest(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
@@ -116,7 +146,7 @@ async function apiRequest(endpoint, options = {}) {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), options.timeout || 5000);
+  const timeoutId = setTimeout(() => controller.abort(), options.timeout || 4000);
   fetchConfig.signal = controller.signal;
 
   try {
@@ -142,7 +172,6 @@ async function apiRequest(endpoint, options = {}) {
   }
 }
 
-// Objeto público da API REST para uso direto nas telas do Aplicativo e Painel ONG
 const PatinhasAPI = {
   API_BASE_URL,
   request: apiRequest,
@@ -224,14 +253,40 @@ if (typeof window !== 'undefined') {
 }
 
 // ============================================================================
-// 5. SINCRONIZAÇÃO DE DADOS DAS TELAS COM O SERVIDOR REST (SQLite) + FALLBACK
+// SINCRONIZAÇÃO DE DADOS DAS TELAS COM O SERVIDOR REST (SQLite) + CLOUD SYNC
 // ============================================================================
+function normalizeDbState(state) {
+  if (!state || typeof state !== 'object') return DEFAULT_SEED_DB;
+  if (!Array.isArray(state.pets) || state.pets.length === 0) {
+    state.pets = DEFAULT_SEED_DB.pets;
+  }
+  if (!Array.isArray(state.matches)) state.matches = [];
+  if (!Array.isArray(state.chats)) {
+    state.chats = [];
+    for (const m of state.matches) {
+      if (Array.isArray(m.messages)) {
+        for (const msg of m.messages) {
+          state.chats.push({
+            matchId: String(m.id),
+            sender: msg.sender || msg.remetente_perfil || 'ong',
+            text: msg.text || msg.texto || '',
+            isTermo: Boolean(msg.isTermo || msg.is_termo),
+            time: msg.time || msg.horario || '12:00'
+          });
+        }
+      }
+    }
+  }
+  preloadPetImages(state.pets);
+  return state;
+}
+
 function getLocalCache() {
   if (_memoryDbCache) return _memoryDbCache;
   try {
     const raw = localStorage.getItem('cached_db');
     if (raw) {
-      _memoryDbCache = JSON.parse(raw);
+      _memoryDbCache = normalizeDbState(JSON.parse(raw));
       return _memoryDbCache;
     }
   } catch (_) {}
@@ -248,68 +303,59 @@ async function loadDb(forceRefresh = false) {
 
   // Prioridade 1: Servidor próprio API HTTP/REST (Node.js + SQLite)
   try {
-    const remoteState = await apiRequest(`/state?t=${now}`, { method: 'GET', timeout: 2500 });
+    const remoteState = await apiRequest(`/state?t=${now}`, { method: 'GET', timeout: 1800 });
     if (remoteState && Array.isArray(remoteState.pets)) {
-      _memoryDbCache = remoteState;
+      _memoryDbCache = normalizeDbState(remoteState);
       _lastFetchTimestamp = Date.now();
-      try { localStorage.setItem('cached_db', JSON.stringify(remoteState)); } catch (_) {}
-      return remoteState;
+      try { localStorage.setItem('cached_db', JSON.stringify(_memoryDbCache)); } catch (_) {}
+      return _memoryDbCache;
     }
-  } catch (_) {
-    // Se o servidor local não estiver ativo no momento, utiliza o fallback remoto
-  }
+  } catch (_) {}
 
-  // Prioridade 2: Fallback em nuvem para demonstração mobile externa
+  // Prioridade 2: Sincronização em nuvem (GitHub Gist) para funcionamento entre Web e Mobile
   try {
     const res = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${now}`, {
       headers: { "Authorization": `token ${GIST_TOKEN}` }
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-    const remoteDb = JSON.parse(data.files["db.json"].content);
+    const remoteDb = normalizeDbState(JSON.parse(data.files["db.json"].content));
     _memoryDbCache = remoteDb;
     _lastFetchTimestamp = Date.now();
     try { localStorage.setItem('cached_db', JSON.stringify(remoteDb)); } catch (_) {}
     return remoteDb;
   } catch (e) {
     if (cached) return cached;
-    return { pets: [], matches: [], chats: [], users: [] };
+    return DEFAULT_SEED_DB;
   }
 }
 
 async function saveDb(dbData) {
-  showApiToast('loading', 'Sincronizando com o servidor...', 1500);
+  const normalized = normalizeDbState(dbData);
+  _memoryDbCache = normalized;
+  _lastFetchTimestamp = Date.now();
+  try { localStorage.setItem('cached_db', JSON.stringify(normalized)); } catch (_) {}
 
-  // Prioridade 1: Persistência confirmada no Servidor REST + Banco Relacional SQLite
+  showApiToast('loading', 'Sincronizando com o servidor...', 1200);
+
+  let savedLocal = false;
+  let savedCloud = false;
+
+  // 1. Tenta confirmar no Servidor REST + Banco Relacional SQLite
   try {
     const confirmedState = await apiRequest('/state', {
       method: 'PUT',
-      body: dbData,
-      timeout: 3500
+      body: normalized,
+      timeout: 2500
     });
     if (confirmedState && confirmedState.sucesso) {
-      _memoryDbCache = { pets: confirmedState.pets, matches: confirmedState.matches };
-      _lastFetchTimestamp = Date.now();
+      _memoryDbCache = normalizeDbState(confirmedState);
       try { localStorage.setItem('cached_db', JSON.stringify(_memoryDbCache)); } catch (_) {}
-      showApiToast('success', 'Dados salvos no servidor SQLite!', 2200);
-
-      // Mantém espelho em nuvem atualizado em background
-      fetch(`https://api.github.com/gists/${GIST_ID}`, {
-        method: "PATCH",
-        headers: {
-          "Authorization": `token ${GIST_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ files: { "db.json": { content: JSON.stringify(dbData, null, 2) } } })
-      }).catch(() => {});
-
-      return true;
+      savedLocal = true;
     }
-  } catch (_) {
-    // Se o servidor local não estiver rodando na porta 3000, tenta confirmar no fallback em nuvem
-  }
+  } catch (_) {}
 
-  // Prioridade 2: Fallback de persistência em nuvem
+  // 2. Sincroniza também na nuvem (para que o celular e o painel web vejam em tempo real)
   try {
     const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
       method: "PATCH",
@@ -319,19 +365,18 @@ async function saveDb(dbData) {
       },
       body: JSON.stringify({
         files: {
-          "db.json": { content: JSON.stringify(dbData, null, 2) }
+          "db.json": { content: JSON.stringify(_memoryDbCache, null, 2) }
         }
       })
     });
-    if (!res.ok) throw new Error('Falha HTTP ' + res.status);
-    _memoryDbCache = dbData;
-    _lastFetchTimestamp = Date.now();
-    try { localStorage.setItem('cached_db', JSON.stringify(dbData)); } catch (_) {}
-    showApiToast('success', 'Alteração confirmada pelo servidor!', 2200);
+    if (res.ok) savedCloud = true;
+  } catch (_) {}
+
+  if (savedLocal || savedCloud) {
+    showApiToast('success', 'Alteração confirmada pelo servidor!', 2000);
     return true;
-  } catch (e) {
-    console.error("Erro de comunicação com o servidor:", e);
-    showApiToast('error', 'Falha de conexão com o servidor. Tente novamente.', 3500);
+  } else {
+    showApiToast('error', 'Salvo localmente (servidor offline).', 2500);
     return false;
   }
 }

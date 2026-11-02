@@ -89,3 +89,4 @@ Com o servidor ativo na porta `3000`, acesse:
   - **Conta Adotante (Seed):** `lucas@ifrn.edu.br` / senha: `123456`
 - **Documentação Interativa OpenAPI (Swagger UI):** `http://localhost:3000/api-docs`
 - **Especificação OpenAPI 3.0 (JSON):** `http://localhost:3000/api/openapi.json`
+

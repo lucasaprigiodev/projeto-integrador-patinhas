@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Filtros · Patinhas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar" style="color:var(--text-1);">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+      <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+    </div>
+  </div>
+  <div class="scroll-content" style="padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+      <a href="javascript:history.back()" style="display:flex;align-items:center;gap:8px;color:var(--text-2);text-decoration:none;font-size:14px;font-weight:600;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+        Filtros de Busca
+      </a>
+      <button onclick="limpar()" style="color:var(--primary);font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;">Limpar tudo</button>
+    </div>
+
+    <h3 style="font-size:13px;font-weight:800;color:var(--text-2);margin-bottom:10px;">ESPÉCIE PREFERIDA</h3>
+    <div style="display:flex;gap:8px;margin-bottom:24px;" id="especie">
+      <button onclick="selecionarFiltroRapido('todos', this)" class="chip chip-primary" data-val="todos" style="padding:10px 16px;border:none;cursor:pointer;font-size:13.5px;">🐾 Todos</button>
+      <button onclick="selecionarFiltroRapido('Cachorro', this)" class="chip" data-val="Cachorro" style="padding:10px 16px;border:none;cursor:pointer;background:var(--surface-2);font-size:13.5px;">🐶 Cães</button>
+      <button onclick="selecionarFiltroRapido('Gato', this)" class="chip" data-val="Gato" style="padding:10px 16px;border:none;cursor:pointer;background:var(--surface-2);font-size:13.5px;">🐱 Gatos</button>
+    </div>
+
+    <h3 style="font-size:13px;font-weight:800;color:var(--text-2);margin-bottom:10px;">PORTE</h3>
+    <div style="display:flex;gap:8px;margin-bottom:24px;" id="porte">
+      <button onclick="toggleChip(this)" class="chip chip-primary" data-active="true" style="padding:10px 16px;border:none;cursor:pointer;font-size:13.5px;">Pequeno</button>
+      <button onclick="toggleChip(this)" class="chip chip-primary" data-active="true" style="padding:10px 16px;border:none;cursor:pointer;font-size:13.5px;">Médio</button>
+      <button onclick="toggleChip(this)" class="chip chip-primary" data-active="true" style="padding:10px 16px;border:none;cursor:pointer;font-size:13.5px;">Grande</button>
+    </div>
+
+    <h3 style="font-size:13px;font-weight:800;color:var(--text-2);margin-bottom:10px;">DISTÂNCIA MÁXIMA EM NATAL/RN: <span id="distLabel" style="color:var(--primary);">15km</span></h3>
+    <input type="range" min="1" max="50" value="15" oninput="document.getElementById('distLabel').textContent=this.value+'km'" style="width:100%;accent-color:var(--primary);margin-bottom:24px;height:6px;">
+
+    <h3 style="font-size:13px;font-weight:800;color:var(--text-2);margin-bottom:12px;">SAÚDE E COMPORTAMENTO</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;cursor:pointer;">
+        💉 Apenas vacinados e vermifugados
+        <input type="checkbox" checked style="width:20px;height:20px;accent-color:var(--primary);">
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;cursor:pointer;">
+        ✂️ Apenas castrados
+        <input type="checkbox" checked style="width:20px;height:20px;accent-color:var(--primary);">
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;cursor:pointer;">
+        👶 Dócil com crianças e outros pets
+        <input type="checkbox" checked style="width:20px;height:20px;accent-color:var(--primary);">
+      </label>
+    </div>
+
+    <button onclick="aplicarFiltros()" class="btn btn-primary">Aplicar Filtros e Ver Pets</button>
+  </div>
+</div>
+
+<script>
+let chosenFilter = localStorage.getItem('patinhas_quick_filter') || 'todos';
+
+function selecionarFiltroRapido(val, btn) {
+  chosenFilter = val;
+  document.querySelectorAll('#especie button').forEach(b => {
+    const isSel = b === btn;
+    b.className = isSel ? 'chip chip-primary' : 'chip';
+    b.style.background = isSel ? '' : 'var(--surface-2)';
+  });
+}
+
+function toggleChip(btn) {
+  const isAct = btn.dataset.active === 'true';
+  btn.dataset.active = isAct ? 'false' : 'true';
+  btn.className = !isAct ? 'chip chip-primary' : 'chip';
+  btn.style.background = !isAct ? '' : 'var(--surface-2)';
+}
+
+function limpar() {
+  chosenFilter = 'todos';
+  localStorage.removeItem('patinhas_quick_filter');
+  localStorage.removeItem('swipedPetIds');
+  window.location.href = '05-home-swipe.html';
+}
+
+function aplicarFiltros() {
+  localStorage.setItem('patinhas_quick_filter', chosenFilter);
+  window.location.href = '05-home-swipe.html';
+}
+</script>
+</body>
+</html>

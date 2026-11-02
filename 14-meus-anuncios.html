@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Minhas Solicitações · Patinhas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar" style="color:var(--text-1);">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+      <svg width="15" height="12" viewBox="0 0 15 12" fill="currentColor"><path d="M7.5 2.5C9.8 2.5 11.8 3.5 13.2 5L14.5 3.7C12.8 1.9 10.3 0.8 7.5 0.8S2.2 1.9 0.5 3.7L1.8 5C3.2 3.5 5.2 2.5 7.5 2.5Z" opacity=".3"/><path d="M7.5 5.2C9.0 5.2 10.4 5.9 11.4 7L12.7 5.7C11.4 4.3 9.6 3.5 7.5 3.5S3.6 4.3 2.3 5.7L3.6 7C4.6 5.9 6.0 5.2 7.5 5.2Z" opacity=".6"/><circle cx="7.5" cy="10" r="2"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+    </div>
+  </div>
+  <div style="padding:0 20px 14px;display:flex;justify-content:space-between;align-items:center;">
+    <h1 style="font-size:21px;font-weight:800;letter-spacing:-0.5px;">Minhas Adoções</h1>
+    <a href="13-criar-anuncio.html" style="display:flex;align-items:center;gap:6px;background:var(--primary);color:white;text-decoration:none;padding:9px 14px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;box-shadow:0 4px 12px rgba(255,107,53,0.3);">+ Cadastrar Pet</a>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;padding:0 20px;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;">
+    <button onclick="showTab('pendente')" id="tab-pendente" style="flex:1;padding:12px 6px;border:none;background:none;font-size:12.5px;font-weight:700;color:var(--primary);border-bottom:2px solid var(--primary);cursor:pointer;">Em Andamento (0)</button>
+    <button onclick="showTab('concluido')" id="tab-concluido" style="flex:1;padding:12px 6px;border:none;background:none;font-size:12.5px;font-weight:600;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer;">Aprovadas (0)</button>
+    <button onclick="showTab('ativo')" id="tab-ativo" style="flex:1;padding:12px 6px;border:none;background:none;font-size:12.5px;font-weight:600;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer;">Catálogo</button>
+  </div>
+
+  <div class="scroll-content" style="padding:16px 20px;">
+    <div id="list-pendente"></div>
+    <div id="list-concluido" style="display:none;"></div>
+    <div id="list-ativo" style="display:none;"></div>
+  </div>
+
+  <div class="navbar"><a href="05-home-swipe.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg><span>Descobrir</span></a><a href="09-chat-lista.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Mensagens</span></a><a href="04-meu-perfil.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Perfil</span></a></div>
+</div>
+
+<script src="db.js"></script>
+<script>
+function showTab(tab) {
+  ['pendente', 'concluido', 'ativo'].forEach(t => {
+    document.getElementById('list-' + t).style.display = t === tab ? 'block' : 'none';
+    const btn = document.getElementById('tab-' + t);
+    if (btn) {
+      btn.style.color = t === tab ? 'var(--primary)' : 'var(--text-3)';
+      btn.style.borderBottom = t === tab ? '2px solid var(--primary)' : '2px solid transparent';
+      btn.style.fontWeight = t === tab ? '700' : '600';
+    }
+  });
+}
+
+async function initMeusProcessos() {
+  try {
+    const db = await loadDb();
+    const matches = db.matches || [];
+    const pets = db.pets || [];
+
+    const emAndamento = matches.filter(m => ['pendente', 'termo_enviado', 'termo_assinado'].includes(m.status));
+    const concluidos = matches.filter(m => m.status === 'aprovado');
+
+    document.getElementById('tab-pendente').innerText = `Em Andamento (${emAndamento.length})`;
+    document.getElementById('tab-concluido').innerText = `Aprovadas (${concluidos.length})`;
+    document.getElementById('tab-ativo').innerText = `Catálogo (${pets.length})`;
+
+    const pCont = document.getElementById('list-pendente');
+    pCont.innerHTML = '';
+    if (emAndamento.length === 0) {
+      pCont.innerHTML = '<p style="text-align:center;color:var(--text-3);padding:30px;font-size:13px;">Você não possui processos pendentes no momento.</p>';
+    } else {
+      emAndamento.slice().reverse().forEach(m => {
+        const isSigned = m.status === 'termo_assinado' || m.termoAssinado;
+        const isSent = m.status === 'termo_enviado' || m.termoEnviado;
+        const badge = isSigned
+          ? '<span class="chip chip-success" style="font-size:10.5px;">✍️ Termo Assinado</span>'
+          : (isSent ? '<span class="chip" style="background:#EDE9FE;color:#5B21B6;font-size:10.5px;">📋 Assinar Termo</span>' : '<span class="chip" style="background:#FEF3C7;color:#92400E;font-size:10.5px;">⏳ Em Entrevista</span>');
+
+        pCont.innerHTML += `
+          <a href="10-chat-mensagem.html?matchId=${m.id}&petId=${m.petId}" style="text-decoration:none;color:inherit;">
+            <div class="card" style="display:flex;gap:14px;padding:14px;margin-bottom:12px;align-items:center;">
+              <img src="${m.petImg}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" style="width:68px;height:68px;border-radius:14px;object-fit:cover;flex-shrink:0;">
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <h3 style="font-size:16px;font-weight:800;">${m.petName}</h3>
+                  ${badge}
+                </div>
+                <p style="font-size:12px;color:var(--text-2);margin-bottom:4px;">Candidato(a): ${m.userName}</p>
+                <p style="font-size:11.5px;color:var(--primary);font-weight:700;">Toque para abrir o chat da adoção →</p>
+              </div>
+            </div>
+          </a>`;
+      });
+    }
+
+    const cCont = document.getElementById('list-concluido');
+    cCont.innerHTML = '';
+    if (concluidos.length === 0) {
+      cCont.innerHTML = '<p style="text-align:center;color:var(--text-3);padding:30px;font-size:13px;">Nenhuma adoção finalizada ainda.</p>';
+    } else {
+      concluidos.forEach(m => {
+        cCont.innerHTML += `
+          <a href="12-acompanhamento.html?matchId=${m.id}&petId=${m.petId}" style="text-decoration:none;color:inherit;">
+            <div class="card" style="display:flex;gap:14px;padding:14px;margin-bottom:12px;align-items:center;background:#F0FDF4;border:1px solid #BBF7D0;">
+              <img src="${m.petImg}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" style="width:68px;height:68px;border-radius:14px;object-fit:cover;flex-shrink:0;">
+              <div style="flex:1;">
+                <h3 style="font-size:16px;font-weight:800;color:#15803D;">${m.petName} 🎉</h3>
+                <p style="font-size:12px;color:#166534;margin-top:2px;">Adoção Oficialmente Aprovada!</p>
+                <p style="font-size:11.5px;color:#059669;font-weight:700;margin-top:4px;">🪪 Ver Carteira RG Pet Digital →</p>
+              </div>
+            </div>
+          </a>`;
+      });
+    }
+
+    const aCont = document.getElementById('list-ativo');
+    aCont.innerHTML = '';
+    pets.forEach(p => {
+      aCont.innerHTML += `
+        <a href="07-detalhes-pet.html?id=${p.id}" style="text-decoration:none;color:inherit;">
+          <div class="card" style="display:flex;gap:14px;padding:12px;margin-bottom:10px;align-items:center;">
+            <img src="${p.img}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" style="width:64px;height:64px;border-radius:12px;object-fit:cover;flex-shrink:0;">
+            <div style="flex:1;">
+              <h3 style="font-size:15px;font-weight:800;">${p.name}</h3>
+              <p style="font-size:12px;color:var(--text-2);">${p.breed} • ${p.age} • ${p.size || 'Médio'}</p>
+              <span class="chip ${p.status === 'adotado' ? '' : 'chip-success'}" style="font-size:10px;margin-top:4px;display:inline-block;">${p.status === 'adotado' ? 'Adotado' : 'Disponível'}</span>
+            </div>
+          </div>
+        </a>`;
+    });
+  } catch (e) { console.error(e); }
+}
+initMeusProcessos();
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Detalhes · Patinhas</title>
+  <link rel="stylesheet" href="styles.css">
+  
+</head>
+<body>
+
+<div class="phone">
+  <!-- Hero image -->
+  <div style="position:relative;height:360px;flex-shrink:0;">
+    <img id="petHeroImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23F0F2F5' width='100' height='100'/%3E%3Ctext y='55%25' x='50%25' text-anchor='middle' dy='.1em' font-size='40'%3E🐾%3C/text%3E%3C/svg%3E" style="width:100%;height:100%;object-fit:cover;">
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 40%);">
+      <div class="statusbar" style="color:white;">
+  <span class="time">9:41</span>
+  <div class="icons">
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+  </div>
+</div>
+    </div>
+    <a href="javascript:history.back()" style="position:absolute;top:52px;left:16px;width:40px;height:40px;background:rgba(0,0,0,0.35);backdrop-filter:blur(10px);border-radius:12px;display:flex;align-items:center;justify-content:center;text-decoration:none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+    </a>
+  </div>
+
+  <!-- Info -->
+  <div class="scroll-content" style="padding:20px;background:var(--surface);border-radius:24px 24px 0 0;margin-top:-20px;z-index:10;position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div>
+        <h1 id="petName" style="font-size:28px;font-weight:800;letter-spacing:-0.5px;">Pet</h1>
+        <p id="petSubtitle" style="color:var(--text-2);font-size:14px;margin-top:2px;">Carregando...</p>
+      </div>
+      <div style="text-align:right;">
+        <div id="petDist" style="font-size:13px;color:var(--text-3);">📍 Próximo</div>
+        <div id="petOng" style="font-size:13px;color:var(--primary);font-weight:600;margin-top:2px;">ONG Patinhas</div>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;">
+      <span class="chip chip-primary">Vacinado</span>
+      <span class="chip chip-success">Castrado</span>
+      <span class="chip chip-accent">Adora carinho</span>
+      <span class="chip" id="petSizeChip">Porte Médio</span>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <div style="flex:1;background:var(--surface-2);border-radius:var(--radius-sm);padding:14px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">⚖️</div>
+        <div id="petWeightStat" style="font-weight:700;font-size:15px;">Saudável</div>
+        <div style="font-size:11px;color:var(--text-3);">Porte</div>
+      </div>
+      <div style="flex:1;background:var(--surface-2);border-radius:var(--radius-sm);padding:14px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">⚡</div>
+        <div style="font-weight:700;font-size:15px;">Dócil</div>
+        <div style="font-size:11px;color:var(--text-3);">Humor</div>
+      </div>
+      <div style="flex:1;background:var(--surface-2);border-radius:var(--radius-sm);padding:14px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">🏠</div>
+        <div style="font-weight:700;font-size:15px;">Família</div>
+        <div style="font-size:11px;color:var(--text-3);">Ambiente</div>
+      </div>
+    </div>
+
+    <h3 id="petAboutTitle" style="font-size:16px;font-weight:700;margin-bottom:10px;">Sobre o pet</h3>
+    <p id="petAboutText" style="color:var(--text-2);line-height:1.7;font-size:14px;margin-bottom:20px;">Carregando histórico...</p>
+
+    <!-- ONG -->
+    <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface-2);border-radius:var(--radius-md);margin-bottom:20px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏥</div>
+      <div style="flex:1;">
+        <div id="petOngBoxName" style="font-weight:700;font-size:14px;">ONG Patinhas Solidárias</div>
+        <div style="font-size:12px;color:var(--text-2);">Adoção Responsável</div>
+      </div>
+    </div>
+
+    <button id="btnQueroAdotar" onclick="queroAdotar()" class="btn btn-primary" style="width:100%;">❤️ Quero Adotar!</button>
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const petId = urlParams.get('id');
+let currentPet = null;
+
+async function initPet() {
+  const db = await loadDb();
+  currentPet = (db.pets || []).find(p => p.id == petId) || (db.pets || [])[0];
+  if(!currentPet) return;
+
+  document.getElementById('petHeroImg').src = currentPet.img;
+  document.getElementById('petName').innerText = currentPet.name;
+  document.getElementById('petSubtitle').innerText = `${currentPet.breed} • ${currentPet.age} • ${currentPet.gender || 'Macho'}`;
+  document.getElementById('petDist').innerText = `📍 A ${currentPet.dist || '2km'}`;
+  document.getElementById('petOng').innerText = currentPet.ong || 'ONG Patinhas';
+  document.getElementById('petAboutTitle').innerText = `Sobre o(a) ${currentPet.name}`;
+  document.getElementById('petAboutText').innerText = currentPet.about || `${currentPet.name} é um animal dócil, carinhoso e está pronto para encontrar um lar amoroso!`;
+  document.getElementById('petOngBoxName').innerText = currentPet.ong || 'ONG Patinhas';
+  document.getElementById('btnQueroAdotar').innerText = `❤️ Quero Adotar o(a) ${currentPet.name}!`;
+  if(currentPet.size) {
+    document.getElementById('petSizeChip').innerText = currentPet.size;
+    document.getElementById('petWeightStat').innerText = currentPet.size;
+  }
+}
+
+async function queroAdotar() {
+  if(!currentPet) return;
+  const btn = document.getElementById('btnQueroAdotar');
+  if(btn) { btn.innerText = 'Conectando com a ONG...'; btn.disabled = true; }
+
+  const db = await loadDb();
+  const uName = localStorage.getItem('userName') || 'Lucas Aprígio';
+  let matchId = Date.now().toString();
+  if(!db.matches) db.matches = [];
+  if(!db.chats) db.chats = [];
+  
+  const existingMatch = db.matches.find(m => String(m.petId) === String(currentPet.id));
+  const SAFE_FALLBACKS = {
+    "4": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=800&q=80",
+    "5": "https://images.unsplash.com/photo-1516371535707-512a1e83bb9a?w=800&q=80",
+    "8": "https://images.unsplash.com/photo-1505628346881-b72b27e84530?w=800&q=80"
+  };
+  let petImg = currentPet.img || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80';
+  if(petImg.includes('1589966847426') || petImg.includes('1590634331661') || petImg.includes('1537151608804')) {
+    petImg = SAFE_FALLBACKS[String(currentPet.id)] || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80';
+  }
+
+  if(!existingMatch) {
+    db.matches.push({
+      id: matchId,
+      petId: currentPet.id,
+      petImg: petImg,
+      petName: currentPet.name,
+      userName: uName,
+      status: 'pendente',
+      date: new Date().toLocaleDateString('pt-BR')
+    });
+    db.chats.push({
+      matchId: matchId,
+      sender: 'ong',
+      text: `Olá, ${uName}! Ficamos muito felizes pelo seu interesse no(a) ${currentPet.name}! Como podemos te ajudar?`,
+      time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+    });
+    // Dispara persistência assíncrona; cache local atualiza imediatamente
+    saveDb(db);
+  } else {
+    matchId = existingMatch.id;
+  }
+  
+  const userSwiped = JSON.parse(localStorage.getItem('swipedPetIds') || '[]');
+  if(!userSwiped.includes(String(currentPet.id))) userSwiped.push(String(currentPet.id));
+  localStorage.setItem('swipedPetIds', JSON.stringify(userSwiped));
+
+  localStorage.setItem('lastMatchId', matchId);
+  localStorage.setItem('lastPetId', String(currentPet.id));
+  localStorage.setItem('lastPetImg', petImg);
+  localStorage.setItem('lastPetName', currentPet.name);
+  window.location.href = `08-match.html?matchId=${matchId}&petId=${currentPet.id}`;
+}
+
+initPet();
+</script>
+</body>
+</html>

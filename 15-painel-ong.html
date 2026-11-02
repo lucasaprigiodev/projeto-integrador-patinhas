@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Painel ONG · Patinhas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="phone">
+  <!-- Header Institucional da ONG -->
+  <div style="background:linear-gradient(135deg,var(--primary),#D9480F);padding:40px 20px 20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div>
+        <p style="color:rgba(255,255,255,0.8);font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px;">Painel Administrativo</p>
+        <h1 style="color:white;font-size:20px;font-weight:800;">ONG Patinhas Natal 🏥</h1>
+      </div>
+      <a href="13-criar-anuncio.html" title="Novo Pet" style="padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.22);color:white;font-size:12px;font-weight:800;text-decoration:none;border:1px solid rgba(255,255,255,0.35);">+ Novo Pet</a>
+    </div>
+
+    <!-- KPIs em Tempo Real -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      <div style="background:rgba(255,255,255,0.18);border-radius:12px;padding:10px 12px;text-align:center;">
+        <div id="stat-pets" style="font-size:22px;font-weight:900;color:white;">-</div>
+        <div style="font-size:10.5px;color:rgba(255,255,255,0.85);font-weight:600;">Pets Ativos</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.18);border-radius:12px;padding:10px 12px;text-align:center;">
+        <div id="stat-pendentes" style="font-size:22px;font-weight:900;color:white;">-</div>
+        <div style="font-size:10.5px;color:rgba(255,255,255,0.85);font-weight:600;">Em Análise</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.18);border-radius:12px;padding:10px 12px;text-align:center;">
+        <div id="stat-aprovados" style="font-size:22px;font-weight:900;color:white;">-</div>
+        <div style="font-size:10.5px;color:rgba(255,255,255,0.85);font-weight:600;">Adoções</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;background:var(--surface);border-bottom:1px solid var(--border);">
+    <button onclick="showTab('pending')" id="tab-pending" style="flex:1;padding:13px 8px;border:none;font-size:12.5px;font-weight:700;color:var(--primary);border-bottom:2px solid var(--primary);background:none;cursor:pointer;">Solicitações (0)</button>
+    <button onclick="showTab('pets')" id="tab-pets" style="flex:1;padding:13px 8px;border:none;font-size:12.5px;font-weight:600;color:var(--text-3);border-bottom:2px solid transparent;background:none;cursor:pointer;">Catálogo Pets</button>
+    <button onclick="showTab('done')" id="tab-done" style="flex:1;padding:13px 8px;border:none;font-size:12.5px;font-weight:600;color:var(--text-3);border-bottom:2px solid transparent;background:none;cursor:pointer;">Aprovadas</button>
+  </div>
+
+  <div class="scroll-content" style="padding:16px 18px;">
+    <!-- Aba 1: Funil de Solicitações em Andamento (pendente, termo_enviado, termo_assinado) -->
+    <div id="list-pending">
+      <p style="text-align:center;color:var(--text-3);padding:30px;">Carregando solicitações...</p>
+    </div>
+
+    <!-- Aba 2: Catálogo de Pets da ONG -->
+    <div id="list-pets" style="display:none;">
+      <a href="13-criar-anuncio.html" class="btn btn-primary" style="margin-bottom:14px;display:block;text-align:center;text-decoration:none;padding:12px;">+ Cadastrar Novo Animal para Adoção</a>
+      <div id="petsContainer"></div>
+    </div>
+
+    <!-- Aba 3: Adoções Concluídas -->
+    <div id="list-done" style="display:none;padding:10px 0;">
+      <div style="text-align:center;margin-bottom:18px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:16px;padding:16px;">
+        <div style="font-size:38px;margin-bottom:4px;">🏆</div>
+        <div id="doneCountText" style="font-size:28px;font-weight:900;color:#15803D;">0</div>
+        <div style="font-size:13px;color:#166534;font-weight:600;">Adoções Responsáveis Concluídas!</div>
+      </div>
+      <div id="doneContainer"></div>
+    </div>
+  </div>
+
+  <div style="padding:8px 18px 12px;border-top:1px solid var(--border);display:flex;gap:8px;">
+    <a href="05-home-swipe.html" class="btn btn-outline" style="flex:1;padding:10px;font-size:12px;text-align:center;text-decoration:none;">📱 Ver Visão do App</a>
+    <a href="01-login.html" onclick="if(window.PatinhasAPI) PatinhasAPI.clearAuthSession();" class="btn btn-ghost" style="flex:1;padding:10px;font-size:12px;text-align:center;text-decoration:none;">Sair da Conta</a>
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script>
+let appDb = null;
+localStorage.setItem('isONG', 'true');
+
+async function loadDashboard() {
+  try {
+    appDb = await loadDb();
+    const pets = appDb.pets || [];
+    const matches = appDb.matches || [];
+
+    // CORREÇÃO CRÍTICA: inclui pendente, termo_enviado e termo_assinado no funil ativo da ONG!
+    const emAndamento = matches.filter(m => ['pendente', 'termo_enviado', 'termo_assinado'].includes(m.status));
+    const aprovados = matches.filter(m => m.status === 'aprovado');
+    const ativos = pets.filter(p => p.status === 'disponivel');
+
+    document.getElementById('stat-pets').textContent = ativos.length;
+    document.getElementById('stat-pendentes').textContent = emAndamento.length;
+    document.getElementById('stat-aprovados').textContent = aprovados.length;
+    document.getElementById('tab-pending').textContent = `Solicitações (${emAndamento.length})`;
+    document.getElementById('tab-pets').textContent = `Pets (${pets.length})`;
+    document.getElementById('tab-done').textContent = `Aprovadas (${aprovados.length})`;
+
+    const listPending = document.getElementById('list-pending');
+    listPending.innerHTML = '';
+
+    if (emAndamento.length === 0) {
+      listPending.innerHTML = `
+        <div style="text-align:center;color:var(--text-3);padding:40px 20px;">
+          <div style="font-size:40px;margin-bottom:8px;">🤝</div>
+          <p style="font-size:14px;font-weight:600;color:var(--text-2);">Nenhuma solicitação pendente no momento.</p>
+          <p style="font-size:12px;margin-top:4px;">Quando um adotante der Match em um pet no aplicativo, ele aparecerá aqui em tempo real.</p>
+        </div>`;
+    } else {
+      emAndamento.slice().reverse().forEach(m => {
+        const isSigned = m.status === 'termo_assinado' || m.termoAssinado;
+        const isSent = m.status === 'termo_enviado' || m.termoEnviado;
+
+        let badge = '<span class="chip" style="background:#FEF3C7;color:#92400E;font-size:10.5px;font-weight:700;">⏳ 1. Novo Match</span>';
+        let statusHint = '';
+
+        if (isSigned) {
+          badge = '<span class="chip" style="background:#D1FAE5;color:#065F46;font-size:10.5px;font-weight:800;">✍️ 3. Termo Assinado</span>';
+          statusHint = `
+            <div style="background:#ECFDF5;border:1px solid #6EE7B7;color:#065F46;padding:8px 10px;border-radius:10px;font-size:11.5px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+              <span>✅</span>
+              <span>Termo assinado digitalmente por <b>${m.assinatura_digital || m.assinaturaNome || m.userName}</b>. Pronto para aprovação!</span>
+            </div>`;
+        } else if (isSent) {
+          badge = '<span class="chip" style="background:#EDE9FE;color:#5B21B6;font-size:10.5px;font-weight:700;">📋 2. Termo Enviado</span>';
+          statusHint = `
+            <div style="background:#FAF5FF;border:1px solid #D8B4FE;color:#6B21A8;padding:7px 10px;border-radius:10px;font-size:11.5px;font-weight:600;margin-bottom:10px;">
+              📋 Termo disponível no chat. Aguardando assinatura digital do adotante.
+            </div>`;
+        }
+
+        listPending.innerHTML += `
+          <div class="card" style="padding:14px;margin-bottom:12px;border:1.5px solid ${isSigned ? '#6EE7B7' : 'var(--border)'};" id="c-${m.id}">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+              <img src="${m.petImg}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" style="width:52px;height:52px;border-radius:12px;object-fit:cover;flex-shrink:0;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:800;font-size:15px;color:var(--text-1);">${m.userName || 'Adotante'}</div>
+                <div style="font-size:12px;color:var(--text-2);">Pet: <strong style="color:var(--primary);">${m.petName}</strong> • ${m.date || 'Hoje'}</div>
+              </div>
+              ${badge}
+            </div>
+            ${statusHint}
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline" onclick="enviarTermo('${m.id}')" style="padding:9px 8px;font-size:11.5px;flex:1.15;background:#FAF5FF;border-color:#D8B4FE;color:#6B21A8;font-weight:700;">
+                ${isSent || isSigned ? '📋 Reenviar Termo' : '📋 Enviar Termo'}
+              </button>
+              <button class="btn btn-primary" onclick="setStatus('${m.id}', 'aprovado')" style="padding:9px 8px;font-size:11.5px;flex:1;background:${isSigned ? '#059669' : 'var(--primary)'};border:none;">
+                ✓ Aprovar
+              </button>
+              <button class="btn btn-outline" onclick="setStatus('${m.id}', 'rejeitado')" style="padding:9px 8px;font-size:11.5px;flex:0.85;color:#DC2626;border-color:#FECACA;">
+                ✕ Recusar
+              </button>
+              <a href="10-chat-mensagem.html?matchId=${m.id}" title="Abrir Chat com Adotante" style="width:38px;height:38px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:17px;text-decoration:none;flex-shrink:0;border:1px solid var(--border);">💬</a>
+            </div>
+          </div>`;
+      });
+    }
+
+    // Catálogo de Pets
+    const pCont = document.getElementById('petsContainer');
+    pCont.innerHTML = '';
+    pets.forEach(p => {
+      const isAdotado = p.status === 'adotado';
+      pCont.innerHTML += `
+        <div class="card" style="display:flex;gap:12px;padding:12px;margin-bottom:10px;align-items:center;${isAdotado ? 'opacity:0.7;' : ''}">
+          <img src="${p.img}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" style="width:60px;height:60px;border-radius:12px;object-fit:cover;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <h3 style="font-size:15px;font-weight:800;margin-bottom:2px;">${p.name}</h3>
+            <p style="font-size:12px;color:var(--text-2);margin-bottom:6px;">${p.breed} • ${p.age} • ${p.size || 'Médio'}</p>
+            <span class="chip ${isAdotado ? '' : 'chip-success'}" style="font-size:10.5px;${isAdotado ? 'background:#E2E8F0;color:#475569;' : ''}">${isAdotado ? '🏠 Adotado' : '🟢 Disponível'}</span>
+          </div>
+          <a href="07-detalhes-pet.html?id=${p.id}" style="padding:8px 10px;border-radius:10px;background:var(--surface-2);text-decoration:none;font-size:12px;font-weight:700;color:var(--text-2);">Ver</a>
+        </div>`;
+    });
+
+    // Concluídos
+    document.getElementById('doneCountText').innerText = aprovados.length;
+    const dCont = document.getElementById('doneContainer');
+    dCont.innerHTML = '';
+    if (aprovados.length === 0) {
+      dCont.innerHTML = '<p style="text-align:center;color:var(--text-3);font-size:13px;">Nenhuma adoção concluída ainda.</p>';
+    } else {
+      aprovados.slice().reverse().forEach(m => {
+        dCont.innerHTML += `
+          <div class="card" style="display:flex;gap:12px;padding:14px;margin-bottom:10px;align-items:center;background:#F0FDF4;border:1px solid #BBF7D0;">
+            <img src="${m.petImg}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80';" style="width:52px;height:52px;border-radius:12px;object-fit:cover;">
+            <div style="flex:1;">
+              <div style="font-weight:800;font-size:14px;color:#15803D;">${m.petName} — Adoção Aprovada! 🎉</div>
+              <div style="font-size:12px;color:#166534;">Tutor(a): <strong>${m.userName}</strong></div>
+              <div style="font-size:11px;color:#15803D;margin-top:2px;">✓ Termo de Guarda Responsável arquivado</div>
+            </div>
+            <a href="12-acompanhamento.html?matchId=${m.id}&petId=${m.petId}" style="padding:7px 10px;background:#16A34A;color:white;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;">RG Pet</a>
+          </div>`;
+      });
+    }
+  } catch (e) { console.error(e); }
+}
+
+async function enviarTermo(matchId) {
+  try {
+    if (!appDb) appDb = await loadDb();
+    const m = (appDb.matches || []).find(x => String(x.id) === String(matchId));
+    if (m) {
+      m.status = 'termo_enviado';
+      m.termoEnviado = true;
+      m.termoEnviadoEm = new Date().toISOString();
+
+      const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      if (!appDb.chats) appDb.chats = [];
+
+      const alreadyHasTerm = appDb.chats.some(c => String(c.matchId) === String(matchId) && (c.isTermo || (c.text && c.text.includes('[TERMO DE ADOÇÃO RESPONSÁVEL]'))));
+      if (!alreadyHasTerm) {
+        appDb.chats.push({
+          matchId: String(matchId),
+          sender: 'ong',
+          text: `Olá, ${m.userName}! Disponibilizamos o Termo Oficial de Adoção Responsável para o(a) ${m.petName}. Clique no cartão abaixo para ler e assinar digitalmente! 🐾📋`,
+          time: time
+        });
+        appDb.chats.push({
+          matchId: String(matchId),
+          sender: 'ong',
+          text: `📄 [TERMO DE ADOÇÃO RESPONSÁVEL]\nClique no botão abaixo para ler o contrato e realizar a assinatura digital para adoção de ${m.petName}.`,
+          isTermo: true,
+          petId: m.petId,
+          petName: m.petName,
+          petImg: m.petImg,
+          time: time
+        });
+      }
+
+      await saveDb(appDb);
+      await loadDashboard();
+      if (window.PatinhasAPI) PatinhasAPI.showToast('success', `Termo enviado para ${m.userName} no chat!`);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function setStatus(matchId, status) {
+  try {
+    if (!appDb) appDb = await loadDb();
+    const m = (appDb.matches || []).find(x => String(x.id) === String(matchId));
+    if (m) {
+      m.status = status;
+      const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      if (!appDb.chats) appDb.chats = [];
+
+      if (status === 'aprovado') {
+        const pet = (appDb.pets || []).find(p => String(p.id) === String(m.petId));
+        if (pet) pet.status = 'adotado';
+        appDb.chats.push({
+          matchId: String(matchId),
+          sender: 'ong',
+          text: `🎉 Parabéns, ${m.userName}! A adoção de ${m.petName} foi OFICIALMENTE APROVADA pela ONG! Seu Certificado Digital de Guarda Responsável já está liberado! 🐾❤️`,
+          time: time
+        });
+      } else if (status === 'rejeitado') {
+        const pet = (appDb.pets || []).find(p => String(p.id) === String(m.petId));
+        if (pet) pet.status = 'disponivel';
+      }
+
+      await saveDb(appDb);
+      await loadDashboard();
+      if (status === 'aprovado' && window.PatinhasAPI) {
+        PatinhasAPI.showToast('success', `Adoção de ${m.petName} aprovada! 🎉`);
+      }
+    }
+  } catch (e) { console.error(e); }
+}
+
+function showTab(tab) {
+  ['pending', 'pets', 'done'].forEach(t => {
+    const l = document.getElementById('list-' + t);
+    if (l) l.style.display = t === tab ? 'block' : 'none';
+    const b = document.getElementById('tab-' + t);
+    if (b) {
+      b.style.color = t === tab ? 'var(--primary)' : 'var(--text-3)';
+      b.style.borderBottom = t === tab ? '2px solid var(--primary)' : '2px solid transparent';
+      b.style.fontWeight = t === tab ? '700' : '600';
+    }
+  });
+}
+
+loadDashboard();
+setInterval(loadDashboard, 3500);
+</script>
+</body>
+</html>
