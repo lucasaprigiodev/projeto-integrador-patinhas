@@ -1009,10 +1009,16 @@ app.put('/api/state', (req, res) => {
 // ============================================================================
 // 6. DOCUMENTAÇÃO OPENAPI 3.0 (SWAGGER UI)
 // ============================================================================
-const OPENAPI_PATH = path.join(__dirname, 'openapi.json');
+const OPENAPI_PATH = path.resolve(__dirname, 'openapi.json');
 
 app.get('/api/openapi.json', (req, res) => {
-  res.sendFile(OPENAPI_PATH);
+  try {
+    const raw = fs.readFileSync(OPENAPI_PATH, 'utf-8');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.send(raw);
+  } catch (err) {
+    res.status(500).json({ erro: 'Arquivo OpenAPI não encontrado.', detalhes: err.message });
+  }
 });
 
 app.get('/api-docs', (req, res) => {
