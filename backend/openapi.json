@@ -1,0 +1,742 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API REST Patinhas - Plataforma de Adoção Responsável",
+    "version": "3.0.0",
+    "description": "Documentação oficial OpenAPI 3.0 da Arquitetura Distribuída do **Projeto Integrador Patinhas (IFRN Campus Natal Zona Leste)**.\n\n### Arquitetura e Segurança\n- **Persistência**: Banco de dados relacional **SQLite** com integridade referencial (`PRAGMA foreign_keys = ON`) e transações ACID.\n- **Autenticação**: Baseada em **Token JWT (Bearer Token)** assinado via HMAC-SHA256 no endpoint `/api/auth/login` ou `/api/auth/register`.\n- **Controle de Acesso Baseado em Papel (RBAC)**:\n  - `adotante`: Pode visualizar animais disponíveis, registrar interesse (Match), enviar/ler mensagens nos seus próprios matches e **assinar digitalmente o Termo de Adoção Responsável**.\n  - `ong`: Pode cadastrar, editar e remover animais, listar todos os candidatos/matches, **enviar o Termo de Adoção Responsável**, aprovar ou rejeitar adoções e conversar com qualquer candidato.\n\n### Máquina de Estados do Fluxo de Adoção\n`pendente` ➔ `termo_enviado` (Ação exclusiva da ONG) ➔ `termo_assinado` (Ação exclusiva do Adotante titular) ➔ `aprovado` ou `rejeitado` (Ação exclusiva da ONG).",
+    "contact": {
+      "name": "Lucas Aprígio da Silva - IFRN Natal Zona Leste",
+      "email": "lucas.aprigio@academico.ifrn.edu.br"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor Local de Desenvolvimento e Homologação (Node.js + Express + SQLite)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "1. Autenticação e Usuários",
+      "description": "Cadastro real de usuários (Adotantes e ONGs), login com emissão de token JWT e consulta de perfil autenticado."
+    },
+    {
+      "name": "2. Animais (Pets)",
+      "description": "Listagem pública de animais para adoção e gerenciamento completo (CRUD) restrito ao perfil ONG."
+    },
+    {
+      "name": "3. Adoções e Matches (Fluxo de Estados)",
+      "description": "Registro de interesse (Match), envio do Termo de Adoção pela ONG, assinatura digital pelo Adotante e aprovação final."
+    },
+    {
+      "name": "4. Mensagens (Chat em Tempo Real)",
+      "description": "Troca de mensagens vinculadas a um Match entre o Adotante titular e a ONG responsável."
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Informe o token JWT obtido em `/api/auth/login` ou `/api/auth/register`. Exemplo: `Bearer eyJhbGciOiJIUzI1Ni...`"
+      }
+    },
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["nome", "email", "senha", "perfil"],
+        "properties": {
+          "nome": {
+            "type": "string",
+            "minLength": 3,
+            "description": "Nome completo do adotante ou razão social da ONG.",
+            "example": "Lucas Aprígio da Silva"
+          },
+          "cpf": {
+            "type": "string",
+            "description": "CPF do adotante ou CNPJ da ONG.",
+            "example": "123.456.789-00"
+          },
+          "telefone": {
+            "type": "string",
+            "description": "Telefone / WhatsApp com DDD.",
+            "example": "(84) 99911-2233"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "E-mail único para autenticação.",
+            "example": "lucas.novo@academico.ifrn.edu.br"
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 4,
+            "description": "Senha de acesso (armazenada com hash criptográfico Scrypt).",
+            "example": "senhaSegura123"
+          },
+          "perfil": {
+            "type": "string",
+            "enum": ["adotante", "ong"],
+            "default": "adotante",
+            "description": "Papel do usuário no controle de acesso (RBAC).",
+            "example": "adotante"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "senha"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "lucas@ifrn.edu.br"
+          },
+          "senha": {
+            "type": "string",
+            "example": "123456"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 2 },
+          "nome": { "type": "string", "example": "Lucas Aprígio" },
+          "cpf": { "type": "string", "example": "123.456.789-00" },
+          "telefone": { "type": "string", "example": "(84) 99911-2233" },
+          "email": { "type": "string", "example": "lucas@ifrn.edu.br" },
+          "perfil": { "type": "string", "enum": ["adotante", "ong"], "example": "adotante" },
+          "criado_em": { "type": "string", "format": "date-time", "example": "2026-11-02T19:00:00.000Z" }
+        }
+      },
+      "AuthSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "mensagem": { "type": "string", "example": "Autenticação realizada com sucesso." },
+          "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+          "usuario": { "$ref": "#/components/schemas/UserResponse" }
+        }
+      },
+      "PetRequest": {
+        "type": "object",
+        "required": ["name", "age", "breed", "img"],
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "example": "Paçoca" },
+          "especie": { "type": "string", "enum": ["Cachorro", "Gato", "Outro"], "default": "Cachorro", "example": "Cachorro" },
+          "breed": { "type": "string", "example": "SRD (Caramelo)" },
+          "age": { "type": "string", "example": "1 ano" },
+          "size": { "type": "string", "enum": ["Pequeno", "Médio", "Grande"], "default": "Médio", "example": "Médio" },
+          "gender": { "type": "string", "enum": ["Macho", "Fêmea"], "default": "Macho", "example": "Macho" },
+          "dist": { "type": "string", "example": "3km" },
+          "about": { "type": "string", "example": "Cachorro dócil, vacinado e castrado." },
+          "img": { "type": "string", "format": "uri", "example": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80" },
+          "ong": { "type": "string", "example": "ONG Patinhas" }
+        }
+      },
+      "PetResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "Buddy" },
+          "especie": { "type": "string", "example": "Cachorro" },
+          "breed": { "type": "string", "example": "Golden Retriever" },
+          "age": { "type": "string", "example": "2 anos" },
+          "size": { "type": "string", "example": "Grande" },
+          "gender": { "type": "string", "example": "Macho" },
+          "dist": { "type": "string", "example": "5km" },
+          "about": { "type": "string", "example": "O Buddy foi resgatado e é extremamente dócil, vacinado e castrado." },
+          "img": { "type": "string", "example": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80" },
+          "status": { "type": "string", "enum": ["disponivel", "em_processo", "adotado"], "example": "disponivel" },
+          "ong_id": { "type": "integer", "example": 1 },
+          "ong": { "type": "string", "example": "ONG Patinhas" }
+        }
+      },
+      "MatchCreateRequest": {
+        "type": "object",
+        "required": ["petId"],
+        "properties": {
+          "petId": {
+            "type": "integer",
+            "description": "ID do animal no qual o adotante deu Match.",
+            "example": 2
+          }
+        }
+      },
+      "MatchResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "petId": { "type": "integer", "example": 4 },
+          "petName": { "type": "string", "example": "Thor" },
+          "petImg": { "type": "string", "example": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=800&q=80" },
+          "adotanteId": { "type": "integer", "example": 2 },
+          "userName": { "type": "string", "example": "Lucas Aprígio" },
+          "status": {
+            "type": "string",
+            "enum": ["pendente", "termo_enviado", "termo_assinado", "aprovado", "rejeitado"],
+            "example": "termo_enviado"
+          },
+          "termoEnviado": { "type": "boolean", "example": true },
+          "termoEnviadoEm": { "type": "string", "nullable": true, "example": "2026-11-02T19:15:00.000Z" },
+          "termoAssinado": { "type": "boolean", "example": false },
+          "termoAssinadoEm": { "type": "string", "nullable": true, "example": null },
+          "date": { "type": "string", "example": "02/11/2026" }
+        }
+      },
+      "MessageCreateRequest": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Conteúdo da mensagem enviada no chat.",
+            "example": "Olá! Gostaria de agendar uma visita para conhecer a Luna."
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 10 },
+          "matchId": { "type": "integer", "example": 1 },
+          "remetenteId": { "type": "integer", "example": 2 },
+          "sender": { "type": "string", "enum": ["user", "ong"], "example": "user" },
+          "text": { "type": "string", "example": "Olá! Gostaria de agendar uma visita para conhecer a Luna." },
+          "isTermo": { "type": "boolean", "example": false },
+          "time": { "type": "string", "example": "19:30" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "erro": { "type": "string", "example": "Acesso negado" },
+          "detalhes": { "type": "string", "example": "Apenas usuários com perfil 'ong' têm permissão para executar esta operação." },
+          "codigo": { "type": "integer", "example": 403 }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["1. Autenticação e Usuários"],
+        "summary": "Cadastrar novo usuário (Adotante ou ONG)",
+        "description": "Realiza o cadastro persistente no banco de dados relacional com validação de campos obrigatórios, unicidade de e-mail/CPF e hash criptográfico de senha.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário cadastrado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthSuccessResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados de entrada inválidos (campos ausentes ou senha curta).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "erro": "Dados inválidos",
+                  "detalhes": "Os campos nome, email e senha (mínimo 4 caracteres) são obrigatórios.",
+                  "codigo": 400
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito: E-mail ou CPF já cadastrado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "erro": "Conflito de cadastro",
+                  "detalhes": "Já existe um usuário registrado com este e-mail.",
+                  "codigo": 409
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["1. Autenticação e Usuários"],
+        "summary": "Autenticar usuário e emitir Token JWT",
+        "description": "Valida as credenciais no banco relacional e retorna o token JWT assinado contendo `id`, `email`, `nome` e `perfil`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" },
+              "examples": {
+                "LoginAdotante": {
+                  "summary": "Login de Adotante",
+                  "value": { "email": "lucas@ifrn.edu.br", "senha": "123456" }
+                },
+                "LoginONG": {
+                  "summary": "Login de Administrador da ONG",
+                  "value": { "email": "admin@ong.com", "senha": "admin" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login efetuado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthSuccessResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais inválidas.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "erro": "Não autorizado",
+                  "detalhes": "E-mail ou senha incorretos.",
+                  "codigo": 401
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["1. Autenticação e Usuários"],
+        "summary": "Consultar perfil do usuário autenticado",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Dados do perfil autenticado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente ou inválido.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pets": {
+      "get": {
+        "tags": ["2. Animais (Pets)"],
+        "summary": "Listar animais cadastrados",
+        "description": "Retorna a lista de animais do banco relacional. Permite filtrar opcionalmente por `status` ou `especie`.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["disponivel", "em_processo", "adotado"] },
+            "description": "Filtrar animais pelo status de disponibilidade."
+          },
+          {
+            "name": "especie",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["Cachorro", "Gato", "Outro"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de animais retornada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PetResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["2. Animais (Pets)"],
+        "summary": "Cadastrar novo animal para adoção (Exclusivo ONG)",
+        "description": "Cria um novo registro na tabela `animais` vinculado ao `ong_id` do usuário autenticado. **Requer perfil `ong`**.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PetRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Animal cadastrado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PetResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos obrigatórios ausentes.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } }
+            }
+          },
+          "401": {
+            "description": "Usuário não autenticado.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } }
+            }
+          },
+          "403": {
+            "description": "Permissão insuficiente (usuário não é ONG).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "erro": "Acesso proibido (Forbidden)",
+                  "detalhes": "Apenas usuários com perfil 'ong' podem cadastrar novos animais.",
+                  "codigo": 403
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pets/{id}": {
+      "get": {
+        "tags": ["2. Animais (Pets)"],
+        "summary": "Obter detalhes de um animal pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados detalhados do animal.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PetResponse" } }
+            }
+          },
+          "404": {
+            "description": "Animal não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "erro": "Recurso não encontrado",
+                  "detalhes": "Nenhum animal encontrado com o ID informado.",
+                  "codigo": 404
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["2. Animais (Pets)"],
+        "summary": "Remover um animal (Exclusivo ONG)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Animal removido com sucesso." },
+          "403": { "description": "Apenas perfil ONG pode remover animais." },
+          "404": { "description": "Animal não encontrado." }
+        }
+      }
+    },
+    "/api/matches": {
+      "get": {
+        "tags": ["3. Adoções e Matches (Fluxo de Estados)"],
+        "summary": "Listar matches de adoção conforme permissão do usuário",
+        "description": "Se autenticado como `ong`, retorna todas as solicitações de adoção. Se autenticado como `adotante`, retorna exclusivamente os matches pertencentes ao próprio usuário.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Lista de matches retornada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MatchResponse" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Não autenticado." }
+        }
+      },
+      "post": {
+        "tags": ["3. Adoções e Matches (Fluxo de Estados)"],
+        "summary": "Criar um novo Match / Interesse de Adoção",
+        "description": "Associa o `adotante_id` autenticado ao `animal_id` desejado com estado inicial `pendente` e cria a mensagem de boas-vindas da ONG.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MatchCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Match registrado com sucesso.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/MatchResponse" } }
+            }
+          },
+          "404": { "description": "Animal informado não existe." },
+          "409": {
+            "description": "Match já existente para este animal e adotante.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "erro": "Match duplicado",
+                  "detalhes": "Você já possui um processo de adoção ativo para este animal.",
+                  "codigo": 409
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/matches/{id}/enviar-termo": {
+      "post": {
+        "tags": ["3. Adoções e Matches (Fluxo de Estados)"],
+        "summary": "Enviar Termo de Adoção Responsável ao Candidato (Exclusivo ONG)",
+        "description": "Realiza a transição de estado `pendente` ➔ `termo_enviado` e insere o Card Oficial do Termo no chat do candidato. **Restrito ao perfil `ong`**.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "ID do Match"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mensagemCustomizada": {
+                    "type": "string",
+                    "example": "Olá! Analisamos seu perfil e disponibilizamos o Termo de Adoção Responsável para assinatura digital."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Termo enviado com sucesso e estado atualizado para `termo_enviado`.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/MatchResponse" } }
+            }
+          },
+          "403": { "description": "Apenas a ONG tem permissão para enviar o termo." },
+          "404": { "description": "Match não encontrado." }
+        }
+      }
+    },
+    "/api/matches/{id}/assinar-termo": {
+      "post": {
+        "tags": ["3. Adoções e Matches (Fluxo de Estados)"],
+        "summary": "Assinar Digitalmente o Termo de Adoção (Exclusivo Adotante Titular)",
+        "description": "Realiza a transição de estado `termo_enviado` ➔ `termo_assinado`. Valida se o termo já foi disponibilizado pela ONG e se o usuário autenticado é o adotante titular do match.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["aceiteClausulas", "aceitePeriodoAdaptacao"],
+                "properties": {
+                  "aceiteClausulas": { "type": "boolean", "example": true },
+                  "aceitePeriodoAdaptacao": { "type": "boolean", "example": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Termo assinado digitalmente com sucesso.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/MatchResponse" } }
+            }
+          },
+          "403": { "description": "Usuário não é o adotante titular deste match." },
+          "422": {
+            "description": "Transição de estado inválida (ex: termo ainda não foi enviado pela ONG).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "erro": "Transição de estado inválida",
+                  "detalhes": "O termo de adoção só pode ser assinado após ser enviado pela ONG (status atual: pendente).",
+                  "codigo": 422
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/matches/{id}/status": {
+      "patch": {
+        "tags": ["3. Adoções e Matches (Fluxo de Estados)"],
+        "summary": "Aprovar ou Rejeitar Adoção (Exclusivo ONG)",
+        "description": "Permite à ONG concluir a adoção (`aprovado`, marcando o animal como `adotado`) ou recusar (`rejeitado`).",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["pendente", "termo_enviado", "termo_assinado", "aprovado", "rejeitado"],
+                    "example": "aprovado"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status atualizado com sucesso." },
+          "403": { "description": "Apenas perfil ONG pode aprovar ou rejeitar adoções." },
+          "404": { "description": "Match não encontrado." }
+        }
+      }
+    },
+    "/api/matches/{id}/messages": {
+      "get": {
+        "tags": ["4. Mensagens (Chat em Tempo Real)"],
+        "summary": "Listar mensagens do chat de um Match",
+        "description": "Retorna o histórico de mensagens do match. Apenas o adotante titular ou a ONG podem consultar.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de mensagens do match.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MessageResponse" }
+                }
+              }
+            }
+          },
+          "403": { "description": "Acesso negado às mensagens de outro usuário." },
+          "404": { "description": "Match não encontrado." }
+        }
+      },
+      "post": {
+        "tags": ["4. Mensagens (Chat em Tempo Real)"],
+        "summary": "Enviar nova mensagem no chat do Match",
+        "description": "Registra uma nova mensagem no banco relacional associada ao `remetente_id` do usuário autenticado.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MessageCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mensagem registrada com sucesso.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/MessageResponse" } }
+            }
+          },
+          "400": { "description": "Texto da mensagem vazio." },
+          "403": { "description": "Sem permissão para participar deste chat." }
+        }
+      }
+    }
+  }
+}

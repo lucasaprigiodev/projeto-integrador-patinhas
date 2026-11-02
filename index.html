@@ -1,693 +1,155 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patinhas - Painel ONG Advanced</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .brand-color { color: #FF5A5F; }
-        .brand-bg { background-color: #FF5A5F; }
-        .brand-hover:hover { background-color: #E04448; }
-        .tab-btn { transition: all 0.2s; }
-        .tab-btn.active { background-color: #fef2f2; color: #FF5A5F; border-right: 3px solid #FF5A5F; font-weight: 700; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Login · Patinhas</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body class="flex h-screen overflow-hidden text-slate-800">
+<body>
 
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex shrink-0">
-        <div class="h-20 flex items-center px-6 border-b border-slate-100">
-            <span class="text-3xl mr-3">🐾</span>
-            <span class="text-xl font-extrabold tracking-tight">Patinhas <span class="brand-color">ONG</span></span>
+<div class="phone">
+  <div style="height:100%; display:flex; flex-direction:column; background:white;">
+    <div class="statusbar" style="color:var(--text-1);">
+      <span class="time">9:41</span>
+      <div class="icons">
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="0.5" width="3" height="11.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".3"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
+      </div>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:28px 28px;" class="anim-fade-up">
+
+      <!-- Logo -->
+      <div style="text-align:center; margin-bottom:28px;">
+        <div style="width:76px;height:76px;background:var(--primary);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 8px 24px rgba(255,90,95,0.35);font-size:36px;animation:pulse 2s infinite;">🐾</div>
+        <h1 style="font-size:28px;font-weight:800;color:var(--text-1);letter-spacing:-0.8px;">Patinhas</h1>
+        <p style="color:var(--text-2);font-size:14px;margin-top:4px;">Conectando corações e patinhas</p>
+      </div>
+
+      <!-- Caixa de Feedback da API (Carregamento / Sucesso / Erro) -->
+      <div id="login-feedback" style="display:none; padding:12px 14px; border-radius:12px; font-size:13px; font-weight:600; margin-bottom:16px; line-height:1.4;"></div>
+
+      <!-- Inputs -->
+      <div class="input-group">
+        <label>E-mail</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <input type="email" id="email" placeholder="lucas@ifrn.edu.br" value="lucas@ifrn.edu.br">
         </div>
-        <nav class="flex-1 px-4 py-8 space-y-3">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn active w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50">📊 Dashboard</button>
-            <button onclick="switchTab('animais')" id="nav-animais" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50">🐶 Animais</button>
-            <button onclick="switchTab('adocoes')" id="nav-adocoes" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50">🤝 Adoções e Matchs</button>
-            <button onclick="switchTab('adotantes')" id="nav-adotantes" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50">👥 Adotantes (Usuários)</button>
-        </nav>
-        <div class="p-6 border-t border-slate-100 bg-slate-50">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center text-xl shadow-sm">🐾</div>
-                <div><p class="text-sm font-bold">ONG Patinhas</p><p class="text-xs text-green-600 font-bold">● Online</p></div>
-            </div>
+      </div>
+      <div class="input-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="senha" placeholder="••••••••" value="123456">
         </div>
-    </aside>
+      </div>
+      <p style="text-align:right;margin:-10px 0 18px;font-size:13px;color:var(--primary);font-weight:600;cursor:pointer;" onclick="preencherDemoOng()">Entrar como ONG (Demo)</p>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-10 shrink-0 shadow-sm z-10">
-            <h1 class="text-2xl font-bold text-slate-800" id="header-title">Visão Geral</h1>
-            <div class="flex gap-4">
-                <button onclick="fetchDashboard()" class="text-slate-500 hover:text-slate-800 bg-slate-100 p-2.5 rounded-full" title="Atualizar Dados">🔄</button>
-                <button onclick="openPetModal()" class="brand-bg brand-hover text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all">+ Novo Animal</button>
-            </div>
-        </header>
+      <button id="btn-login" class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
 
-        <div class="flex-1 overflow-auto p-10 bg-slate-50">
-            
-            <!-- TAB: DASHBOARD -->
-            <div id="tab-dashboard" class="tab-content active max-w-6xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl mb-4">🐶</div>
-                        <p class="text-sm text-slate-500 font-medium">Animais Ativos</p>
-                        <p class="text-3xl font-extrabold text-slate-800" id="stat-pets">-</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                        <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl mb-4">⏳</div>
-                        <p class="text-sm text-slate-500 font-medium">Adoções Pendentes</p>
-                        <p class="text-3xl font-extrabold text-slate-800" id="stat-cand">-</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                        <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl mb-4">🎉</div>
-                        <p class="text-sm text-slate-500 font-medium">Animais Adotados</p>
-                        <p class="text-3xl font-extrabold text-slate-800" id="stat-adop">-</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                        <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xl mb-4">👥</div>
-                        <p class="text-sm text-slate-500 font-medium">Adotantes Registrados</p>
-                        <p class="text-3xl font-extrabold text-slate-800" id="stat-users">-</p>
-                    </div>
-                </div>
+      <div class="divider">ou</div>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
-                        <h2 class="text-lg font-bold">Candidatos Recentes (Matchs)</h2>
-                    </div>
-                    <table class="w-full text-left">
-                        <thead><tr class="bg-slate-50 text-slate-500 text-xs tracking-wider uppercase"><th class="px-8 py-4">Adotante</th><th class="px-8 py-4">Pet Desejado</th><th class="px-8 py-4">Status</th><th class="px-8 py-4 text-right">Ação Rápida</th></tr></thead>
-                        <tbody id="dash-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
-                    </table>
-                </div>
-            </div>
+      <button class="btn btn-ghost" onclick="window.location.href='02-cadastro-tipo.html'">
+        ✨ &nbsp;Criar Nova Conta
+      </button>
 
-            <!-- TAB: ANIMAIS -->
-            <div id="tab-animais" class="tab-content max-w-7xl mx-auto">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Gestão de Animais</h2>
-                    <div class="flex gap-2">
-                        <span class="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-bold" id="badge-disponivel">0 Disponíveis</span>
-                        <span class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold" id="badge-adotado">0 Adotados</span>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6" id="pets-grid">
-                    <p class="text-slate-500 col-span-full">Carregando animais...</p>
-                </div>
-            </div>
-
-            <!-- TAB: ADOÇÕES -->
-            <div id="tab-adocoes" class="tab-content max-w-6xl mx-auto">
-                <h2 class="text-2xl font-bold mb-6">Processos de Adoção e Chat</h2>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead><tr class="bg-slate-50 text-slate-500 text-xs tracking-wider uppercase"><th class="px-8 py-4">Adotante</th><th class="px-8 py-4">Pet</th><th class="px-8 py-4">Status</th><th class="px-8 py-4 text-right">Ações Completas</th></tr></thead>
-                        <tbody id="adocoes-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- TAB: ADOTANTES -->
-            <div id="tab-adotantes" class="tab-content max-w-6xl mx-auto">
-                <h2 class="text-2xl font-bold mb-6">Usuários Cadastrados</h2>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead><tr class="bg-slate-50 text-slate-500 text-xs tracking-wider uppercase"><th class="px-8 py-4">Nome</th><th class="px-8 py-4">E-mail</th><th class="px-8 py-4">Telefone</th><th class="px-8 py-4">Localização</th></tr></thead>
-                        <tbody id="users-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- MODAL: PET (CRIAR/EDITAR) -->
-        <div id="pet-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-all">
-            <div class="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl transform scale-100">
-                <h2 class="text-2xl font-extrabold mb-6" id="pet-modal-title">Cadastrar Animal</h2>
-                <form id="pet-form" onsubmit="event.preventDefault(); savePet();" class="space-y-5">
-                    <input type="hidden" id="p-id">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-bold text-slate-700 mb-1">Nome</label><input required id="p-name" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50" placeholder="Ex: Rex"></div>
-                        <div><label class="block text-sm font-bold text-slate-700 mb-1">Idade</label><input required id="p-age" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50" placeholder="Ex: 2 anos"></div>
-                    </div>
-                    <div><label class="block text-sm font-bold text-slate-700 mb-1">Raça / Tipo</label><input required id="p-breed" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50" placeholder="Ex: SRD"></div>
-                    <div><label class="block text-sm font-bold text-slate-700 mb-1">URL da Foto</label><input required id="p-img" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50" placeholder="https://..."></div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Status</label>
-                        <select id="p-status" class="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none transition-all bg-slate-50">
-                            <option value="disponivel">Disponível para Adoção</option>
-                            <option value="adotado">Já Adotado</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
-                        <button type="button" onclick="closePetModal()" class="px-5 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-all">Cancelar</button>
-                        <button type="submit" class="brand-bg text-white px-8 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all" id="pet-modal-btn">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- MODAL: ENVIAR TERMO DE ADOÇÃO -->
-        <div id="termo-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-all">
-            <div class="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl transform scale-100">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl font-bold">📋</div>
-                    <div>
-                        <h2 class="text-xl font-extrabold text-slate-800">Enviar Termo de Adoção</h2>
-                        <p class="text-xs text-slate-500">Documento Oficial com Assinatura Digital</p>
-                    </div>
-                </div>
-
-                <!-- Pet & Candidate summary card -->
-                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center gap-4 mb-5">
-                    <img id="termo-pet-img" src="" class="w-16 h-16 rounded-xl object-cover shadow-sm bg-slate-200">
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-bold text-slate-800" id="termo-adotante-nome">Adotante</div>
-                        <div class="text-xs text-slate-500 mb-1">Interesse em: <strong class="text-slate-700" id="termo-pet-nome">Pet</strong></div>
-                        <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700">7 dias período de adaptação</span>
-                    </div>
-                </div>
-
-                <!-- Clauses preview -->
-                <div class="space-y-2 mb-4 text-xs text-slate-600 bg-purple-50/50 p-4 rounded-xl border border-purple-100/60 max-h-36 overflow-y-auto">
-                    <p class="font-bold text-purple-900 mb-1">Cláusulas do Termo:</p>
-                    <p>✓ <strong>1. Bem-estar:</strong> Alimentação adequada, água fresca e abrigo protegido.</p>
-                    <p>✓ <strong>2. Saúde:</strong> Vacinação em dia e assistência veterinária periódica.</p>
-                    <p>✓ <strong>3. Não Abandono:</strong> Proibição de repasse a terceiros sem autorização prévia.</p>
-                    <p>✓ <strong>4. Acompanhamento:</strong> Consentimento de 7 dias de adaptação com a ONG.</p>
-                </div>
-
-                <!-- Message to adopter -->
-                <div class="mb-5">
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Mensagem enviada junto ao Termo (no Chat do App):</label>
-                    <textarea id="termo-msg-custom" class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-purple-400 outline-none bg-slate-50 resize-none h-20 text-slate-700" placeholder="Mensagem personalizada..."></textarea>
-                </div>
-
-                <input type="hidden" id="termo-match-id">
-
-                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                    <button type="button" onclick="closeTermoModal()" class="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-bold text-sm transition-all">Cancelar</button>
-                    <button type="button" onclick="confirmarEnviarTermo()" id="btn-confirmar-termo" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                        <span>🚀</span> Enviar Termo Agora
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- CHAT MODAL (GAVETA) -->
-        <div id="chat-modal" class="fixed inset-0 bg-slate-900 bg-opacity-40 z-50 flex justify-end opacity-0 pointer-events-none transition-opacity duration-300 backdrop-blur-sm">
-            <div id="chat-panel" class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300">
-                <div class="px-6 py-5 border-b border-slate-200 flex justify-between brand-bg text-white items-center">
-                    <div><h3 class="font-extrabold text-lg" id="chat-title">Chat</h3><p class="text-xs font-medium text-red-100" id="chat-subtitle">Comunicação ao Vivo</p></div>
-                    <button onclick="closeChat()" class="text-3xl font-light hover:scale-110 transition-transform">&times;</button>
-                </div>
-                
-                <!-- Barra de Ação Rápida: Termo de Adoção -->
-                <div class="px-6 py-2.5 bg-purple-50 border-b border-purple-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-xs font-semibold text-purple-900">
-                        <span>📋</span> <span id="chat-termo-status">Termo de Adoção</span>
-                    </div>
-                    <button onclick="abrirTermoModal(currentMatchId)" id="btn-enviar-termo-chat" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition">
-                        📋 Enviar Termo
-                    </button>
-                </div>
-
-                <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50"></div>
-                <div class="p-4 bg-white border-t border-slate-200">
-                    <form onsubmit="event.preventDefault(); sendMsg();" class="flex gap-3">
-                        <input id="chat-input" class="flex-1 border border-slate-300 focus:border-red-400 rounded-full px-5 outline-none transition-all" placeholder="Digite uma mensagem...">
-                        <button type="submit" class="brand-bg hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-md transition-all">➤</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!-- TOAST CONTAINER -->
-        <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-3 pointer-events-none"></div>
-    </main>
+      <p style="text-align:center;color:var(--text-2);font-size:13px;margin-top:20px;">
+        Não tem conta? <a href="02-cadastro-tipo.html" style="color:var(--primary);font-weight:700;">Cadastre-se</a>
+      </p>
+    </div>
+    <p style="text-align:center;color:var(--text-3);font-size:11px;padding-bottom:16px;">
+      ONG: <b>admin@ong.com</b> / <b>admin</b> &nbsp;|&nbsp; Adotante: <b>lucas@ifrn.edu.br</b> / <b>123456</b>
+    </p>
+  </div>
+</div>
 
 <script src="db.js"></script>
 <script>
-let currentMatchId = null;
-let chatInterval = null;
-let appData = { pets: [], matches: [], chats: [], users: [] };
-let prevMatchCount = -1;
-
-function playChime() {
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.4);
-    } catch(e) {}
+function showFeedback(type, text) {
+  const box = document.getElementById('login-feedback');
+  box.style.display = 'block';
+  if (type === 'loading') {
+    box.style.background = '#EFF6FF';
+    box.style.color = '#1D4ED8';
+    box.style.border = '1px solid #BFDBFE';
+  } else if (type === 'error') {
+    box.style.background = '#FEF2F2';
+    box.style.color = '#DC2626';
+    box.style.border = '1px solid #FECACA';
+  } else if (type === 'success') {
+    box.style.background = '#ECFDF5';
+    box.style.color = '#047857';
+    box.style.border = '1px solid #A7F3D0';
+  }
+  box.textContent = text;
 }
 
-function showToast(msg) {
-    const container = document.getElementById('toast-container');
-    if(!container) return;
-    const toast = document.createElement('div');
-    toast.className = "bg-slate-900 text-white px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 transform translate-y-4 opacity-0 transition-all duration-300 pointer-events-auto border border-slate-700";
-    toast.innerHTML = `<span class="text-xl">🔔</span><div class="text-sm font-semibold">${msg}</div>`;
-    container.appendChild(toast);
-    setTimeout(() => { toast.classList.remove('translate-y-4', 'opacity-0'); }, 10);
-    playChime();
+function preencherDemoOng() {
+  document.getElementById('email').value = 'admin@ong.com';
+  document.getElementById('senha').value = 'admin';
+  showFeedback('loading', 'Credenciais da ONG preenchidas. Clique em Entrar.');
+}
+
+async function fazerLogin() {
+  const email = (document.getElementById('email').value || '').trim();
+  const senha = (document.getElementById('senha').value || '').trim();
+  const btn = document.getElementById('btn-login');
+
+  if (!email || !senha) {
+    showFeedback('error', '⚠️ Informe seu e-mail e sua senha para autenticar.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Autenticando no servidor...';
+  showFeedback('loading', '⏳ Validando credenciais junto à API REST (POST /api/auth/login)...');
+
+  try {
+    // 1. Tenta autenticar no servidor próprio Node.js + SQLite
+    const res = await PatinhasAPI.login(email, senha);
+    showFeedback('success', `✅ Bem-vindo(a), ${res.usuario.nome}! Redirecionando...`);
+    btn.textContent = '✅ Autenticado!';
+
     setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-4');
-        setTimeout(() => toast.remove(), 300);
-    }, 4500);
-}
+      if (res.usuario.perfil === 'ong') {
+        window.location.href = '15-painel-ong.html';
+      } else {
+        window.location.href = '05-home-swipe.html';
+      }
+    }, 450);
+  } catch (err) {
+    // Se o servidor retornou erro HTTP explícito (400 ou 401), bloqueia o acesso e exibe a resposta real do servidor
+    if (err.status === 400 || err.status === 401 || err.status === 403) {
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      showFeedback('error', `⚠️ ${err.message}`);
+      return;
+    }
 
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + tabId).classList.add('active');
-    document.getElementById('nav-' + tabId).classList.add('active');
-    const titles = { 'dashboard': 'Visão Geral', 'animais': 'Gestão de Animais', 'adocoes': 'Adoções e Matchs', 'adotantes': 'Usuários Registrados' };
-    document.getElementById('header-title').innerText = titles[tabId];
-    fetchDashboard();
-}
+    // Fallback offline/mobile caso o servidor local na porta 3000 esteja desligado
+    const localUsers = JSON.parse(localStorage.getItem('local_registered_users') || '[]');
+    const foundLocal = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === senha);
 
-function getStatusBadge(status) {
-    if(status === 'termo_assinado') return '<span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-xs">✍️ Termo Assinado</span>';
-    if(status === 'termo_enviado') return '<span class="px-3 py-1 bg-purple-100 text-purple-800 font-bold rounded-full text-xs">📋 Termo Enviado</span>';
-    if(status === 'aprovado' || status === 'concluido') return '<span class="px-3 py-1 bg-green-100 text-green-700 font-bold rounded-full text-xs">Aprovado</span>';
-    if(status === 'rejeitado') return '<span class="px-3 py-1 bg-red-100 text-red-700 font-bold rounded-full text-xs">Rejeitado</span>';
-    return '<span class="px-3 py-1 bg-yellow-100 text-yellow-700 font-bold rounded-full text-xs">Pendente</span>';
-}
-
-async function fetchDashboard() {
-    try {
-        const json = await loadDb();
-        appData = json;
-        
-        const pets = json.pets || [];
-        const matches = json.matches || [];
-        const users = json.users || [];
-        
-        // Notify ONG if new match arrived
-        if(prevMatchCount !== -1 && matches.length > prevMatchCount) {
-            const newest = matches[matches.length - 1];
-            showToast(`Novo Match! <strong>${newest.userName}</strong> quer adotar <strong>${newest.petName}</strong>!`);
-        }
-        prevMatchCount = matches.length;
-        
-        const disponiveis = pets.filter(p => p.status === 'disponivel');
-        const adotados = pets.filter(p => p.status === 'adotado');
-        const pendentes = matches.filter(m => m.status === 'pendente' || m.status === 'termo_enviado');
-        
-        // STATS
-        document.getElementById('stat-pets').innerText = disponiveis.length;
-        document.getElementById('stat-cand').innerText = pendentes.length;
-        document.getElementById('stat-adop').innerText = adotados.length;
-        document.getElementById('stat-users').innerText = users.length;
-        document.getElementById('badge-disponivel').innerText = `${disponiveis.length} Disponíveis`;
-        document.getElementById('badge-adotado').innerText = `${adotados.length} Adotados`;
-        
-        // RENDER PETS (CRUD)
-        const pGrid = document.getElementById('pets-grid');
-        pGrid.innerHTML = '';
-        pets.forEach(p => {
-            const isAdotado = p.status === 'adotado';
-            pGrid.innerHTML += `
-            <div class="bg-white rounded-2xl border ${isAdotado ? 'border-slate-300 opacity-60' : 'border-slate-200'} overflow-hidden shadow-sm hover:shadow-md transition-all group relative">
-                ${isAdotado ? '<div class="absolute top-2 right-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-md z-10">Adotado</div>' : ''}
-                <img src="${p.img}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80'" class="w-full h-40 object-cover ${isAdotado ? 'grayscale' : ''}">
-                <div class="p-4">
-                    <h4 class="font-extrabold text-lg text-slate-800">${p.name}</h4>
-                    <p class="text-sm text-slate-500 mb-4">${p.breed} • ${p.age}</p>
-                    <div class="flex gap-2 border-t border-slate-100 pt-3">
-                        <button onclick="editPet(${p.id})" class="flex-1 bg-blue-50 text-blue-700 font-bold py-2 rounded-lg text-sm hover:bg-blue-100 transition">✏️ Editar</button>
-                        <button onclick="deletePet(${p.id})" class="flex-1 bg-red-50 text-red-700 font-bold py-2 rounded-lg text-sm hover:bg-red-100 transition">🗑️ Excluir</button>
-                    </div>
-                </div>
-            </div>`;
-        });
-
-        // RENDER MATCHES (DASHBOARD & ADOÇÕES)
-        let dashRows = '', adocRows = '';
-        if(matches.length === 0) {
-            dashRows = adocRows = `<tr><td colspan="4" class="text-center py-8 text-slate-500">Nenhuma adoção registrada ainda.</td></tr>`;
-        } else {
-            matches.slice().reverse().forEach(m => {
-                const rowContent = `
-                    <td class="px-8 py-5 font-bold text-slate-700 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">${m.userName.charAt(0)}</div>${m.userName}</td>
-                    <td class="px-8 py-5"><div class="flex items-center gap-3"><img src="${m.petImg}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&q=80'" class="w-10 h-10 rounded-lg object-cover shadow-sm font-medium text-slate-700"><span>${m.petName}</span></div></td>
-                    <td class="px-8 py-5">${getStatusBadge(m.status)}</td>
-                `;
-                dashRows += `<tr>${rowContent}
-                    <td class="px-8 py-5 text-right space-x-2">
-                        <button onclick="abrirTermoModal('${m.id}')" class="bg-purple-50 text-purple-700 font-bold px-3 py-2 rounded-lg hover:bg-purple-100 transition shadow-sm text-xs">📋 Termo</button>
-                        <button onclick="openChat('${m.id}', '${m.userName}')" class="bg-blue-50 text-blue-700 font-bold px-3 py-2 rounded-lg hover:bg-blue-100 transition shadow-sm text-xs">💬 Chat</button>
-                    </td>
-                </tr>`;
-                adocRows += `<tr>${rowContent}
-                    <td class="px-8 py-5 text-right space-x-2">
-                        <button onclick="abrirTermoModal('${m.id}')" class="bg-purple-50 text-purple-700 font-bold p-2.5 rounded-lg hover:bg-purple-100 transition shadow-sm" title="Enviar Termo de Adoção">📋</button>
-                        <button onclick="openChat('${m.id}', '${m.userName}')" class="bg-blue-50 text-blue-700 font-bold p-2.5 rounded-lg hover:bg-blue-100 transition shadow-sm" title="Chat">💬</button>
-                        <button onclick="setStatus('${m.id}', 'aprovado')" class="bg-green-50 text-green-700 font-bold p-2.5 rounded-lg hover:bg-green-100 transition shadow-sm" title="Aprovar Adoção">✓</button>
-                        <button onclick="setStatus('${m.id}', 'rejeitado')" class="bg-red-50 text-red-700 font-bold p-2.5 rounded-lg hover:bg-red-100 transition shadow-sm" title="Rejeitar">✕</button>
-                    </td>
-                </tr>`;
-            });
-        }
-        document.getElementById('dash-table-body').innerHTML = dashRows;
-        document.getElementById('adocoes-table-body').innerHTML = adocRows;
-
-        // RENDER USERS
-        const tbodyUsers = document.getElementById('users-table-body');
-        tbodyUsers.innerHTML = '';
-        if(users.length === 0) tbodyUsers.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500">Nenhum usuário cadastrado.</td></tr>`;
-        users.forEach(u => {
-            tbodyUsers.innerHTML += `<tr>
-                <td class="px-8 py-5 font-bold text-slate-700 flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">${u.name.charAt(0)}</div>${u.name}</td>
-                <td class="px-8 py-5 text-slate-600">${u.email}</td>
-                <td class="px-8 py-5 text-slate-600">${u.phone}</td>
-                <td class="px-8 py-5 text-slate-600">${u.address}</td>
-            </tr>`;
-        });
-
-    } catch(e) { console.error(e); }
-}
-
-// CRUD PETS
-async function savePet() {
-    const id = document.getElementById('p-id').value;
-    const n = document.getElementById('p-name').value;
-    const a = document.getElementById('p-age').value;
-    const b = document.getElementById('p-breed').value;
-    const i = document.getElementById('p-img').value;
-    const s = document.getElementById('p-status').value;
-    
-    if(!appData.pets) appData.pets = [];
-
-    if(id) {
-        // Edit
-        const idx = appData.pets.findIndex(p => p.id == id);
-        if(idx >= 0) appData.pets[idx] = { ...appData.pets[idx], name: n, age: a, breed: b, img: i, status: s };
+    if (email.toLowerCase() === 'admin@ong.com' && senha === 'admin') {
+      PatinhasAPI.setAuthSession('offline-jwt-ong', { id: 1, nome: 'ONG Patinhas Natal', email: 'admin@ong.com', perfil: 'ong' });
+      showFeedback('success', '✅ Autenticado como ONG Patinhas!');
+      setTimeout(() => { window.location.href = '15-painel-ong.html'; }, 350);
+    } else if ((email.toLowerCase() === 'lucas@ifrn.edu.br' && senha === '123456') || foundLocal) {
+      const userObj = foundLocal || { id: 2, nome: 'Lucas Aprígio', email: 'lucas@ifrn.edu.br', perfil: 'adotante' };
+      PatinhasAPI.setAuthSession('offline-jwt-user', userObj);
+      showFeedback('success', `✅ Bem-vindo(a), ${userObj.nome}!`);
+      setTimeout(() => { window.location.href = userObj.perfil === 'ong' ? '15-painel-ong.html' : '05-home-swipe.html'; }, 350);
     } else {
-        // Create
-        appData.pets.push({ id: Date.now(), name: n, age: a, breed: b, img: i, ong: "ONG Patinhas", dist: "2km", status: s });
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      showFeedback('error', '⚠️ Credenciais inválidas ou servidor indisponível. Verifique seu e-mail e senha.');
     }
-
-    try {
-        await saveDb(appData);
-        closePetModal();
-        fetchDashboard();
-    } catch(e) { alert("Erro ao salvar."); }
+  }
 }
 
-function editPet(id) {
-    const pet = appData.pets.find(p => p.id == id);
-    if(!pet) return;
-    document.getElementById('p-id').value = pet.id;
-    document.getElementById('p-name').value = pet.name;
-    document.getElementById('p-age').value = pet.age;
-    document.getElementById('p-breed').value = pet.breed;
-    document.getElementById('p-img').value = pet.img;
-    document.getElementById('p-status').value = pet.status;
-    document.getElementById('pet-modal-title').innerText = "Editar Animal";
-    document.getElementById('pet-modal-btn').innerText = "Salvar Alterações";
-    document.getElementById('pet-modal').classList.remove('hidden');
-}
-
-async function deletePet(id) {
-    if(!confirm("Tem certeza que deseja excluir este animal permanentemente?")) return;
-    appData.pets = appData.pets.filter(p => p.id != id);
-    try {
-        await saveDb(appData);
-        fetchDashboard();
-    } catch(e) { alert("Erro ao deletar."); }
-}
-
-async function setStatus(matchId, status) {
-    const m = appData.matches.find(x => x.id == matchId);
-    if(m) {
-        m.status = status;
-        if(status === 'aprovado') {
-            const pet = appData.pets.find(p => p.id == m.petId);
-            if(pet) pet.status = 'adotado';
-            showToast(`Adoção de <strong>${m.petName}</strong> foi aprovada com sucesso! 🎉`);
-        }
-    }
-    try {
-        await saveDb(appData);
-        fetchDashboard();
-    } catch(e) {}
-}
-
-function openPetModal() {
-    document.getElementById('pet-form').reset();
-    document.getElementById('p-id').value = '';
-    document.getElementById('pet-modal-title').innerText = "Cadastrar Animal";
-    document.getElementById('pet-modal-btn').innerText = "Publicar no App";
-    document.getElementById('pet-modal').classList.remove('hidden');
-}
-function closePetModal() { document.getElementById('pet-modal').classList.add('hidden'); }
-
-// MODAL TERMO DE ADOÇÃO
-function abrirTermoModal(matchId) {
-    const m = (appData.matches || []).find(x => x.id == matchId);
-    if(!m) {
-        alert("Match não encontrado.");
-        return;
-    }
-    document.getElementById('termo-match-id').value = m.id;
-    document.getElementById('termo-adotante-nome').innerText = m.userName || "Candidato à Adoção";
-    document.getElementById('termo-pet-nome').innerText = m.petName || "Pet";
-    document.getElementById('termo-pet-img').src = m.petImg || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=500";
-    
-    // Default custom message
-    const defaultMsg = `Olá, ${m.userName}! Parabéns! Analisamos seu perfil e ficamos muito felizes com seu interesse em adotar o(a) ${m.petName}. Acabamos de disponibilizar o Termo de Adoção Responsável oficial diretamente aqui no app. Por favor, acesse o termo, leia com atenção as cláusulas e assine digitalmente para darmos o próximo passo! 🐾📋`;
-    document.getElementById('termo-msg-custom').value = defaultMsg;
-    
-    document.getElementById('termo-modal').classList.remove('hidden');
-}
-
-function closeTermoModal() {
-    document.getElementById('termo-modal').classList.add('hidden');
-}
-
-async function confirmarEnviarTermo() {
-    const matchId = document.getElementById('termo-match-id').value;
-    const customMsg = document.getElementById('termo-msg-custom').value.trim();
-    if(!matchId) return;
-    
-    const btn = document.getElementById('btn-confirmar-termo');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = `<span>⏳</span> Enviando Termo...`;
-
-    try {
-        const json = await loadDb();
-        if(!json.matches) json.matches = [];
-        if(!json.chats) json.chats = [];
-        
-        const m = json.matches.find(x => String(x.id) === String(matchId));
-        if(m) {
-            m.status = 'termo_enviado';
-            m.termoEnviado = true;
-            m.termoEnviadoEm = new Date().toISOString();
-        }
-        
-        const time = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-        
-        // 1. Mensagem explicativa
-        if(customMsg) {
-            json.chats.push({
-                matchId: String(matchId),
-                sender: 'ong',
-                text: customMsg,
-                time: time
-            });
-        }
-        
-        // 2. Card oficial do Termo para assinatura
-        json.chats.push({
-            matchId: String(matchId),
-            sender: 'ong',
-            text: `📄 [TERMO DE ADOÇÃO RESPONSÁVEL]\nClique no botão abaixo para ler o contrato e realizar a assinatura digital para adoção de ${m ? m.petName : 'seu novo amigo'}.`,
-            isTermo: true,
-            petId: m ? m.petId : null,
-            petName: m ? m.petName : '',
-            petImg: m ? m.petImg : '',
-            time: time
-        });
-        
-        await saveDb(json);
-        appData = json;
-        
-        closeTermoModal();
-        showToast(`Termo de Adoção enviado com sucesso para <strong>${m ? m.userName : 'o candidato'}</strong>! 📋`);
-        
-        fetchDashboard();
-        
-        // Abre e atualiza o chat gaveta imediatamente com as novas mensagens!
-        openChat(matchId, m ? m.userName : 'Candidato');
-    } catch(e) {
-        console.error(e);
-        alert("Erro ao enviar termo. Tente novamente.");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
-}
-
-function atualizarTermoBarChat(match) {
-    const statusEl = document.getElementById('chat-termo-status');
-    const btnEl = document.getElementById('btn-enviar-termo-chat');
-    if(!statusEl || !btnEl) return;
-    
-    if(!match) {
-        statusEl.innerText = "Termo de Adoção";
-        btnEl.innerText = "📋 Enviar Termo";
-        btnEl.className = "bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition";
-        btnEl.onclick = () => abrirTermoModal(currentMatchId);
-        return;
-    }
-    
-    if(match.status === 'termo_assinado' || match.termoAssinado) {
-        statusEl.innerHTML = `<span class="text-emerald-700 font-bold">✍️ Termo Assinado pelo Adotante!</span>`;
-        btnEl.innerText = "✓ Termo Assinado";
-        btnEl.className = "bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm cursor-default";
-        btnEl.onclick = null;
-    } else if(match.status === 'termo_enviado' || match.termoEnviado) {
-        statusEl.innerHTML = `<span class="text-purple-700 font-bold">⏳ Termo Enviado (Aguardando Assinatura)</span>`;
-        btnEl.innerText = "Reenviar Termo";
-        btnEl.className = "bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition";
-        btnEl.onclick = () => abrirTermoModal(match.id);
-    } else {
-        statusEl.innerText = "Termo de Adoção não enviado";
-        btnEl.innerText = "📋 Enviar Termo";
-        btnEl.className = "bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition";
-        btnEl.onclick = () => abrirTermoModal(match.id);
-    }
-}
-
-// Chat
-function openChat(matchId, userName) {
-    currentMatchId = String(matchId);
-    document.getElementById('chat-title').innerText = "Chat com " + userName;
-    document.getElementById('chat-modal').classList.remove('opacity-0', 'pointer-events-none');
-    document.getElementById('chat-panel').classList.remove('translate-x-full');
-    
-    const m = (appData.matches || []).find(x => String(x.id) === String(matchId));
-    atualizarTermoBarChat(m);
-    
-    loadChat();
-    clearInterval(chatInterval);
-    chatInterval = setInterval(loadChat, 3000);
-}
-function closeChat() {
-    document.getElementById('chat-modal').classList.add('opacity-0', 'pointer-events-none');
-    document.getElementById('chat-panel').classList.add('translate-x-full');
-    currentMatchId = null;
-    clearInterval(chatInterval);
-}
-async function loadChat() {
-    if(!currentMatchId) return;
-    try {
-        const json = await loadDb();
-        const m = (json.matches || []).find(x => String(x.id) === String(currentMatchId));
-        if(m) atualizarTermoBarChat(m);
-
-        let chats = (json.chats || []).filter(c => String(c.matchId) === String(currentMatchId));
-
-        // GARANTIA: Se o termo foi enviado no status mas não está em chats, sintetiza o card!
-        const isSentOrSigned = m && (m.status === 'termo_enviado' || m.termoEnviado || m.status === 'termo_assinado');
-        const hasTermoCard = chats.some(c => c.isTermo || (c.text && c.text.includes('[TERMO DE ADOÇÃO RESPONSÁVEL]')));
-        if (isSentOrSigned && !hasTermoCard) {
-            chats.push({
-                matchId: String(m.id),
-                sender: 'ong',
-                text: `📄 [TERMO DE ADOÇÃO RESPONSÁVEL]\nClique no botão abaixo para ler o contrato e realizar a assinatura digital para adoção de ${m.petName}.`,
-                isTermo: true,
-                petId: m.petId,
-                petName: m.petName,
-                petImg: m.petImg,
-                time: 'Oficial'
-            });
-        }
-
-        const area = document.getElementById('chat-messages');
-        area.innerHTML = '';
-        chats.forEach(c => {
-            const isMe = c.sender === 'ong';
-            const isTermoMsg = c.isTermo || (c.text && c.text.includes('[TERMO DE ADOÇÃO RESPONSÁVEL]'));
-            
-            if(isTermoMsg) {
-                const isSigned = m && (m.status === 'termo_assinado' || m.termoAssinado);
-                area.innerHTML += `
-                <div class="flex justify-start">
-                    <div class="max-w-[85%] rounded-2xl p-4 bg-purple-50 border border-purple-200 text-slate-800 shadow-sm">
-                        <div class="flex items-center gap-2 font-bold text-purple-900 text-sm mb-1">
-                            <span class="text-xl">📋</span> Termo de Adoção Responsável
-                        </div>
-                        <p class="text-xs text-slate-600 mb-2">Contrato Oficial enviado pela ONG para assinatura digital do candidato (${m ? m.petName : 'Pet'}).</p>
-                        ${isSigned ? `
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                                <span>✓</span> Termo Assinado Digitalmente
-                            </div>
-                        ` : `
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
-                                <span>⏳</span> Aguardando Assinatura do Candidato
-                            </div>
-                        `}
-                        ${c.time ? `<div class="text-[10px] text-slate-400 text-right mt-2">${c.time}</div>` : ''}
-                    </div>
-                </div>`;
-            } else {
-                area.innerHTML += `
-                <div class="flex ${isMe?'justify-end':'justify-start'}">
-                    <div class="max-w-[80%] rounded-2xl px-5 py-3 text-sm shadow-sm ${isMe?'brand-bg text-white rounded-tr-sm':'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'}">
-                        <div class="whitespace-pre-wrap">${c.text}</div>
-                        ${c.time ? `<div class="text-[10px] ${isMe?'text-red-100':'text-slate-400'} text-right mt-1">${c.time}</div>` : ''}
-                    </div>
-                </div>`;
-            }
-        });
-        area.scrollTop = area.scrollHeight;
-    } catch(e) {}
-}
-async function sendMsg() {
-    const text = document.getElementById('chat-input').value.trim();
-    if(!text || !currentMatchId) return;
-    document.getElementById('chat-input').value = '';
-    const time = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-    
-    // Immediate display
-    const area = document.getElementById('chat-messages');
-    area.innerHTML += `
-    <div class="flex justify-end">
-        <div class="max-w-[80%] rounded-2xl px-5 py-3 text-sm shadow-sm brand-bg text-white rounded-tr-sm">
-            <div class="whitespace-pre-wrap">${text}</div>
-            <div class="text-[10px] text-red-100 text-right mt-1">${time}</div>
-        </div>
-    </div>`;
-    area.scrollTop = area.scrollHeight;
-    
-    try {
-        const json = await loadDb();
-        if(!json.chats) json.chats = [];
-        json.chats.push({ matchId: currentMatchId, sender: 'ong', text, time });
-        await saveDb(json);
-    } catch(e) {}
-}
-
-fetchDashboard();
-setInterval(fetchDashboard, 5000);
+document.addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 </script>
 </body>
 </html>

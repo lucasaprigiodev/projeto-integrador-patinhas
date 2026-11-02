@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrega Etapa 3 - Arquitetura Distribuída, API REST e Banco Relacional - Projeto Patinhas</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.55;
+      font-size: 10.5pt;
+      margin: 0;
+      padding: 0;
+    }
+    .header-banner {
+      border-bottom: 3px solid #ea580c;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .header-banner .inst {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .header-banner h1 {
+      font-size: 17pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 6px 0 2px 0;
+    }
+    .header-banner .sub {
+      font-size: 10.5pt;
+      color: #ea580c;
+      font-weight: 700;
+    }
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #ea580c;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      font-size: 9.5pt;
+    }
+    .meta-box p { margin: 3px 0; }
+    h2 {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #0f172a;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-top: 22px;
+      margin-bottom: 10px;
+    }
+    h3 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #c2410c;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+    p {
+      margin: 6px 0 10px 0;
+      text-align: justify;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 16px 0;
+      font-size: 9pt;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+    code {
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+      font-size: 8.8pt;
+      background: #f1f5f9;
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: #b91c1c;
+    }
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 8.2pt;
+      overflow-x: auto;
+      line-height: 1.45;
+      margin: 8px 0 14px 0;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .diagram-box {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0 16px 0;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .diagram-caption {
+      font-size: 8.8pt;
+      color: #475569;
+      margin-top: 8px;
+      font-style: italic;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .b-get { background: #dbeafe; color: #1d4ed8; }
+    .b-post { background: #dcfce7; color: #15803d; }
+    .b-put { background: #fef3c7; color: #b45309; }
+    .b-patch { background: #ede9fe; color: #6d28d9; }
+    .b-del { background: #fee2e2; color: #b91c1c; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+  <div class="header-banner">
+    <div>
+      <div class="inst">Instituto Federal do Rio Grande do Norte — Campus Natal Zona Leste</div>
+      <h1>Projeto Integrador: Patinhas (Etapa 3)</h1>
+      <div class="sub">Arquitetura Distribuída, API HTTP/REST, Persistência Relacional e OpenAPI 3.0</div>
+    </div>
+  </div>
+
+  <div class="meta-box">
+    <p><strong>Discente:</strong> Lucas Aprígio da Silva &nbsp;|&nbsp; <strong>Matrícula:</strong> 20232158060024</p>
+    <p><strong>Repositório Oficial (GitHub):</strong> <a href="https://github.com/lucasaprigiodev/projeto-integrador-patinhas">https://github.com/lucasaprigiodev/projeto-integrador-patinhas</a></p>
+    <p><strong>Documentação Interativa OpenAPI (Swagger UI):</strong> <a href="https://lucasaprigiodev.github.io/projeto-integrador-patinhas/swagger.html">https://lucasaprigiodev.github.io/projeto-integrador-patinhas/swagger.html</a> (ou <code>http://localhost:3000/api-docs</code>)</p>
+    <p><strong>Arquivos Principais no Repositório:</strong> <code>backend/server.js</code> (API REST), <code>backend/database.js</code> + <code>backend/schema.sql</code> + <code>backend/patinhas.sqlite</code> (Banco Relacional), <code>backend/openapi.json</code> + <code>swagger.html</code> (OpenAPI 3.0), <code>www/db.js</code> (Cliente HTTP).</p>
+  </div>
+
+  <h2>1. Diagrama da Arquitetura Distribuída</h2>
+  <p>
+    O sistema <strong>Patinhas</strong> foi evoluído para uma arquitetura cliente-servidor distribuída em três camadas desacopladas. As interfaces de usuário (Aplicativo Mobile Android empacotado com Capacitor e Painel Web Administrativo da ONG) não manipulam dados isoladamente: todas as operações passam pelo módulo de comunicação HTTP (<code>www/db.js</code>), que envia requisições padronizadas em JSON com autenticação JWT para o servidor <strong>API HTTP/REST</strong> (<code>backend/server.js</code>), responsável por validar regras de negócio, controlar permissões (RBAC) e persistir os registros no banco de dados relacional <strong>SQLite</strong> (<code>backend/patinhas.sqlite</code>).
+  </p>
+
+  <div class="diagram-box">
+    <svg width="660" height="205" viewBox="0 0 660 205" xmlns="http://www.w3.org/2000/svg">
+      <!-- Camada 1: Clientes -->
+      <rect x="10" y="18" width="185" height="75" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+      <text x="102" y="42" font-family="Arial" font-size="11" font-weight="bold" fill="#9a3412" text-anchor="middle">📱 Aplicativo Mobile (Adotante)</text>
+      <text x="102" y="60" font-family="Arial" font-size="9.5" fill="#475569" text-anchor="middle">Swipe de Pets, Chat, Assinatura</text>
+      <text x="102" y="75" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">Módulo Cliente HTTP (www/db.js)</text>
+
+      <rect x="10" y="112" width="185" height="75" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+      <text x="102" y="136" font-family="Arial" font-size="11" font-weight="bold" fill="#166534" text-anchor="middle">💻 Painel Web (Admin ONG)</text>
+      <text x="102" y="154" font-family="Arial" font-size="9.5" fill="#475569" text-anchor="middle">Gestão de Pets, Envio de Termo,</text>
+      <text x="102" y="169" font-family="Arial" font-size="9.5" fill="#475569" text-anchor="middle">Aprovação/Rejeição de Adoções</text>
+
+      <!-- Setas Cliente <-> API -->
+      <line x1="195" y1="55" x2="250" y2="90" stroke="#334155" stroke-width="2"/>
+      <line x1="195" y1="148" x2="250" y2="115" stroke="#334155" stroke-width="2"/>
+      <rect x="197" y="88" width="52" height="28" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="223" y="100" font-family="Arial" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle">HTTP/REST</text>
+      <text x="223" y="111" font-family="Arial" font-size="7.5" fill="#475569" text-anchor="middle">JSON + JWT</text>
+
+      <!-- Camada 2: Servidor API REST -->
+      <rect x="252" y="25" width="195" height="155" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="349" y="48" font-family="Arial" font-size="11.5" font-weight="bold" fill="#1e40af" text-anchor="middle">⚙️ Servidor API HTTP/REST</text>
+      <text x="349" y="64" font-family="Arial" font-size="9.5" font-weight="bold" fill="#3b82f6" text-anchor="middle">Node.js + Express (server.js)</text>
+      <line x1="268" y1="74" x2="430" y2="74" stroke="#bfdbfe" stroke-width="1"/>
+      <text x="349" y="92" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">• Autenticação JWT (HMAC-SHA256)</text>
+      <text x="349" y="108" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">• Controle de Acesso RBAC (401/403)</text>
+      <text x="349" y="124" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">• Máquina de Estados da Adoção</text>
+      <text x="349" y="140" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">• Validação de Dados e CORS</text>
+      <text x="349" y="156" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">• Documentação OpenAPI (/api-docs)</text>
+
+      <!-- Seta API <-> Banco -->
+      <line x1="447" y1="102" x2="495" y2="102" stroke="#334155" stroke-width="2"/>
+      <rect x="451" y="88" width="40" height="26" rx="4" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="471" y="100" font-family="Arial" font-size="8" font-weight="bold" fill="#0f172a" text-anchor="middle">SQL</text>
+      <text x="471" y="110" font-family="Arial" font-size="7.5" fill="#475569" text-anchor="middle">ACID</text>
+
+      <!-- Camada 3: Banco de Dados Relacional -->
+      <rect x="497" y="25" width="152" height="155" rx="10" fill="#faf5ff" stroke="#7e22ce" stroke-width="2"/>
+      <text x="573" y="48" font-family="Arial" font-size="11.5" font-weight="bold" fill="#581c87" text-anchor="middle">🗄️ Banco Relacional</text>
+      <text x="573" y="64" font-family="Arial" font-size="9.5" font-weight="bold" fill="#7e22ce" text-anchor="middle">SQLite (patinhas.sqlite)</text>
+      <line x1="510" y1="74" x2="636" y2="74" stroke="#e9d5ff" stroke-width="1"/>
+      <text x="573" y="94" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">1. Tabela: usuarios</text>
+      <text x="573" y="112" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">2. Tabela: animais</text>
+      <text x="573" y="130" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">3. Tabela: adocoes_matches</text>
+      <text x="573" y="148" font-family="Arial" font-size="9" fill="#1e293b" text-anchor="middle">4. Tabela: mensagens</text>
+      <text x="573" y="166" font-family="Arial" font-size="8.5" font-weight="bold" fill="#6b21a8" text-anchor="middle">Foreign Keys + WAL Ativos</text>
+    </svg>
+    <div class="diagram-caption">Figura 1 — Arquitetura distribuída do sistema Patinhas: Aplicativo/Painel → API HTTP/REST → Banco de Dados Relacional SQLite.</div>
+  </div>
+
+  <h2>2. Modelagem e Persistência de Dados Relacional</h2>
+
+  <h3>2.1 Entidades, Relacionamentos e Regras de Integridade</h3>
+  <p>
+    O esquema relacional foi definido no arquivo <code>backend/schema.sql</code> e instanciado automaticamente por <code>backend/database.js</code> com suporte explícito a chaves estrangeiras (<code>PRAGMA foreign_keys = ON;</code>). O modelo contempla quatro entidades principais:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:18%;">Entidade (Tabela)</th>
+        <th style="width:32%;">Chaves e Atributos Principais</th>
+        <th style="width:25%;">Relacionamentos (FK)</th>
+        <th style="width:25%;">Regras de Integridade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>usuarios</code></td>
+        <td><code>id</code> (PK), <code>nome</code>, <code>cpf</code>, <code>telefone</code>, <code>email</code>, <code>senha_hash</code>, <code>perfil</code>, <code>avatar_url</code></td>
+        <td>1:N com <code>animais</code><br/>1:N com <code>adocoes_matches</code><br/>1:N com <code>mensagens</code></td>
+        <td><code>UNIQUE(email)</code>, <code>UNIQUE(cpf)</code>, <code>CHECK(perfil IN ('adotante','ong'))</code>, senha com hash <code>scrypt</code>.</td>
+      </tr>
+      <tr>
+        <td><code>animais</code></td>
+        <td><code>id</code> (PK), <code>nome</code>, <code>especie</code>, <code>raca</code>, <code>idade</code>, <code>porte</code>, <code>sexo</code>, <code>foto_url</code>, <code>status</code>, <code>ong_id</code> (FK)</td>
+        <td>N:1 com <code>usuarios(id)</code> via <code>ong_id</code> (<code>ON DELETE RESTRICT</code>)</td>
+        <td><code>CHECK(status IN ('disponivel', 'em_processo', 'adotado'))</code>, <code>CHECK(porte IN ('Pequeno','Médio','Grande'))</code>.</td>
+      </tr>
+      <tr>
+        <td><code>adocoes_matches</code></td>
+        <td><code>id</code> (PK), <code>animal_id</code> (FK), <code>adotante_id</code> (FK), <code>status</code>, <code>termo_enviado</code>, <code>termo_assinado</code>, <code>assinatura_digital</code></td>
+        <td>N:1 com <code>animais(id)</code><br/>N:1 com <code>usuarios(id)</code><br/>(<code>ON DELETE CASCADE</code>)</td>
+        <td><code>UNIQUE(animal_id, adotante_id)</code> impede matches duplicados; <code>CHECK</code> de estados válidos.</td>
+      </tr>
+      <tr>
+        <td><code>mensagens</code></td>
+        <td><code>id</code> (PK), <code>match_id</code> (FK), <code>remetente_id</code> (FK), <code>remetente_perfil</code>, <code>texto</code>, <code>is_termo</code>, <code>horario</code></td>
+        <td>N:1 com <code>adocoes_matches(id)</code><br/>N:1 com <code>usuarios(id)</code></td>
+        <td><code>CHECK(remetente_perfil IN ('user','ong'))</code>, <code>CHECK(length(trim(texto)) >= 1)</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 Justificativa da Escolha do Banco de Dados Relacional (SQLite)</h3>
+  <p>
+    Optou-se pelo banco de dados relacional <strong>SQLite 3</strong> integrado nativamente ao motor do Node.js (módulo <code>node:sqlite</code> / <code>DatabaseSync</code>) pelos seguintes motivos técnicos e arquiteturais:
+  </p>
+  <p>
+    <strong>1. Conformidade Relacional e Transações ACID:</strong> O SQLite implementa o padrão SQL relacional completo, garantindo atomicidade, consistência, isolamento e durabilidade (ACID), além de impor restrições de chave estrangeira (<code>FOREIGN KEY</code>), unicidade (<code>UNIQUE</code>) e validação de domínio (<code>CHECK</code>) diretamente no nível do banco.
+    <br/>
+    <strong>2. Persistência Real em Disco e Portabilidade Acadêmica:</strong> Todos os dados são gravados de forma durável no arquivo binário <code>backend/patinhas.sqlite</code> operando em modo <em>Write-Ahead Logging</em> (<code>PRAGMA journal_mode = WAL;</code>). Ao reiniciar o servidor Node.js, todas as contas criadas, animais cadastrados, matches, assinaturas de termos e mensagens de chat permanecem intactos, sem depender de containers externos complexos para avaliação da banca.
+    <br/>
+    <strong>3. Carga Inicial Automatizada (Seeds):</strong> Ao iniciar pela primeira vez, <code>backend/database.js</code> popula automaticamente 3 usuários (incluindo a conta administrativa <code>admin@ong.com</code> e o adotante <code>lucas@ifrn.edu.br</code>), 6 animais disponíveis e um processo de adoção com histórico de mensagens para testes imediatos.
+  </p>
+
+  <div class="page-break"></div>
+
+  <h2>3. Desenvolvimento da API HTTP/REST e Máquina de Estados</h2>
+
+  <h3>3.1 Máquina de Estados do Processo de Adoção</h3>
+  <p>
+    O fluxo principal de negócio do sistema Patinhas regula o ciclo de vida de uma adoção responsável em 5 estados bem definidos, validados de forma estrita pelo servidor antes de qualquer transição (retornando código <code>422 Unprocessable Entity</code> caso uma transição inválida seja solicitada, como tentar aprovar uma adoção sem que o Termo de Adoção Responsável tenha sido assinado digitalmente):
+  </p>
+
+  <div class="diagram-box">
+    <svg width="650" height="115" viewBox="0 0 650 115" xmlns="http://www.w3.org/2000/svg">
+      <!-- Estado 1 -->
+      <rect x="8" y="32" width="105" height="44" rx="22" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+      <text x="60" y="52" font-family="Arial" font-size="9.5" font-weight="bold" fill="#0f172a" text-anchor="middle">1. pendente</text>
+      <text x="60" y="65" font-family="Arial" font-size="7.5" fill="#475569" text-anchor="middle">(Match / Swipe Like)</text>
+
+      <line x1="113" y1="54" x2="155" y2="54" stroke="#ea580c" stroke-width="2"/>
+      <text x="134" y="47" font-family="Arial" font-size="7.5" font-weight="bold" fill="#ea580c" text-anchor="middle">ONG envia</text>
+
+      <!-- Estado 2 -->
+      <rect x="155" y="32" width="125" height="44" rx="22" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+      <text x="217" y="52" font-family="Arial" font-size="9.5" font-weight="bold" fill="#9a3412" text-anchor="middle">2. termo_enviado</text>
+      <text x="217" y="65" font-family="Arial" font-size="7.5" fill="#c2410c" text-anchor="middle">(Contrato no Chat)</text>
+
+      <line x1="280" y1="54" x2="325" y2="54" stroke="#2563eb" stroke-width="2"/>
+      <text x="302" y="47" font-family="Arial" font-size="7.5" font-weight="bold" fill="#2563eb" text-anchor="middle">Adotante</text>
+
+      <!-- Estado 3 -->
+      <rect x="325" y="32" width="130" height="44" rx="22" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="390" y="52" font-family="Arial" font-size="9.5" font-weight="bold" fill="#1e40af" text-anchor="middle">3. termo_assinado</text>
+      <text x="390" y="65" font-family="Arial" font-size="7.5" fill="#1d4ed8" text-anchor="middle">(Assinatura Digital)</text>
+
+      <!-- Setas para Aprovado / Rejeitado -->
+      <line x1="455" y1="45" x2="510" y2="26" stroke="#16a34a" stroke-width="2"/>
+      <line x1="455" y1="63" x2="510" y2="82" stroke="#dc2626" stroke-width="2"/>
+
+      <!-- Estado 4A: Aprovado -->
+      <rect x="510" y="6" width="128" height="40" rx="20" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+      <text x="574" y="25" font-family="Arial" font-size="9.5" font-weight="bold" fill="#166534" text-anchor="middle">4A. aprovado</text>
+      <text x="574" y="37" font-family="Arial" font-size="7.5" fill="#15803d" text-anchor="middle">(Animal -> adotado)</text>
+
+      <!-- Estado 4B: Rejeitado -->
+      <rect x="510" y="64" width="128" height="40" rx="20" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+      <text x="574" y="83" font-family="Arial" font-size="9.5" font-weight="bold" fill="#991b1b" text-anchor="middle">4B. rejeitado</text>
+      <text x="574" y="95" font-family="Arial" font-size="7.5" fill="#b91c1c" text-anchor="middle">(Animal -> disponivel)</text>
+    </svg>
+    <div class="diagram-caption">Figura 2 — Máquina de estados finitos do processo de adoção e transições controladas pela API REST.</div>
+  </div>
+
+  <h3>3.2 Justificativa da Arquitetura REST em Comparação ao SOAP</h3>
+  <p>
+    Para a construção da camada de comunicação distribuída do projeto Patinhas, escolheu-se o estilo arquitetural <strong>REST (Representational State Transfer)</strong> sobre HTTP com payloads em formato <strong>JSON</strong>, em detrimento do protocolo <strong>SOAP (Simple Object Access Protocol)</strong>. A decisão fundamenta-se nos seguintes critérios técnicos:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:20%;">Critério Técnico</th>
+        <th style="width:40%;">Arquitetura REST (Escolhida no Projeto)</th>
+        <th style="width:40%;">Protocolo SOAP</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Formato de Dados e Overhead de Rede</strong></td>
+        <td>Utiliza <strong>JSON</strong>, formato leve e compacto, reduzindo drasticamente o consumo de banda e bateria em dispositivos móveis (Android/Web).</td>
+        <td>Exige envelopes <strong>XML</strong> verbosos (<code>&lt;soap:Envelope&gt;</code>, <code>&lt;soap:Header&gt;</code>, <code>&lt;soap:Body&gt;</code>), aumentando o tamanho das mensagens e a latência.</td>
+      </tr>
+      <tr>
+        <td><strong>Semântica do Protocolo HTTP</strong></td>
+        <td>Aproveita nativamente os verbos HTTP (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, <code>DELETE</code>) e códigos de status padronizados (<code>200</code>, <code>201</code>, <code>400</code>, <code>401</code>, <code>403</code>, <code>404</code>, <code>409</code>, <code>422</code>).</td>
+        <td>Opera geralmente encapsulado apenas em requisições <code>POST</code>, ignorando a semântica de cache e status nativos do HTTP (erros vêm em <code>SOAP Fault</code>).</td>
+      </tr>
+      <tr>
+        <td><strong>Acoplamento e Consumo no Frontend</strong></td>
+        <td>Nativo no JavaScript moderno via <code>fetch()</code> e <code>JSON.parse()</code> no módulo <code>db.js</code>, sem necessidade de bibliotecas pesadas de parsing no celular.</td>
+        <td>Exige contratos rígidos em <strong>WSDL</strong> e bibliotecas especializadas de serialização/parsing XML, dificultando a evolução ágil das telas.</td>
+      </tr>
+      <tr>
+        <td><strong>Escalabilidade e Estado (Stateless)</strong></td>
+        <td>Totalmente <em>stateless</em>: cada requisição carrega seu próprio token <strong>JWT Bearer</strong>, facilitando escalabilidade horizontal e cache.</td>
+        <td>Frequentemente acoplado a extensões complexas como <em>WS-Security</em> e estado de sessão pesado no servidor.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Identificação, Autenticação JWT e Controle de Acesso (RBAC)</h2>
+  <p>
+    O servidor substituiu qualquer login simulado por autenticação real persistida na tabela <code>usuarios</code>. As senhas são armazenadas exclusivamente sob derivação criptográfica (<code>crypto.scryptSync</code> com salt) e verificadas com comparação em tempo constante (<code>crypto.timingSafeEqual</code>). Ao autenticar em <code>POST /api/auth/login</code>, o servidor emite um token <strong>JWT (HMAC-SHA256)</strong> contendo <code>id</code>, <code>email</code> e <code>perfil</code> (<code>adotante</code> ou <code>ong</code>).
+  </p>
+  <ul>
+    <li><strong>Tentativas sem autenticação (<code>401 Unauthorized</code>):</strong> O middleware <code>authenticateToken</code> intercepta rotas protegidas e recusa imediatamente requisições sem cabeçalho <code>Authorization: Bearer &lt;token&gt;</code> ou com assinatura JWT inválida/expirada.</li>
+    <li><strong>Tentativas com permissão insuficiente (<code>403 Forbidden</code>):</strong> O middleware <code>requireRole('ong')</code> valida no servidor o perfil do usuário autenticado. Um usuário <code>adotante</code> não consegue cadastrar/excluir animais (<code>POST/DELETE /api/pets</code>), enviar termos (<code>POST /api/matches/:id/enviar-termo</code>) nem aprovar adoções (<code>PATCH /api/matches/:id/status</code>). Além disso, na rota <code>GET /api/matches</code>, um adotante consulta exclusivamente os seus próprios processos (filtrados por <code>adotante_id = req.user.id</code>).</li>
+  </ul>
+
+  <h2>5. Resumo das Rotas Documentadas no OpenAPI 3.0 (Swagger)</h2>
+  <p>
+    A especificação completa encontra-se em <code>backend/openapi.json</code> e na interface interativa <code>swagger.html</code> (ou em <code>http://localhost:3000/api-docs</code> quando o servidor está em execução):
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:12%;">Método</th>
+        <th style="width:32%;">Caminho (Endpoint)</th>
+        <th style="width:18%;">Permissão / Auth</th>
+        <th style="width:38%;">Descrição e Códigos HTTP Retornados</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge b-post">POST</span></td>
+        <td><code>/api/auth/register</code></td>
+        <td>Público</td>
+        <td>Cadastra novo usuário (adotante ou ONG) e retorna JWT (<code>201</code>, <code>400</code>, <code>409</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-post">POST</span></td>
+        <td><code>/api/auth/login</code></td>
+        <td>Público</td>
+        <td>Autentica e-mail/senha no SQLite e emite token JWT (<code>200</code>, <code>400</code>, <code>401</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-get">GET</span></td>
+        <td><code>/api/auth/me</code></td>
+        <td>JWT (Qualquer)</td>
+        <td>Retorna dados do usuário logado a partir do token (<code>200</code>, <code>401</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-get">GET</span></td>
+        <td><code>/api/pets</code> e <code>/api/pets/:id</code></td>
+        <td>Público</td>
+        <td>Lista catálogo de animais ou detalhes por ID (<code>200</code>, <code>404</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-post">POST</span></td>
+        <td><code>/api/pets</code></td>
+        <td>JWT (Perfil: <code>ong</code>)</td>
+        <td>Cadastra novo animal vinculado ao <code>ong_id</code> autenticado (<code>201</code>, <code>400</code>, <code>401</code>, <code>403</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-put">PUT</span> / <span class="badge b-del">DEL</span></td>
+        <td><code>/api/pets/:id</code></td>
+        <td>JWT (Perfil: <code>ong</code>)</td>
+        <td>Atualiza ou remove um animal do banco de dados (<code>200</code>, <code>401</code>, <code>403</code>, <code>404</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-get">GET</span></td>
+        <td><code>/api/matches</code></td>
+        <td>JWT (Adotante/ONG)</td>
+        <td>Lista matches do adotante logado ou todos os matches da ONG (<code>200</code>, <code>401</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-post">POST</span></td>
+        <td><code>/api/matches</code></td>
+        <td>JWT (Adotante)</td>
+        <td>Cria match no estado <code>pendente</code> e inicia chat com a ONG (<code>201</code>, <code>404</code>, <code>409</code>, <code>422</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-post">POST</span></td>
+        <td><code>/api/matches/:id/enviar-termo</code></td>
+        <td>JWT (Perfil: <code>ong</code>)</td>
+        <td>Transição <code>pendente</code> → <code>termo_enviado</code> (<code>200</code>, <code>401</code>, <code>403</code>, <code>404</code>, <code>422</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-post">POST</span></td>
+        <td><code>/api/matches/:id/assinar-termo</code></td>
+        <td>JWT (Dono do Match)</td>
+        <td>Transição <code>termo_enviado</code> → <code>termo_assinado</code> (<code>200</code>, <code>400</code>, <code>403</code>, <code>404</code>, <code>422</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-patch">PATCH</span></td>
+        <td><code>/api/matches/:id/status</code></td>
+        <td>JWT (Perfil: <code>ong</code>)</td>
+        <td>Transição final para <code>aprovado</code> ou <code>rejeitado</code> (<code>200</code>, <code>400</code>, <code>403</code>, <code>404</code>, <code>422</code>).</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-get">GET</span> / <span class="badge b-post">POST</span></td>
+        <td><code>/api/matches/:id/messages</code></td>
+        <td>JWT (Participantes)</td>
+        <td>Consulta ou envia mensagens no chat vinculadas ao usuário (<code>200</code>, <code>201</code>, <code>403</code>, <code>404</code>).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Como Executar e Testar o Servidor Localmente</h3>
+  <pre><code># 1. Na pasta raiz do projeto, inicie o servidor da API HTTP/REST + Banco SQLite:
+node backend/server.js
+
+# 2. Acesse no navegador:
+# - Aplicativo / Painel Web Integrado: http://localhost:3000/01-login.html
+# - Documentação Interativa Swagger:   http://localhost:3000/api-docs
+# - Especificação OpenAPI Bruta:       http://localhost:3000/api/openapi.json</code></pre>
+
+</body>
+</html>
