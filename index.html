@@ -59,8 +59,10 @@
         Não tem conta? <a href="02-cadastro-tipo.html" style="color:var(--primary);font-weight:700;">Cadastre-se</a>
       </p>
     </div>
-    <p style="text-align:center;color:var(--text-3);font-size:11px;padding-bottom:16px;">
-      ONG: <b>admin@ong.com</b> / <b>admin</b> &nbsp;|&nbsp; Adotante: <b>lucas@ifrn.edu.br</b> / <b>123456</b>
+    <p style="text-align:center;color:var(--text-3);font-size:11px;padding-bottom:16px;line-height:1.6;">
+      ONG: <b>admin@ong.com</b> (senha: admin)<br>
+      Admin: <b>admin@patinhas.org.br</b> (senha: admin123)<br>
+      Adotante: <b>lucas@ifrn.edu.br</b> (senha: 123456)
     </p>
   </div>
 </div>
@@ -120,31 +122,12 @@ async function fazerLogin() {
       }
     }, 450);
   } catch (err) {
-    // Se o servidor retornou erro HTTP explícito (400 ou 401), bloqueia o acesso e exibe a resposta real do servidor
-    if (err.status === 400 || err.status === 401 || err.status === 403) {
-      btn.disabled = false;
-      btn.textContent = 'Entrar';
-      showFeedback('error', `⚠️ ${err.message}`);
-      return;
-    }
-
-    // Fallback offline/mobile caso o servidor local na porta 3000 esteja desligado
-    const localUsers = JSON.parse(localStorage.getItem('local_registered_users') || '[]');
-    const foundLocal = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === senha);
-
-    if (email.toLowerCase() === 'admin@ong.com' && senha === 'admin') {
-      PatinhasAPI.setAuthSession('offline-jwt-ong', { id: 1, nome: 'ONG Patinhas Natal', email: 'admin@ong.com', perfil: 'ong' });
-      showFeedback('success', '✅ Autenticado como ONG Patinhas!');
-      setTimeout(() => { window.location.href = '15-painel-ong.html'; }, 350);
-    } else if ((email.toLowerCase() === 'lucas@ifrn.edu.br' && senha === '123456') || foundLocal) {
-      const userObj = foundLocal || { id: 2, nome: 'Lucas Aprígio', email: 'lucas@ifrn.edu.br', perfil: 'adotante' };
-      PatinhasAPI.setAuthSession('offline-jwt-user', userObj);
-      showFeedback('success', `✅ Bem-vindo(a), ${userObj.nome}!`);
-      setTimeout(() => { window.location.href = userObj.perfil === 'ong' ? '15-painel-ong.html' : '05-home-swipe.html'; }, 350);
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+    if (err.status === 400 || err.status === 401 || err.status === 403 || err.status === 429) {
+      showFeedback('error', `⚠️ ${err.message || 'Credenciais inválidas.'}`);
     } else {
-      btn.disabled = false;
-      btn.textContent = 'Entrar';
-      showFeedback('error', '⚠️ Credenciais inválidas ou servidor indisponível. Verifique seu e-mail e senha.');
+      showFeedback('error', '⚠️ Não foi possível conectar ao servidor API REST. Certifique-se de que o backend está em execução.');
     }
   }
 }

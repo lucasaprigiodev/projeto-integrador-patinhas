@@ -1,7 +1,20 @@
+# Dependências e Builds
 node_modules/
+backend/node_modules/
 .gradle/
 build/
 android/app/build/
 android/.gradle/
+
+# Bancos de Dados locais e sessões efêmeras
+*.sqlite*
+backend/*.sqlite*
+tunnel.url
+backend/tunnel.url
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
 *.log
 .DS_Store
+Thumbs.db

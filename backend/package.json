@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "test": "node --test api.test.js"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "body-parser": "^2.3.0",
+    "compression": "^1.8.2",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "localtunnel": "^2.0.2"

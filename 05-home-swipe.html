@@ -190,8 +190,8 @@ function buildCard(pet, zIndex) {
           <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">✂️ Castrado</span>
           <span style="background:rgba(255,107,53,0.85);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">${breedLabel}</span>
         </div>
-        <h2 style="color:white;font-size:25px;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${pet.name}, ${pet.age}</h2>
-        <p style="color:rgba(255,255,255,0.82);font-size:12.5px;margin-bottom:0;">📍 ${pet.dist || '3km'} • ${pet.ong || 'ONG Patinhas'}</p>
+        <h2 style="color:white;font-size:25px;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(pet.name)}, ${escapeHtml(pet.age)}</h2>
+        <p style="color:rgba(255,255,255,0.82);font-size:12.5px;margin-bottom:0;">📍 ${escapeHtml(pet.dist || '3km')} • ${escapeHtml(pet.ong || 'ONG Patinhas')}</p>
       </div>
       <button onclick="event.stopPropagation(); window.location.href='07-detalhes-pet.html?id=${pet.id}'" style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.25);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.5);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Ver Ficha Completa">ℹ️</button>
     </div>`;

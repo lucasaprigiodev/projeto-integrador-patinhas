@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     telefone TEXT,
     email TEXT NOT NULL UNIQUE CHECK(email LIKE '%_@_%.__%'),
     senha_hash TEXT NOT NULL,
-    perfil TEXT NOT NULL DEFAULT 'adotante' CHECK(perfil IN ('adotante', 'ong')),
+    perfil TEXT NOT NULL DEFAULT 'adotante' CHECK(perfil IN ('adotante', 'ong', 'admin')),
     avatar_url TEXT,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 );

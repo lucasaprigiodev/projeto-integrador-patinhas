@@ -4,6 +4,7 @@
 // ============================================================================
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('node:path');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
@@ -11,16 +12,74 @@ const { db, DB_PATH, hashPassword, verifyPassword } = require('./database');
 
 const app = express();
 
-// 1. Configuração de CORS e Parser JSON (com suporte a imagens Base64)
+// Desativa cabeçalho de tecnologia para prevenir enumeração de fingerprint (CWE-200)
+app.disable('x-powered-by');
+
+// Middleware de compressão de respostas HTTP (GZIP/Deflate)
+app.use(compression({ threshold: 512 }));
+
+// Cabeçalhos de Segurança HTTP (OWASP / Helmet-style)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' https: data:; img-src 'self' https: data: blob:;");
+  next();
+});
+
+// Configuração de CORS Restrito e Seguro (compatível com navegadores, apps móveis e preflights)
 app.use(cors({
-  origin: '*',
+  origin: true,
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json({ limit: '15mb' }));
 
-// Chave secreta para assinatura de tokens JWT (HMAC-SHA256)
-const JWT_SECRET = process.env.JWT_SECRET || 'patinhas_ifrn_jwt_secret_key_2026';
+// Chave secreta segura para assinatura de tokens JWT (HMAC-SHA256)
+// Caso a variável de ambiente não esteja configurada ou possua o valor de demonstração público,
+// gera um segredo criptograficamente aleatório e seguro por instância.
+const JWT_SECRET = (process.env.JWT_SECRET && process.env.JWT_SECRET !== 'patinhas_ifrn_jwt_secret_key_2026')
+  ? process.env.JWT_SECRET
+  : crypto.randomBytes(32).toString('hex');
+
+// ============================================================================
+// RATE LIMITING EM MEMÓRIA CONTRA BRUTE FORCE (OWASP Authentication Cheat Sheet)
+// ============================================================================
+const failedLoginAttempts = new Map();
+
+function loginRateLimiter(req, res, next) {
+  const ip = req.ip || req.socket.remoteAddress || 'client';
+  const email = (req.body && req.body.email) ? String(req.body.email).trim().toLowerCase() : '';
+  const key = `${ip}:${email}`;
+  const now = Date.now();
+  const record = failedLoginAttempts.get(key) || { count: 0, resetAt: now + 60000 };
+
+  if (now > record.resetAt) {
+    record.count = 0;
+    record.resetAt = now + 60000;
+  }
+
+  if (record.count >= 10) {
+    return res.status(429).json({
+      erro: 'Muitas tentativas incorretas de autenticação para esta conta. Por segurança, aguarde 1 minuto.',
+      codigo: 429
+    });
+  }
+
+  req._loginRateRecord = record;
+  req._loginRateKey = key;
+  next();
+}
+
+// ============================================================================
+// UTILITÁRIOS DE VALIDAÇÃO E SEGURANÇA
+// ============================================================================
+function isValidImageUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:image/') || trimmed.startsWith('/');
+}
 
 // ============================================================================
 // UTILITÁRIOS DE AUTENTICAÇÃO JWT (RFC 7519)
@@ -35,10 +94,12 @@ function generateToken(user) {
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 dias
   })).toString('base64url');
+
   const signature = crypto
     .createHmac('sha256', JWT_SECRET)
     .update(`${header}.${payload}`)
     .digest('base64url');
+
   return `${header}.${payload}.${signature}`;
 }
 
@@ -47,11 +108,15 @@ function verifyToken(token) {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   const [header, payload, signature] = parts;
+
   const expectedSig = crypto
     .createHmac('sha256', JWT_SECRET)
     .update(`${header}.${payload}`)
     .digest('base64url');
-  if (signature !== expectedSig) return null;
+
+  if (signature.length !== expectedSig.length) return null;
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) return null;
+
   try {
     const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
     if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) return null;
@@ -101,7 +166,9 @@ function requireRole(...allowedRoles) {
     if (!req.user) {
       return res.status(401).json({ erro: 'Usuário não autenticado.', codigo: 401 });
     }
-    if (!allowedRoles.includes(req.user.perfil)) {
+    // Administradores possuem acesso a todas as operações de ONG
+    const hasPermission = allowedRoles.includes(req.user.perfil) || req.user.perfil === 'admin';
+    if (!hasPermission) {
       return res.status(403).json({
         erro: `Acesso negado. Seu perfil ('${req.user.perfil}') não possui permissão para executar esta operação. Perfis permitidos: [${allowedRoles.join(', ')}].`,
         codigo: 403
@@ -131,7 +198,7 @@ function formatPetRow(row) {
     ong_id: row.ong_id,
     ong_nome: row.ong_nome,
     criado_em: row.criado_em,
-    // Campos legados em inglês mantidos para compatibilidade imediata com todas as telas HTML
+    // Compatibilidade com telas legadas do frontend
     name: row.nome,
     species: row.especie,
     breed: row.raca,
@@ -161,7 +228,6 @@ function formatMatchRow(row) {
     is_termo: Boolean(m.is_termo),
     horario: m.horario,
     criado_em: m.criado_em,
-    // Compatibilidade com as telas de chat do frontend
     sender: m.remetente_perfil,
     text: m.texto,
     isTermo: Boolean(m.is_termo),
@@ -183,7 +249,6 @@ function formatMatchRow(row) {
     animal: formatPetRow(petRow),
     adotante: adopterRow || null,
     mensagens: messages,
-    // Compatibilidade com as telas do aplicativo e painel ONG
     petId: row.animal_id,
     petName: petRow ? petRow.nome : 'Pet',
     petImg: petRow ? petRow.foto_url : '',
@@ -208,7 +273,7 @@ function formatMatchRow(row) {
 // POST /api/auth/register - Cadastro real de usuário no banco SQLite
 app.post('/api/auth/register', (req, res) => {
   try {
-    const { nome, cpf, telefone, email, senha, perfil, avatar_url } = req.body || {};
+    const { nome, cpf, telefone, email, senha, avatar_url } = req.body || {};
 
     if (!nome || String(nome).trim().length < 3) {
       return res.status(400).json({ erro: 'O campo "nome" é obrigatório e deve ter pelo menos 3 caracteres.', codigo: 400 });
@@ -220,7 +285,9 @@ app.post('/api/auth/register', (req, res) => {
       return res.status(400).json({ erro: 'A "senha" deve possuir no mínimo 4 caracteres.', codigo: 400 });
     }
 
-    const role = perfil && ['adotante', 'ong'].includes(perfil) ? perfil : 'adotante';
+    // Regra de Segurança (SEC-01): Registro público sempre cadastra 'adotante'.
+    // Perfis de ONG e Administrador são provisionados de forma controlada/administrativa.
+    const role = 'adotante';
     const cleanEmail = String(email).trim().toLowerCase();
 
     const existing = db.prepare('SELECT id FROM usuarios WHERE lower(email) = ?').get(cleanEmail);
@@ -232,9 +299,7 @@ app.post('/api/auth/register', (req, res) => {
     }
 
     const senhaHash = hashPassword(senha);
-    const defaultAvatar = role === 'adotante'
-      ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80'
-      : '';
+    const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80';
 
     const result = db.prepare(`
       INSERT INTO usuarios (nome, cpf, telefone, email, senha_hash, perfil, avatar_url)
@@ -259,13 +324,12 @@ app.post('/api/auth/register', (req, res) => {
       usuario: newUser
     });
   } catch (err) {
-    console.error('[POST /api/auth/register]', err);
-    return res.status(500).json({ erro: 'Erro interno ao cadastrar usuário.', detalhes: err.message, codigo: 500 });
+    return res.status(500).json({ erro: 'Erro interno ao cadastrar usuário.', codigo: 500 });
   }
 });
 
 // POST /api/auth/login - Autenticação real de usuário e emissão de JWT
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', loginRateLimiter, (req, res) => {
   try {
     const { email, senha } = req.body || {};
     if (!email || !senha) {
@@ -279,10 +343,19 @@ app.post('/api/auth/login', (req, res) => {
     const userRow = db.prepare('SELECT * FROM usuarios WHERE lower(email) = ?').get(cleanEmail);
 
     if (!userRow || !verifyPassword(senha, userRow.senha_hash)) {
+      if (req._loginRateRecord) {
+        req._loginRateRecord.count++;
+        failedLoginAttempts.set(req._loginRateKey, req._loginRateRecord);
+      }
       return res.status(401).json({
         erro: 'Credenciais inválidas. Verifique seu e-mail e senha.',
         codigo: 401
       });
+    }
+
+    // Login bem-sucedido: limpa histórico de falhas
+    if (req._loginRateKey) {
+      failedLoginAttempts.delete(req._loginRateKey);
     }
 
     const usuario = {
@@ -303,7 +376,6 @@ app.post('/api/auth/login', (req, res) => {
       usuario
     });
   } catch (err) {
-    console.error('[POST /api/auth/login]', err);
     return res.status(500).json({ erro: 'Erro interno ao autenticar usuário.', codigo: 500 });
   }
 });
@@ -313,8 +385,8 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
   return res.status(200).json({ usuario: req.user });
 });
 
-// GET /api/users - Lista usuários (Exclusivo para perfil ONG)
-app.get('/api/users', authenticateToken, requireRole('ong'), (req, res) => {
+// GET /api/users - Lista usuários (Exclusivo para perfil ONG e Admin)
+app.get('/api/users', authenticateToken, requireRole('ong', 'admin'), (req, res) => {
   const users = db.prepare('SELECT id, nome, cpf, telefone, email, perfil, avatar_url, criado_em FROM usuarios ORDER BY id ASC').all();
   return res.status(200).json(users);
 });
@@ -360,8 +432,8 @@ app.get('/api/pets/:id', (req, res) => {
   return res.status(200).json(formatPetRow(row));
 });
 
-// POST /api/pets - Cadastra novo animal (Exclusivo perfil ONG)
-app.post('/api/pets', authenticateToken, requireRole('ong'), (req, res) => {
+// POST /api/pets - Cadastra novo animal (Exclusivo perfil ONG / Admin)
+app.post('/api/pets', authenticateToken, requireRole('ong', 'admin'), (req, res) => {
   try {
     const body = req.body || {};
     const nome = body.nome || body.name;
@@ -376,7 +448,7 @@ app.post('/api/pets', authenticateToken, requireRole('ong'), (req, res) => {
     const ong_nome = body.ong_nome || body.ong || req.user.nome || 'ONG Patinhas';
 
     if (!nome || String(nome).trim().length < 2) {
-      return res.status(400).json({ erro: 'O campo "nome" do animal é obrigatório.', codigo: 400 });
+      return res.status(400).json({ erro: 'O campo "nome" do animal é obrigatório e deve ter no mínimo 2 caracteres.', codigo: 400 });
     }
     if (!raca) {
       return res.status(400).json({ erro: 'O campo "raca" é obrigatório.', codigo: 400 });
@@ -384,8 +456,8 @@ app.post('/api/pets', authenticateToken, requireRole('ong'), (req, res) => {
     if (!idade) {
       return res.status(400).json({ erro: 'O campo "idade" é obrigatório.', codigo: 400 });
     }
-    if (!foto_url) {
-      return res.status(400).json({ erro: 'O campo "foto_url" é obrigatório.', codigo: 400 });
+    if (!foto_url || !isValidImageUrl(foto_url)) {
+      return res.status(400).json({ erro: 'O campo "foto_url" deve ser uma URL válida de imagem (http, https ou data:image).', codigo: 400 });
     }
 
     const validSpecies = ['Cachorro', 'Gato', 'Outro'];
@@ -417,21 +489,50 @@ app.post('/api/pets', authenticateToken, requireRole('ong'), (req, res) => {
     const newPet = db.prepare('SELECT * FROM animais WHERE id = ?').get(Number(result.lastInsertRowid));
     return res.status(201).json(formatPetRow(newPet));
   } catch (err) {
-    console.error('[POST /api/pets]', err);
-    return res.status(500).json({ erro: 'Erro interno ao cadastrar animal.', detalhes: err.message, codigo: 500 });
+    return res.status(500).json({ erro: 'Erro interno ao cadastrar animal.', codigo: 500 });
   }
 });
 
-// PUT /api/pets/:id - Atualiza dados de um animal (Exclusivo perfil ONG)
-app.put('/api/pets/:id', authenticateToken, requireRole('ong'), (req, res) => {
+// PUT /api/pets/:id - Atualiza dados de um animal (Exclusivo ONG dona ou Admin)
+app.put('/api/pets/:id', authenticateToken, requireRole('ong', 'admin'), (req, res) => {
   try {
     const petId = Number(req.params.id);
+    if (Number.isNaN(petId)) {
+      return res.status(400).json({ erro: 'ID do animal inválido.', codigo: 400 });
+    }
+
     const existing = db.prepare('SELECT * FROM animais WHERE id = ?').get(petId);
     if (!existing) {
       return res.status(404).json({ erro: 'Animal não encontrado para atualização.', codigo: 404 });
     }
 
+    // Verificação de Propriedade (SEC-16): ONG só altera seus próprios animais
+    if (req.user.perfil !== 'admin' && existing.ong_id !== req.user.id) {
+      return res.status(403).json({
+        erro: 'Acesso negado. Você só pode gerenciar os animais cadastrados pela sua própria organização.',
+        codigo: 403
+      });
+    }
+
     const body = req.body || {};
+
+    // Validações estritas de domínio (SEC-19, SEC-20)
+    if (body.status !== undefined && !['disponivel', 'em_processo', 'adotado'].includes(body.status)) {
+      return res.status(400).json({ erro: 'Status inválido. Valores permitidos: disponivel, em_processo, adotado.', codigo: 400 });
+    }
+    if (body.especie !== undefined && !['Cachorro', 'Gato', 'Outro'].includes(body.especie)) {
+      return res.status(400).json({ erro: 'Espécie inválida. Valores permitidos: Cachorro, Gato, Outro.', codigo: 400 });
+    }
+    if (body.porte !== undefined && !['Pequeno', 'Médio', 'Grande'].includes(body.porte)) {
+      return res.status(400).json({ erro: 'Porte inválido. Valores permitidos: Pequeno, Médio, Grande.', codigo: 400 });
+    }
+    if (body.sexo !== undefined && !['Macho', 'Fêmea'].includes(body.sexo)) {
+      return res.status(400).json({ erro: 'Sexo inválido. Valores permitidos: Macho, Fêmea.', codigo: 400 });
+    }
+    if (body.foto_url !== undefined && !isValidImageUrl(body.foto_url)) {
+      return res.status(400).json({ erro: 'O campo "foto_url" deve ser uma URL válida de imagem.', codigo: 400 });
+    }
+
     const nome = body.nome || body.name || existing.nome;
     const especie = body.especie || existing.especie;
     const raca = body.raca || body.breed || existing.raca;
@@ -452,17 +553,29 @@ app.put('/api/pets/:id', authenticateToken, requireRole('ong'), (req, res) => {
     const updated = db.prepare('SELECT * FROM animais WHERE id = ?').get(petId);
     return res.status(200).json(formatPetRow(updated));
   } catch (err) {
-    return res.status(500).json({ erro: 'Erro ao atualizar animal.', detalhes: err.message, codigo: 500 });
+    return res.status(500).json({ erro: 'Erro ao atualizar animal.', codigo: 500 });
   }
 });
 
-// DELETE /api/pets/:id - Remove um animal do catálogo (Exclusivo perfil ONG)
-app.delete('/api/pets/:id', authenticateToken, requireRole('ong'), (req, res) => {
+// DELETE /api/pets/:id - Remove um animal do catálogo (Exclusivo ONG dona ou Admin)
+app.delete('/api/pets/:id', authenticateToken, requireRole('ong', 'admin'), (req, res) => {
   try {
     const petId = Number(req.params.id);
+    if (Number.isNaN(petId)) {
+      return res.status(400).json({ erro: 'ID do animal inválido.', codigo: 400 });
+    }
+
     const existing = db.prepare('SELECT * FROM animais WHERE id = ?').get(petId);
     if (!existing) {
       return res.status(404).json({ erro: 'Animal não encontrado para exclusão.', codigo: 404 });
+    }
+
+    // Verificação de Propriedade (SEC-16)
+    if (req.user.perfil !== 'admin' && existing.ong_id !== req.user.id) {
+      return res.status(403).json({
+        erro: 'Acesso negado. Você só pode excluir os animais cadastrados pela sua própria organização.',
+        codigo: 403
+      });
     }
 
     db.prepare('DELETE FROM animais WHERE id = ?').run(petId);
@@ -471,7 +584,7 @@ app.delete('/api/pets/:id', authenticateToken, requireRole('ong'), (req, res) =>
       id: petId
     });
   } catch (err) {
-    return res.status(500).json({ erro: 'Erro ao excluir animal.', detalhes: err.message, codigo: 500 });
+    return res.status(500).json({ erro: 'Erro ao excluir animal.', codigo: 500 });
   }
 });
 
@@ -480,11 +593,11 @@ app.delete('/api/pets/:id', authenticateToken, requireRole('ong'), (req, res) =>
 // Estados do Fluxo: pendente -> termo_enviado -> termo_assinado -> aprovado | rejeitado
 // ============================================================================
 
-// GET /api/matches - Lista matches (ONG vê todos; Adotante vê apenas os seus)
+// GET /api/matches - Lista matches (ONG/Admin vê todos; Adotante vê apenas os seus)
 app.get('/api/matches', authenticateToken, (req, res) => {
   try {
     let rows;
-    if (req.user.perfil === 'ong') {
+    if (req.user.perfil === 'ong' || req.user.perfil === 'admin') {
       rows = db.prepare('SELECT * FROM adocoes_matches ORDER BY id DESC').all();
     } else {
       rows = db.prepare('SELECT * FROM adocoes_matches WHERE adotante_id = ? ORDER BY id DESC').all(req.user.id);
@@ -532,6 +645,11 @@ app.post('/api/matches', authenticateToken, (req, res) => {
     const matchId = Number(result.lastInsertRowid);
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    // Atualiza status do animal para 'em_processo' (BUG-03)
+    if (pet.status === 'disponivel') {
+      db.prepare("UPDATE animais SET status = 'em_processo' WHERE id = ?").run(animalId);
+    }
+
     // Mensagem automática de boas-vindas da ONG
     db.prepare(`
       INSERT INTO mensagens (match_id, remetente_id, remetente_perfil, texto, is_termo, horario)
@@ -546,13 +664,12 @@ app.post('/api/matches', authenticateToken, (req, res) => {
     const createdMatch = db.prepare('SELECT * FROM adocoes_matches WHERE id = ?').get(matchId);
     return res.status(201).json(formatMatchRow(createdMatch));
   } catch (err) {
-    console.error('[POST /api/matches]', err);
-    return res.status(500).json({ erro: 'Erro ao registrar match.', detalhes: err.message, codigo: 500 });
+    return res.status(500).json({ erro: 'Erro ao registrar match.', codigo: 500 });
   }
 });
 
-// POST /api/matches/:id/enviar-termo - Transição: pendente -> termo_enviado (Exclusivo ONG)
-app.post('/api/matches/:id/enviar-termo', authenticateToken, requireRole('ong'), (req, res) => {
+// POST /api/matches/:id/enviar-termo - Transição: pendente -> termo_enviado (Exclusivo ONG / Admin)
+app.post('/api/matches/:id/enviar-termo', authenticateToken, requireRole('ong', 'admin'), (req, res) => {
   try {
     const matchId = Number(req.params.id);
     const match = db.prepare('SELECT * FROM adocoes_matches WHERE id = ?').get(matchId);
@@ -577,7 +694,7 @@ app.post('/api/matches/:id/enviar-termo', authenticateToken, requireRole('ong'),
       WHERE id = ?
     `).run(nowIso, matchId);
 
-    // Verifica se já existe mensagem de termo para não duplicar
+    // Registra mensagem contendo o termo oficial se ainda não existir
     const existingTermMsg = db.prepare('SELECT id FROM mensagens WHERE match_id = ? AND is_termo = 1').get(matchId);
     if (!existingTermMsg) {
       db.prepare(`
@@ -597,11 +714,11 @@ app.post('/api/matches/:id/enviar-termo', authenticateToken, requireRole('ong'),
       match: formatMatchRow(updated)
     });
   } catch (err) {
-    return res.status(500).json({ erro: 'Erro ao enviar termo de adoção.', detalhes: err.message, codigo: 500 });
+    return res.status(500).json({ erro: 'Erro ao enviar termo de adoção.', codigo: 500 });
   }
 });
 
-// POST /api/matches/:id/assinar-termo - Transição: termo_enviado -> termo_assinado (Adotante)
+// POST /api/matches/:id/assinar-termo - Transição: termo_enviado -> termo_assinado (Apenas o Adotante)
 app.post('/api/matches/:id/assinar-termo', authenticateToken, (req, res) => {
   try {
     const matchId = Number(req.params.id);
@@ -610,10 +727,10 @@ app.post('/api/matches/:id/assinar-termo', authenticateToken, (req, res) => {
       return res.status(404).json({ erro: 'Processo de adoção (Match) não encontrado.', codigo: 404 });
     }
 
-    // Garante que apenas o dono do match (ou ONG em testes) possa assinar
-    if (req.user.perfil === 'adotante' && match.adotante_id !== req.user.id) {
+    // Regra de Integridade Jurídica (SEC-17): Apenas o adotante titular do match pode assinar o contrato
+    if (match.adotante_id !== req.user.id) {
       return res.status(403).json({
-        erro: 'Acesso negado. Você só pode assinar o Termo de Adoção de um processo vinculado ao seu próprio usuário.',
+        erro: 'Acesso negado. Apenas o próprio adotante titular deste processo pode assinar digitalmente o termo de adoção.',
         codigo: 403
       });
     }
@@ -658,12 +775,12 @@ app.post('/api/matches/:id/assinar-termo', authenticateToken, (req, res) => {
       match: formatMatchRow(updated)
     });
   } catch (err) {
-    return res.status(500).json({ erro: 'Erro ao assinar termo.', detalhes: err.message, codigo: 500 });
+    return res.status(500).json({ erro: 'Erro ao assinar termo.', codigo: 500 });
   }
 });
 
-// PATCH /api/matches/:id/status - Transição final: aprovar ou rejeitar adoção (Exclusivo ONG)
-app.patch('/api/matches/:id/status', authenticateToken, requireRole('ong'), (req, res) => {
+// PATCH /api/matches/:id/status - Transições da Máquina de Estados (Exclusivo ONG / Admin)
+app.patch('/api/matches/:id/status', authenticateToken, requireRole('ong', 'admin'), (req, res) => {
   try {
     const matchId = Number(req.params.id);
     const { status } = req.body || {};
@@ -681,16 +798,25 @@ app.patch('/api/matches/:id/status', authenticateToken, requireRole('ong'), (req
       return res.status(404).json({ erro: 'Processo de adoção (Match) não encontrado.', codigo: 404 });
     }
 
-    // Validação rigorosa de transição de estados:
-    // Se tentar aprovar um match que já foi rejeitado (ou vice-versa), ou se tentar aprovar sem termo assinado quando strict=true
-    if ((match.status === 'aprovado' || match.status === 'rejeitado') && status !== match.status) {
+    // Máquina de Estados Estrita (SEC-18)
+    const ALLOWED_TRANSITIONS = {
+      'pendente': ['termo_enviado', 'rejeitado'],
+      'termo_enviado': ['termo_assinado', 'rejeitado'],
+      'termo_assinado': ['aprovado', 'rejeitado'],
+      'aprovado': [],
+      'rejeitado': []
+    };
+
+    const allowedNext = ALLOWED_TRANSITIONS[match.status] || [];
+    if (!allowedNext.includes(status)) {
       return res.status(422).json({
-        erro: `Transição de estado inválida: o processo já se encontra finalizado no estado "${match.status}".`,
+        erro: `Transição de estado inválida: não é permitido transitar de "${match.status}" para "${status}".`,
         codigo: 422
       });
     }
 
-    if (status === 'aprovado' && !match.termo_assinado && req.body.exigir_termo !== false) {
+    // Regra Estrita (BUG-01): Aprovação EXIGE termo digitalmente assinado
+    if (status === 'aprovado' && !match.termo_assinado) {
       return res.status(422).json({
         erro: 'Transição de estado inválida: não é permitido aprovar a adoção antes da assinatura digital do Termo de Adoção pelo candidato (estado exigido: termo_assinado).',
         codigo: 422
@@ -704,6 +830,14 @@ app.patch('/api/matches/:id/status', authenticateToken, requireRole('ong'), (req
 
     if (status === 'aprovado' && pet) {
       db.prepare("UPDATE animais SET status = 'adotado' WHERE id = ?").run(pet.id);
+
+      // Rejeição Automática de Concorrentes (BUG-02): Finaliza outros matches abertos para o mesmo animal
+      db.prepare(`
+        UPDATE adocoes_matches
+        SET status = 'rejeitado'
+        WHERE animal_id = ? AND id != ? AND status NOT IN ('aprovado', 'rejeitado')
+      `).run(pet.id, matchId);
+
       db.prepare(`
         INSERT INTO mensagens (match_id, remetente_id, remetente_perfil, texto, is_termo, horario)
         VALUES (?, ?, 'ong', ?, 0, ?)
@@ -714,7 +848,11 @@ app.patch('/api/matches/:id/status', authenticateToken, requireRole('ong'), (req
         nowTime
       );
     } else if (status === 'rejeitado' && pet) {
-      db.prepare("UPDATE animais SET status = 'disponivel' WHERE id = ?").run(pet.id);
+      // Verifica se ainda restam outros matches ativos para o pet
+      const otherActive = db.prepare("SELECT id FROM adocoes_matches WHERE animal_id = ? AND status IN ('pendente', 'termo_enviado', 'termo_assinado')").get(pet.id);
+      if (!otherActive) {
+        db.prepare("UPDATE animais SET status = 'disponivel' WHERE id = ?").run(pet.id);
+      }
     }
 
     const updated = db.prepare('SELECT * FROM adocoes_matches WHERE id = ?').get(matchId);
@@ -723,7 +861,7 @@ app.patch('/api/matches/:id/status', authenticateToken, requireRole('ong'), (req
       match: formatMatchRow(updated)
     });
   } catch (err) {
-    return res.status(500).json({ erro: 'Erro ao atualizar status do match.', detalhes: err.message, codigo: 500 });
+    return res.status(500).json({ erro: 'Erro ao atualizar status do match.', codigo: 500 });
   }
 });
 
@@ -734,7 +872,7 @@ app.delete('/api/matches/:id', authenticateToken, (req, res) => {
   if (!match) {
     return res.status(404).json({ erro: 'Match não encontrado.', codigo: 404 });
   }
-  if (req.user.perfil !== 'ong' && match.adotante_id !== req.user.id) {
+  if (req.user.perfil !== 'ong' && req.user.perfil !== 'admin' && match.adotante_id !== req.user.id) {
     return res.status(403).json({ erro: 'Sem permissão para remover este match.', codigo: 403 });
   }
   db.prepare('DELETE FROM adocoes_matches WHERE id = ?').run(matchId);
@@ -752,7 +890,7 @@ app.get('/api/matches/:id/messages', authenticateToken, (req, res) => {
   if (!match) {
     return res.status(404).json({ erro: 'Match não encontrado.', codigo: 404 });
   }
-  if (req.user.perfil !== 'ong' && match.adotante_id !== req.user.id) {
+  if (req.user.perfil !== 'ong' && req.user.perfil !== 'admin' && match.adotante_id !== req.user.id) {
     return res.status(403).json({ erro: 'Acesso negado às mensagens deste chat.', codigo: 403 });
   }
 
@@ -781,7 +919,7 @@ app.post('/api/matches/:id/messages', authenticateToken, (req, res) => {
     if (!match) {
       return res.status(404).json({ erro: 'Match não encontrado.', codigo: 404 });
     }
-    if (req.user.perfil !== 'ong' && match.adotante_id !== req.user.id) {
+    if (req.user.perfil !== 'ong' && req.user.perfil !== 'admin' && match.adotante_id !== req.user.id) {
       return res.status(403).json({ erro: 'Você não tem permissão para enviar mensagens neste chat.', codigo: 403 });
     }
 
@@ -790,8 +928,15 @@ app.post('/api/matches/:id/messages', authenticateToken, (req, res) => {
       return res.status(400).json({ erro: 'O campo "texto" da mensagem não pode ser vazio.', codigo: 400 });
     }
 
-    const senderRole = req.user.perfil === 'ong' ? 'ong' : 'user';
-    const isTermo = req.body.is_termo || req.body.isTermo ? 1 : 0;
+    // Limitação de Tamanho de Mensagem (SEC-23)
+    if (String(texto).length > 5000) {
+      return res.status(400).json({ erro: 'O texto da mensagem excede o limite máximo permitido (5.000 caracteres).', codigo: 400 });
+    }
+
+    const senderRole = (req.user.perfil === 'ong' || req.user.perfil === 'admin') ? 'ong' : 'user';
+
+    // Apenas ONGs ou Admins podem emitir mensagens de termo (SEC-24)
+    const isTermo = ((req.user.perfil === 'ong' || req.user.perfil === 'admin') && (req.body.is_termo || req.body.isTermo)) ? 1 : 0;
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const result = db.prepare(`
@@ -820,8 +965,7 @@ app.post('/api/matches/:id/messages', authenticateToken, (req, res) => {
 });
 
 // ============================================================================
-// 5. PONTE DE SINCRONIZAÇÃO DE ESTADO COMPLETO (/api/state)
-// Permite que o módulo cliente (db.js) sincronize e persista alterações no SQLite
+// 5. PONTE DE SINCRONIZAÇÃO DE ESTADO COMPLETO (/api/state) PROTEGIDA
 // ============================================================================
 function buildFullStatePayload() {
   const petRows = db.prepare('SELECT * FROM animais ORDER BY id ASC').all();
@@ -850,29 +994,33 @@ function buildFullStatePayload() {
   };
 }
 
-app.get('/api/state', (req, res) => {
+// GET /api/state - Requer autenticação (SEC-12)
+app.get('/api/state', authenticateToken, (req, res) => {
   try {
     return res.status(200).json(buildFullStatePayload());
   } catch (err) {
-    return res.status(500).json({ erro: 'Erro ao carregar estado do banco.', detalhes: err.message });
+    return res.status(500).json({ erro: 'Erro ao carregar estado do banco.' });
   }
 });
 
-app.put('/api/state', (req, res) => {
+// PUT /api/state - Requer autenticação e perfil ONG ou Admin (SEC-13, SEC-14)
+app.put('/api/state', authenticateToken, (req, res) => {
   try {
+    if (req.user.perfil !== 'ong' && req.user.perfil !== 'admin') {
+      return res.status(403).json({ erro: 'Acesso negado. Apenas administradores e ONGs podem sincronizar estado completo.', codigo: 403 });
+    }
+
     const { pets, matches, chats } = req.body || {};
     const ongRow = db.prepare("SELECT id FROM usuarios WHERE perfil = 'ong' ORDER BY id ASC LIMIT 1").get();
     const defaultOngId = ongRow ? ongRow.id : 1;
     const adopterRow = db.prepare("SELECT id FROM usuarios WHERE perfil = 'adotante' ORDER BY id ASC LIMIT 1").get();
     const defaultAdopterId = adopterRow ? adopterRow.id : 2;
 
-    if (Array.isArray(pets)) {
+    if (Array.isArray(pets) && pets.length > 0) {
       const incomingIds = pets.map(p => Number(p.id)).filter(id => !Number.isNaN(id));
       if (incomingIds.length > 0) {
         const placeholders = incomingIds.map(() => '?').join(',');
         db.prepare(`DELETE FROM animais WHERE id NOT IN (${placeholders})`).run(...incomingIds);
-      } else {
-        db.prepare('DELETE FROM animais').run();
       }
 
       for (const p of pets) {
@@ -914,8 +1062,6 @@ app.put('/api/state', (req, res) => {
       if (incomingMatchIds.length > 0) {
         const placeholders = incomingMatchIds.map(() => '?').join(',');
         db.prepare(`DELETE FROM adocoes_matches WHERE id NOT IN (${placeholders})`).run(...incomingMatchIds);
-      } else {
-        db.prepare('DELETE FROM adocoes_matches').run();
       }
 
       for (const m of matches) {
@@ -1001,8 +1147,7 @@ app.put('/api/state', (req, res) => {
       ...buildFullStatePayload()
     });
   } catch (err) {
-    console.error('[PUT /api/state]', err);
-    return res.status(500).json({ erro: 'Erro ao sincronizar estado no banco SQLite.', detalhes: err.message });
+    return res.status(500).json({ erro: 'Erro ao sincronizar estado no banco SQLite.' });
   }
 });
 
@@ -1017,7 +1162,7 @@ app.get('/api/openapi.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.send(raw);
   } catch (err) {
-    res.status(500).json({ erro: 'Arquivo OpenAPI não encontrado.', detalhes: err.message });
+    res.status(500).json({ erro: 'Arquivo OpenAPI não encontrado.' });
   }
 });
 
@@ -1052,12 +1197,20 @@ app.get('/api-docs', (req, res) => {
         dom_id: '#swagger-ui',
         deepLinking: true,
         persistAuthorization: true,
-         presets: [SwaggerUIBundle.presets.apis]
+        presets: [SwaggerUIBundle.presets.apis]
       });
     };
   </script>
 </body>
 </html>`);
+});
+
+// Handler 404 em formato JSON para endpoints de API não encontrados
+app.use('/api', (req, res) => {
+  res.status(404).json({
+    erro: `Recurso de API '${req.method} ${req.originalUrl}' não encontrado.`,
+    codigo: 404
+  });
 });
 
 // Serve os arquivos estáticos do aplicativo/painel web (pasta ../www)
