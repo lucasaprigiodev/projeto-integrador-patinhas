@@ -79,11 +79,30 @@
       <textarea id="pet-desc" rows="3" placeholder="Conte um pouco sobre a personalidade e história do pet..." style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:'Inter',sans-serif;resize:none;box-sizing:border-box;">Resgatado com muito amor em Natal/RN, já está vacinado, castrado, vermifugado e pronto para adoção responsável!</textarea>
     </div>
 
+    <!-- Dados do Resgate & Prontuário Inicial -->
+    <div style="background:var(--surface-2);border-radius:14px;padding:14px;margin-bottom:16px;border:1px solid var(--border);">
+      <h3 style="font-size:13px;font-weight:800;color:var(--text-1);margin-bottom:10px;">🚨 Dados do Resgate & Triagem Inicial</h3>
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div class="input-group" style="flex:1;margin-bottom:0;">
+          <label style="font-size:11px;">Local do Resgate</label>
+          <div class="input-wrap"><input type="text" id="pet-local-resgate" placeholder="Ex: Tirol, Natal/RN" value="Natal/RN" style="font-size:12px;"></div>
+        </div>
+        <div class="input-group" style="flex:1;margin-bottom:0;">
+          <label style="font-size:11px;">Peso Inicial (kg)</label>
+          <div class="input-wrap"><input type="number" step="0.1" id="pet-peso" placeholder="Ex: 12.5" style="font-size:12px;"></div>
+        </div>
+      </div>
+      <div class="input-group" style="margin-bottom:0;">
+        <label style="font-size:11px;">Condição Inicial no Acolhimento</label>
+        <div class="input-wrap"><input type="text" id="pet-condicao-inicial" placeholder="Ex: Dócil, vermifugado e sem fraturas" value="Resgatado em boas condições gerais" style="font-size:12px;"></div>
+      </div>
+    </div>
+
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
-      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface-2);padding:7px 12px;border-radius:20px;"><input type="checkbox" checked style="accent-color:var(--primary);"> Vacinado</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface-2);padding:7px 12px;border-radius:20px;"><input type="checkbox" checked style="accent-color:var(--primary);"> Castrado</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface-2);padding:7px 12px;border-radius:20px;"><input type="checkbox" checked style="accent-color:var(--primary);"> Vermifugado</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface-2);padding:7px 12px;border-radius:20px;"><input type="checkbox" checked style="accent-color:var(--primary);"> Sociável</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface-2);padding:7px 12px;border-radius:20px;"><input type="checkbox" id="chk-vacinado" checked style="accent-color:var(--primary);"> Vacinado</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface-2);padding:7px 12px;border-radius:20px;"><input type="checkbox" id="chk-castrado" checked style="accent-color:var(--primary);"> Castrado</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface-2);padding:7px 12px;border-radius:20px;"><input type="checkbox" id="chk-vermifugado" checked style="accent-color:var(--primary);"> Vermifugado</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--surface-2);padding:7px 12px;border-radius:20px;"><input type="checkbox" id="chk-sociavel" checked style="accent-color:var(--primary);"> Sociável</label>
     </div>
 
     <button id="btnPublicar" onclick="publicarPet()" class="btn btn-primary">🐾 Publicar Pet no Catálogo</button>
@@ -110,6 +129,12 @@ async function publicarPet() {
   const idade = (document.getElementById('pet-idade').value || '1 ano').trim();
   const raca = (document.getElementById('pet-raca').value || 'SRD').trim();
   const desc = (document.getElementById('pet-desc').value || '').trim();
+  const localResgate = (document.getElementById('pet-local-resgate').value || 'Natal/RN').trim();
+  const peso = parseFloat(document.getElementById('pet-peso').value) || null;
+  const condicaoInicial = (document.getElementById('pet-condicao-inicial').value || 'Resgatado em boas condições gerais').trim();
+  const vacinado = document.getElementById('chk-vacinado').checked;
+  const castrado = document.getElementById('chk-castrado').checked;
+  const vermifugado = document.getElementById('chk-vermifugado').checked;
   const btn = document.getElementById('btnPublicar');
 
   if (!nome || nome.length < 2) {
@@ -118,7 +143,7 @@ async function publicarPet() {
   }
 
   btn.disabled = true;
-  btn.textContent = '⏳ Salvando no servidor SQLite...';
+  btn.textContent = '⏳ Gravando no servidor e prontuário...';
 
   try {
     const db = await loadDb();
@@ -146,8 +171,37 @@ async function publicarPet() {
       img: selectedPhotoUrl,
       foto_url: selectedPhotoUrl,
       about: desc,
-      descricao: desc
+      descricao: desc,
+      local_resgate: localResgate,
+      condicao_inicial: condicaoInicial,
+      peso_atual_kg: peso,
+      vacinado: vacinado,
+      castrado: castrado,
+      vermifugado: vermifugado
     };
+
+    // Tenta registrar diretamente via API REST (se token estiver presente)
+    if (window.PatinhasAPI && PatinhasAPI.getAuthToken()) {
+      try {
+        await PatinhasAPI.cadastrarResgate({
+          nome,
+          especie,
+          raca,
+          idade,
+          porte,
+          sexo,
+          descricao: desc,
+          foto_url: selectedPhotoUrl,
+          local_resgate: localResgate,
+          condicao_inicial: condicaoInicial,
+          peso_atual_kg: peso,
+          castrado: castrado ? 1 : 0,
+          vacinado: vacinado ? 1 : 0,
+          vermifugado: vermifugado ? 1 : 0,
+          status: 'disponivel'
+        });
+      } catch (_) {}
+    }
 
     db.pets.unshift(newPet);
     await saveDb(db);

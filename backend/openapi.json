@@ -31,6 +31,18 @@
     {
       "name": "4. Mensagens (Chat em Tempo Real)",
       "description": "Troca de mensagens vinculadas a um Match entre o Adotante titular e a ONG responsável."
+    },
+    {
+      "name": "5. Resgates e Triagem",
+      "description": "Registro inicial de resgate, acolhimento de animais e triagem com custódia."
+    },
+    {
+      "name": "6. Prontuário Veterinário",
+      "description": "Linha do tempo clínica, histórico de vacinas, exames, cirurgias e retificações auditáveis."
+    },
+    {
+      "name": "7. Pós-Adoção e Tutor Vitalício",
+      "description": "RG Pet digital, acompanhamento continuado, agenda de vacinas, marcos e programa de indicação."
     }
   ],
   "components": {
@@ -1455,6 +1467,496 @@
           },
           "403": {
             "description": "Apenas ONG ou Admin podem sincronizar o estado global."
+          }
+        }
+      }
+    },
+    "/api/resgates": {
+      "post": {
+        "tags": [
+          "5. Resgates e Triagem"
+        ],
+        "summary": "Registrar novo resgate de animal (ONG / Protetor / Admin)",
+        "description": "Cadastra animal resgatado, atribui primeira custódia e gera evento inicial de prontuário.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nome"
+                ],
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "example": "Bob Resgatado"
+                  },
+                  "especie": {
+                    "type": "string",
+                    "enum": [
+                      "Cachorro",
+                      "Gato",
+                      "Outro"
+                    ],
+                    "example": "Cachorro"
+                  },
+                  "raca": {
+                    "type": "string",
+                    "example": "SRD"
+                  },
+                  "idade": {
+                    "type": "string",
+                    "example": "1 ano"
+                  },
+                  "porte": {
+                    "type": "string",
+                    "enum": [
+                      "Pequeno",
+                      "Médio",
+                      "Grande"
+                    ],
+                    "example": "Médio"
+                  },
+                  "sexo": {
+                    "type": "string",
+                    "enum": [
+                      "Macho",
+                      "Fêmea"
+                    ],
+                    "example": "Macho"
+                  },
+                  "foto_url": {
+                    "type": "string",
+                    "example": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800"
+                  },
+                  "data_resgate": {
+                    "type": "string",
+                    "example": "2024-05-10"
+                  },
+                  "local_resgate": {
+                    "type": "string",
+                    "example": "Ponta Negra, Natal/RN"
+                  },
+                  "origem_resgate": {
+                    "type": "string",
+                    "example": "rua"
+                  },
+                  "condicao_inicial": {
+                    "type": "string",
+                    "example": "Desidratado e com ferimento leve na pata"
+                  },
+                  "peso_atual_kg": {
+                    "type": "number",
+                    "example": 14.2
+                  },
+                  "castrado": {
+                    "type": "integer",
+                    "example": 0
+                  },
+                  "vacinado": {
+                    "type": "integer",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Resgate registrado e prontuário inicial criado com sucesso."
+          },
+          "400": {
+            "description": "Dados de entrada inválidos."
+          },
+          "401": {
+            "description": "Token JWT ausente ou inválido."
+          },
+          "403": {
+            "description": "Acesso negado. Apenas ONG, Protetor ou Admin."
+          }
+        }
+      }
+    },
+    "/api/pets/{id}/publicar": {
+      "post": {
+        "tags": [
+          "5. Resgates e Triagem"
+        ],
+        "summary": "Publicar animal para adoção após triagem e checklist",
+        "description": "Transiciona status do pet para disponivel exibindo pendências de forma transparente.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Animal publicado para adoção."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "403": {
+            "description": "Apenas a ONG ou Protetor responsável."
+          },
+          "404": {
+            "description": "Animal não encontrado."
+          }
+        }
+      }
+    },
+    "/api/pets/{id}/prontuario": {
+      "get": {
+        "tags": [
+          "6. Prontuário Veterinário"
+        ],
+        "summary": "Consultar histórico clínico e linha do tempo de resgate (Transparência Completa)",
+        "description": "Aberto a interessados e tutores para visualização de vacinas, exames, castração e curva de peso.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prontuário completo retornado com sucesso."
+          },
+          "404": {
+            "description": "Animal não encontrado."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "6. Prontuário Veterinário"
+        ],
+        "summary": "Adicionar evento clínico ou de cuidado ao prontuário",
+        "description": "Registra vacina, consulta, exame, castração ou pesagem com atualização automática nos dados do animal.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "tipo",
+                  "titulo"
+                ],
+                "properties": {
+                  "tipo": {
+                    "type": "string",
+                    "example": "vacina"
+                  },
+                  "titulo": {
+                    "type": "string",
+                    "example": "Vacina V10 Polivalente"
+                  },
+                  "descricao": {
+                    "type": "string",
+                    "example": "Dose de reforço aplicada com sucesso."
+                  },
+                  "ocorrido_em": {
+                    "type": "string",
+                    "example": "2024-05-15"
+                  },
+                  "proxima_data": {
+                    "type": "string",
+                    "example": "2025-05-15"
+                  },
+                  "profissional": {
+                    "type": "string",
+                    "example": "Dr. Roberto Silva"
+                  },
+                  "crmv": {
+                    "type": "string",
+                    "example": "CRMV/RN 1420"
+                  },
+                  "clinica": {
+                    "type": "string",
+                    "example": "Clínica VetCare Natal"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Evento registrado com sucesso."
+          },
+          "400": {
+            "description": "Dados inválidos."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "403": {
+            "description": "Apenas gestor responsável ou tutor do animal."
+          },
+          "404": {
+            "description": "Animal não encontrado."
+          }
+        }
+      }
+    },
+    "/api/pets/{id}/prontuario/{eventoId}/retificar": {
+      "post": {
+        "tags": [
+          "6. Prontuário Veterinário"
+        ],
+        "summary": "Retificação auditável de evento clínico (Append-Only)",
+        "description": "Adiciona registro retificador sem apagar o histórico original.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "eventoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "motivo_retificacao"
+                ],
+                "properties": {
+                  "motivo_retificacao": {
+                    "type": "string",
+                    "example": "Correção do lote da vacina"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Retificação registrada."
+          },
+          "400": {
+            "description": "Motivo ausente."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "403": {
+            "description": "Apenas autor ou gestor."
+          },
+          "404": {
+            "description": "Evento não encontrado."
+          }
+        }
+      }
+    },
+    "/api/pets/{id}/agenda": {
+      "get": {
+        "tags": [
+          "6. Prontuário Veterinário"
+        ],
+        "summary": "Consultar agenda de retornos e vacinas do animal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agenda retornada com sucesso."
+          },
+          "404": {
+            "description": "Animal não encontrado."
+          }
+        }
+      }
+    },
+    "/api/meus-pets": {
+      "get": {
+        "tags": [
+          "7. Pós-Adoção e Tutor Vitalício"
+        ],
+        "summary": "Consultar pets adotados pelo tutor com RG Pet e saúde",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pets do tutor com RG Pet e acompanhamento."
+          },
+          "401": {
+            "description": "Não autorizado."
+          }
+        }
+      }
+    },
+    "/api/meus-pets/{id}/acompanhamento": {
+      "post": {
+        "tags": [
+          "7. Pós-Adoção e Tutor Vitalício"
+        ],
+        "summary": "Registrar acompanhamento pelo tutor (peso, vacina, consulta)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tipo": {
+                    "type": "string",
+                    "enum": [
+                      "peso",
+                      "vacina",
+                      "consulta",
+                      "observacao"
+                    ],
+                    "example": "peso"
+                  },
+                  "peso_kg": {
+                    "type": "number",
+                    "example": 15.5
+                  },
+                  "vacina_nome": {
+                    "type": "string",
+                    "example": "Antirrábica"
+                  },
+                  "observacao": {
+                    "type": "string",
+                    "example": "Pet muito ativo e saudável"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Acompanhamento registrado com sucesso."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "403": {
+            "description": "Apenas tutor oficial."
+          }
+        }
+      }
+    },
+    "/api/tutor/marcos": {
+      "get": {
+        "tags": [
+          "7. Pós-Adoção e Tutor Vitalício"
+        ],
+        "summary": "Listar conquistas e marcos pós-adoção do tutor",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de marcos e selos conquistados."
+          },
+          "401": {
+            "description": "Não autorizado."
+          }
+        }
+      }
+    },
+    "/api/tutor/indicacao": {
+      "get": {
+        "tags": [
+          "7. Pós-Adoção e Tutor Vitalício"
+        ],
+        "summary": "Obter código do programa Indique um Amigo",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Código e link de indicação gerados."
+          },
+          "401": {
+            "description": "Não autorizado."
           }
         }
       }

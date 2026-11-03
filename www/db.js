@@ -296,6 +296,49 @@ const PatinhasAPI = {
       method: 'POST',
       body: { texto }
     });
+  },
+
+  // --------------------------------------------------------------------------
+  // Módulo de Resgates, Prontuário Veterinário e Acompanhamento Pós-Adoção
+  // --------------------------------------------------------------------------
+  async cadastrarResgate(resgateData) {
+    return apiRequest('/resgates', { method: 'POST', body: resgateData });
+  },
+
+  async publicarPet(petId, dados = {}) {
+    return apiRequest(`/pets/${petId}/publicar`, { method: 'POST', body: dados });
+  },
+
+  async getProntuario(petId) {
+    return apiRequest(`/pets/${petId}/prontuario`, { method: 'GET' });
+  },
+
+  async adicionarEventoProntuario(petId, eventoData) {
+    return apiRequest(`/pets/${petId}/prontuario`, { method: 'POST', body: eventoData });
+  },
+
+  async retificarEventoProntuario(petId, eventoId, retificacaoData) {
+    return apiRequest(`/pets/${petId}/prontuario/${eventoId}/retificar`, { method: 'POST', body: retificacaoData });
+  },
+
+  async getAgendaPet(petId) {
+    return apiRequest(`/pets/${petId}/agenda`, { method: 'GET' });
+  },
+
+  async getMeusPets() {
+    return apiRequest('/meus-pets', { method: 'GET' });
+  },
+
+  async registrarAcompanhamento(petId, dados) {
+    return apiRequest(`/meus-pets/${petId}/acompanhamento`, { method: 'POST', body: dados });
+  },
+
+  async getMarcosTutor() {
+    return apiRequest('/tutor/marcos', { method: 'GET' });
+  },
+
+  async getIndicacaoTutor() {
+    return apiRequest('/tutor/indicacao', { method: 'GET' });
   }
 };
 

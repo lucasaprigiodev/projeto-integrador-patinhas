@@ -186,9 +186,9 @@ function buildCard(pet, zIndex) {
     <div style="position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.7) 40%,rgba(0,0,0,0.92));display:flex;justify-content:space-between;align-items:flex-end;">
       <div style="flex:1;min-width:0;padding-right:10px;">
         <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-          <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">💉 Vacinado</span>
-          <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">✂️ Castrado</span>
-          <span style="background:rgba(255,107,53,0.85);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">${breedLabel}</span>
+          ${pet.vacinado !== false ? '<span style="background:rgba(16,185,129,0.35);backdrop-filter:blur(4px);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">💉 Vacinado</span>' : '<span style="background:rgba(245,158,11,0.5);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">💉 Vacina pendente</span>'}
+          ${pet.castrado !== false ? '<span style="background:rgba(59,130,246,0.35);backdrop-filter:blur(4px);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">🩺 Castrado</span>' : '<span style="background:rgba(245,158,11,0.5);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">🩺 Castração pendente</span>'}
+          <span style="background:rgba(255,107,53,0.85);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">${escapeHtml(breedLabel)}</span>
         </div>
         <h2 style="color:white;font-size:25px;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(pet.name)}, ${escapeHtml(pet.age)}</h2>
         <p style="color:rgba(255,255,255,0.82);font-size:12.5px;margin-bottom:0;">📍 ${escapeHtml(pet.dist || '3km')} • ${escapeHtml(pet.ong || 'ONG Patinhas')}</p>

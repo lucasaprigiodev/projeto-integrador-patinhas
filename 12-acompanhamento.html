@@ -3,8 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>Acompanhamento & RG Pet · Patinhas</title>
+  <title>Acompanhamento Vitalício & RG Pet · Patinhas</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .tab-btn {
+      flex: 1;
+      padding: 12px 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-3);
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .timeline-item {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      padding-bottom: 16px;
+    }
+    .timeline-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 28px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-box {
+      background: var(--surface);
+      width: 100%;
+      max-width: 440px;
+      border-radius: 24px 24px 0 0;
+      padding: 24px 20px 32px;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+      animation: slideUp 0.25s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
 
@@ -17,72 +96,142 @@
       <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1" fill="none" opacity=".35"/><rect x="1.5" y="2.5" width="15" height="7" rx="2"/><path d="M22 4.5v3a1.5 1.5 0 000-3z" opacity=".4"/></svg>
     </div>
   </div>
-  <div style="padding:0 20px;display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+
+  <div style="padding:0 20px 8px;display:flex;align-items:center;gap:12px;">
     <a href="javascript:history.back()" style="display:flex;align-items:center;color:var(--text-1);text-decoration:none;">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
     </a>
-    <h1 style="font-size:18px;font-weight:800;flex:1;">Acompanhamento & RG Pet</h1>
+    <h1 style="font-size:18px;font-weight:800;flex:1;">Hub Vitalício & RG Pet</h1>
+    <button onclick="abrirModalAcompanhamento()" title="Adicionar Registro de Saúde" style="background:var(--primary);color:white;border:none;border-radius:12px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:4px;">+ Saúde</button>
   </div>
 
-  <div class="scroll-content" style="padding:0 20px 20px;text-align:center;">
+  <div class="scroll-content" style="padding:0 18px 24px;">
     <!-- Cartão Oficial RG Pet Digital (Inovação Pet-Tech) -->
-    <div style="background:linear-gradient(135deg,#1E293B,#0F172A);color:white;border-radius:18px;padding:16px;margin:8px 0 18px;text-align:left;box-shadow:0 10px 25px rgba(15,23,42,0.22);position:relative;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#1E293B,#0F172A);color:white;border-radius:18px;padding:16px;margin:8px 0 16px;text-align:left;box-shadow:0 10px 25px rgba(15,23,42,0.22);position:relative;overflow:hidden;">
       <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.12);padding-bottom:8px;margin-bottom:12px;">
         <span style="font-size:10px;font-weight:800;letter-spacing:1px;color:#FB923C;">🪪 CARTEIRA NACIONAL DE GUARDA PET • RN</span>
         <span id="rgNumero" style="font-size:10px;font-family:monospace;background:rgba(255,255,255,0.12);padding:2px 7px;border-radius:4px;">#PAT-2026-004</span>
       </div>
       <div style="display:flex;gap:14px;align-items:center;">
-        <img id="acompPetImg" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80';" style="width:64px;height:64px;border-radius:14px;object-fit:cover;border:2px solid #FB923C;flex-shrink:0;">
+        <img id="acompPetImg" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80';" style="width:70px;height:70px;border-radius:14px;object-fit:cover;border:2px solid #FB923C;flex-shrink:0;">
         <div style="flex:1;min-width:0;">
-          <div id="acompPetName" style="font-weight:900;font-size:18px;color:white;">Thor</div>
-          <div id="acompPetBreed" style="font-size:12px;color:#CBD5E1;margin-bottom:4px;">Pastor Alemão • Vacinado & Castrado</div>
-          <div style="font-size:11px;color:#94A3B8;">Tutor(a): <strong id="acompTutorName" style="color:white;">Lucas Aprígio</strong></div>
+          <div id="acompPetName" style="font-weight:900;font-size:20px;color:white;">Thor</div>
+          <div id="acompPetBreed" style="font-size:12px;color:#CBD5E1;margin-bottom:4px;">Pastor Alemão • SRD</div>
+          <div style="font-size:11px;color:#94A3B8;">Tutor: <strong id="acompTutorName" style="color:white;">Lucas Aprígio</strong></div>
+          <div style="font-size:10.5px;color:#94A3B8;">Microchip: <span id="acompChip" style="color:#FDE047;font-family:monospace;">981098102938475</span></div>
         </div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);font-size:11px;">
-        <span id="acompOngName" style="color:#CBD5E1;">🏥 ONG Patinhas Natal</span>
-        <span id="acompStatusBadge" style="background:#059669;color:white;padding:2px 8px;border-radius:999px;font-weight:700;font-size:10px;">✓ Adaptação Ativa</span>
+        <span id="acompDiasJuntos" style="color:#A7F3D0;font-weight:700;">❤️ Juntos há 45 dias</span>
+        <span id="acompStatusBadge" style="background:#059669;color:white;padding:2px 8px;border-radius:999px;font-weight:700;font-size:10px;">✓ Guarda Definitiva Ativa</span>
       </div>
     </div>
 
-    <!-- Timer Circular -->
-    <div style="position:relative;width:146px;height:146px;margin:10px auto 18px;">
-      <svg viewBox="0 0 180 180" style="width:100%;height:100%;transform:rotate(-90deg);">
-        <circle cx="90" cy="90" r="80" fill="none" stroke="var(--surface-2)" stroke-width="12"/>
-        <circle id="progressRing" cx="90" cy="90" r="80" fill="none" stroke="url(#grad)" stroke-width="12" stroke-dasharray="502" stroke-dashoffset="120" stroke-linecap="round"/>
-        <defs><linearGradient id="grad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#FF6B35"/></linearGradient></defs>
-      </svg>
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;">
-        <span id="dias" style="font-size:40px;font-weight:900;color:var(--primary);letter-spacing:-2px;line-height:1;">7</span>
-        <span id="diasLabel" style="font-size:10px;font-weight:800;color:var(--text-2);letter-spacing:0.8px;margin-top:2px;">DIAS DE ADAPTAÇÃO</span>
+    <!-- Navegação em Abas do Hub -->
+    <div style="display:flex;background:var(--surface);border-bottom:1px solid var(--border);margin-bottom:16px;">
+      <button class="tab-btn active" id="tabBtn-prontuario" onclick="switchHubTab('prontuario')">🩺 Prontuário</button>
+      <button class="tab-btn" id="tabBtn-peso" onclick="switchHubTab('peso')">📈 Curva de Peso</button>
+      <button class="tab-btn" id="tabBtn-agenda" onclick="switchHubTab('agenda')">📅 Agenda</button>
+      <button class="tab-btn" id="tabBtn-marcos" onclick="switchHubTab('marcos')">🏆 Conquistas</button>
+    </div>
+
+    <!-- ABA 1: PRONTUÁRIO & LINHA DO TEMPO CLÍNICA -->
+    <div id="hubSection-prontuario">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-1);">Linha do Tempo Clínica & Resgate</h3>
+        <span id="totalEventosBadge" class="badge-pill" style="background:#EEF2FF;color:#4338CA;">0 eventos</span>
+      </div>
+      <div id="timelineContainer" style="margin-bottom:16px;">
+        <p style="text-align:center;color:var(--text-3);padding:20px;font-size:13px;">Carregando prontuário...</p>
       </div>
     </div>
 
-    <!-- Linha do Tempo Dinâmica Sincronizada com o Servidor -->
-    <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:16px;margin-bottom:18px;text-align:left;border:1px solid var(--border);">
-      <h3 style="font-size:13.5px;font-weight:800;margin-bottom:12px;color:var(--text-1);">Status em Tempo Real do Processo</h3>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          <div style="width:26px;height:26px;border-radius:50%;background:var(--success);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">✓</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text-1);">1. Match e Entrevista Iniciada</div><div style="font-size:11px;color:var(--text-3);">Interesse registrado junto à ONG</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:center;">
-          <div id="step2Icon" style="width:26px;height:26px;border-radius:50%;background:var(--success);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">✓</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text-1);">2. Termo de Adoção Assinado Digitalmente</div><div id="dataTermoAssinado" style="font-size:11px;color:var(--text-3);">Assinatura validada</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:center;">
-          <div id="step3Icon" style="width:26px;height:26px;border-radius:50%;background:#7C3AED;color:white;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">◉</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text-1);">3. Período de Adaptação Assistida (7 Dias)</div><div style="font-size:11px;color:#7C3AED;font-weight:600;">Acompanhamento veterinário e comportamental</div></div>
-        </div>
-        <div id="step4Row" style="display:flex;gap:12px;align-items:center;opacity:0.55;">
-          <div id="step4Icon" style="width:26px;height:26px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">○</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text-1);">4. Adoção Definitiva Aprovada pela ONG</div><div id="dataPrevisao" style="font-size:11px;color:var(--text-3);">Previsão: 7 dias</div></div>
-        </div>
+    <!-- ABA 2: CURVA DE CRESCIMENTO E PESO -->
+    <div id="hubSection-peso" style="display:none;">
+      <div style="background:var(--surface-2);border-radius:16px;padding:18px;margin-bottom:16px;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:4px;">Peso Atual do Pet</div>
+        <div id="pesoAtualDisplay" style="font-size:36px;font-weight:900;color:var(--primary);letter-spacing:-1px;">-- kg</div>
+        <p style="font-size:12px;color:var(--text-2);margin-top:4px;">Evolução saudável monitorada pelo tutor no Patinhas</p>
+        <button onclick="abrirModalAcompanhamento('peso')" class="btn btn-primary" style="margin-top:12px;padding:8px 16px;font-size:12px;width:auto;">+ Registrar Nova Pesagem</button>
+      </div>
+      <h4 style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-1);">Histórico de Aferições</h4>
+      <div id="pesoHistoricoList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <!-- ABA 3: AGENDA E PREVENÇÃO -->
+    <div id="hubSection-agenda" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="font-size:14px;font-weight:800;color:var(--text-1);">Próximas Doses & Retornos</h3>
+        <span class="badge-pill" style="background:#FEF3C7;color:#92400E;">Preventivo</span>
+      </div>
+      <div id="agendaContainer">
+        <p style="text-align:center;color:var(--text-3);padding:20px;font-size:13px;">Nenhuma pendência para os próximos dias.</p>
       </div>
     </div>
 
-    <a id="btnChatAjuda" href="10-chat-mensagem.html" class="btn btn-primary" style="background:#7C3AED;border:none;margin-bottom:8px;">💬 Falar com a ONG no Chat</a>
-    <a href="05-home-swipe.html" class="btn btn-outline">Voltar para Descobrir Pets</a>
+    <!-- ABA 4: MARCOS & INDIQUE UM AMIGO -->
+    <div id="hubSection-marcos" style="display:none;">
+      <div style="background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border:1px solid #FED7AA;border-radius:18px;padding:16px;margin-bottom:16px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:4px;">🎁</div>
+        <h3 style="font-size:15px;font-weight:800;color:#9A3412;">Programa Indique um Amigo!</h3>
+        <p style="font-size:12px;color:#C2410C;margin:4px 0 12px;line-height:1.5;">Convide amigos para adotar também. Ao concluírem a adoção, vocês dois ganham o selo de <strong>Embaixador Patinhas</strong>!</p>
+        <div style="background:white;border:1px dashed #EA580C;border-radius:10px;padding:8px 12px;font-family:monospace;font-size:14px;font-weight:800;color:#EA580C;margin-bottom:10px;" id="codigoIndicacaoDisplay">
+          PATINHAS-LUCAS-MIA
+        </div>
+        <button onclick="copiarIndicacao()" class="btn btn-primary" style="background:#EA580C;border:none;padding:8px 16px;font-size:12px;width:auto;">📲 Compartilhar Convite</button>
+      </div>
+
+      <h4 style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-1);">Conquistas do Tutor</h4>
+      <div id="marcosContainer" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <!-- Ações Inferiores -->
+    <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px;">
+      <a id="btnChatAjuda" href="10-chat-mensagem.html" class="btn btn-primary" style="background:#7C3AED;border:none;">💬 Mensagens & Acompanhamento da ONG</a>
+      <a href="05-home-swipe.html" class="btn btn-outline">Voltar para Descobrir Pets</a>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Rápido de Registro de Saúde / Acompanhamento -->
+<div id="modalAcomp" class="modal-overlay" onclick="if(event.target===this) fecharModalAcompanhamento()">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-size:17px;font-weight:800;margin:0;">Registrar Cuidado de Saúde</h3>
+      <button onclick="fecharModalAcompanhamento()" style="border:none;background:none;font-size:22px;cursor:pointer;color:var(--text-3);">&times;</button>
+    </div>
+    <div class="input-group">
+      <label>Tipo de Evento</label>
+      <div class="input-wrap">
+        <select id="modal-tipo" onchange="ajustarCamposModal()">
+          <option value="peso">⚖️ Pesagem de Rotina</option>
+          <option value="vacina">💉 Vacina Aplicada</option>
+          <option value="consulta">🩺 Consulta Veterinária</option>
+          <option value="observacao">📝 Observação / Check-up</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-group" id="group-peso">
+      <label>Peso Aferido (kg)</label>
+      <div class="input-wrap"><input type="number" step="0.1" id="modal-peso" placeholder="Ex: 14.5"></div>
+    </div>
+    <div class="input-group" id="group-vacina" style="display:none;">
+      <label>Nome da Vacina / Lote</label>
+      <div class="input-wrap"><input type="text" id="modal-vacina-nome" placeholder="Ex: V10 Polivalente ou Antirrábica"></div>
+    </div>
+    <div class="input-group">
+      <label>Veterinário / Clínica (Opcional)</label>
+      <div class="input-wrap"><input type="text" id="modal-vet" placeholder="Ex: Dr. Roberto Silva • VetCare"></div>
+    </div>
+    <div class="input-group">
+      <label>Próxima Dose / Retorno Agendado (Opcional)</label>
+      <div class="input-wrap"><input type="date" id="modal-proxima"></div>
+    </div>
+    <div class="input-group">
+      <label>Anotações e Evolução do Pet</label>
+      <textarea id="modal-obs" rows="2" placeholder="Como o pet se comportou, ganho de energia, adaptação..." style="width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;resize:none;box-sizing:border-box;"></textarea>
+    </div>
+    <button id="btnSalvarAcomp" onclick="salvarRegistroAcompanhamento()" class="btn btn-primary" style="margin-top:12px;">Gravar no Prontuário</button>
   </div>
 </div>
 
@@ -91,8 +240,37 @@
 const urlParams = new URLSearchParams(window.location.search);
 let matchId = urlParams.get('matchId') || localStorage.getItem('lastMatchId');
 let petId = urlParams.get('petId') || localStorage.getItem('lastPetId');
+let currentPetData = null;
+let currentProntuario = null;
 
-async function initAcompanhamento() {
+function switchHubTab(tabName) {
+  ['prontuario', 'peso', 'agenda', 'marcos'].forEach(t => {
+    const sec = document.getElementById(`hubSection-${t}`);
+    const btn = document.getElementById(`tabBtn-${t}`);
+    if (sec) sec.style.display = (t === tabName) ? 'block' : 'none';
+    if (btn) btn.classList.toggle('active', t === tabName);
+  });
+}
+
+function abrirModalAcompanhamento(tipoPre = null) {
+  if (tipoPre) {
+    document.getElementById('modal-tipo').value = tipoPre;
+    ajustarCamposModal();
+  }
+  document.getElementById('modalAcomp').style.display = 'flex';
+}
+
+function fecharModalAcompanhamento() {
+  document.getElementById('modalAcomp').style.display = 'none';
+}
+
+function ajustarCamposModal() {
+  const tipo = document.getElementById('modal-tipo').value;
+  document.getElementById('group-peso').style.display = (tipo === 'peso') ? 'block' : 'none';
+  document.getElementById('group-vacina').style.display = (tipo === 'vacina') ? 'block' : 'none';
+}
+
+async function initHub() {
   try {
     const json = await loadDb();
     let match = null;
@@ -102,47 +280,226 @@ async function initAcompanhamento() {
 
     const resolvedPetId = match ? match.petId : (petId || 4);
     const pet = (json.pets || []).find(p => String(p.id) === String(resolvedPetId)) || (json.pets || [])[0];
+    currentPetData = pet;
 
     const name = (match && match.petName) || (pet && pet.name) || 'Thor';
-    const img = (match && match.petImg) || (pet && pet.img) || 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=800&q=80';
+    const img = (match && match.petImg) || (pet && pet.img) || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80';
     const tutor = (match && (match.assinatura_digital || match.userName)) || localStorage.getItem('userName') || 'Lucas Aprígio';
 
     document.getElementById('acompPetName').innerText = name;
     document.getElementById('acompPetImg').src = img;
     document.getElementById('acompTutorName').innerText = tutor;
-    document.getElementById('rgNumero').innerText = `#PAT-2026-00${resolvedPetId}`;
-
+    document.getElementById('rgNumero').innerText = `#PAT-2026-${String(resolvedPetId).padStart(3, '0')}`;
     if (pet) {
-      document.getElementById('acompPetBreed').innerText = `${pet.breed || 'SRD'} • ${pet.age || '2 anos'} • Vacinado & Castrado`;
-      document.getElementById('acompOngName').innerText = `🏥 ${pet.ong || 'ONG Patinhas Natal'}`;
+      document.getElementById('acompPetBreed').innerText = `${pet.breed || 'SRD'} • ${pet.age || '2 anos'}`;
+      if (pet.microchip) document.getElementById('acompChip').innerText = pet.microchip;
+      if (pet.peso_atual_kg) document.getElementById('pesoAtualDisplay').innerText = `${pet.peso_atual_kg} kg`;
     }
-
-    const hoje = new Date();
-    const dateStr = (match && match.date) || hoje.toLocaleDateString('pt-BR');
-    document.getElementById('dataTermoAssinado').innerText = `Assinado digitalmente em ${dateStr} por ${tutor}`;
-
-    const previsao = new Date(hoje.getTime() + (7 * 24 * 60 * 60 * 1000));
-    document.getElementById('dataPrevisao').innerText = `Previsão de conclusão: ${previsao.toLocaleDateString('pt-BR')}`;
 
     if (match) {
       document.getElementById('btnChatAjuda').href = `10-chat-mensagem.html?matchId=${match.id}&petId=${match.petId}`;
-      if (match.status === 'aprovado') {
-        document.getElementById('dias').innerText = '✓';
-        document.getElementById('diasLabel').innerText = 'ADOÇÃO APROVADA!';
-        document.getElementById('progressRing').setAttribute('stroke-dashoffset', '0');
-        document.getElementById('acompStatusBadge').innerText = '🏆 Guarda Definitiva Aprovada';
-        document.getElementById('step4Row').style.opacity = '1';
-        document.getElementById('step4Icon').style.background = 'var(--success)';
-        document.getElementById('step4Icon').style.color = 'white';
-        document.getElementById('step4Icon').innerText = '✓';
-        document.getElementById('dataPrevisao').innerText = 'Aprovado oficialmente pela ONG Patinhas!';
-      }
     }
-  } catch (e) {
-    console.error(e);
+
+    // Carrega Prontuário Completo via API REST
+    try {
+      const prontData = await PatinhasAPI.getProntuario(resolvedPetId);
+      if (prontData && Array.isArray(prontData.eventos)) {
+        currentProntuario = prontData;
+        renderTimeline(prontData.eventos);
+        renderPesoHistorico(prontData.eventos);
+      }
+    } catch (_) {
+      renderFallbackTimeline();
+    }
+
+    // Carrega Agenda
+    try {
+      const agendaData = await PatinhasAPI.getAgendaPet(resolvedPetId);
+      if (agendaData && Array.isArray(agendaData.agenda)) {
+        renderAgenda(agendaData.agenda);
+      }
+    } catch (_) {}
+
+    // Carrega Marcos do Tutor
+    try {
+      const marcosData = await PatinhasAPI.getMarcosTutor();
+      if (marcosData && Array.isArray(marcosData.marcos)) {
+        renderMarcos(marcosData.marcos);
+      }
+    } catch (_) {}
+
+    // Carrega Código de Indicação
+    try {
+      const indData = await PatinhasAPI.getIndicacaoTutor();
+      if (indData && indData.codigo) {
+        document.getElementById('codigoIndicacaoDisplay').innerText = indData.codigo;
+      }
+    } catch (_) {}
+
+  } catch (err) {
+    console.error(err);
   }
 }
-initAcompanhamento();
+
+function renderTimeline(eventos) {
+  const container = document.getElementById('timelineContainer');
+  document.getElementById('totalEventosBadge').innerText = `${eventos.length} registros`;
+  if (!eventos.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-3);padding:16px;">Nenhum registro clínico ainda.</p>';
+    return;
+  }
+
+  const icons = {
+    resgate: '🚨', triagem: '📋', vacina: '💉', vermifugo: '💊',
+    castracao: '🩺', cirurgia: '🏥', peso: '⚖️', consulta: '👨‍⚕️',
+    adocao: '🏠', exame: '🔬', microchip: '🪪', observacao: '📝'
+  };
+
+  container.innerHTML = eventos.map(e => `
+    <div class="timeline-item">
+      <div class="timeline-icon">${icons[e.tipo] || '🐾'}</div>
+      <div style="flex:1;background:var(--surface-2);border-radius:12px;padding:12px 14px;border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+          <strong style="font-size:13px;color:var(--text-1);">${escapeHtml(e.titulo)}</strong>
+          <span style="font-size:10.5px;color:var(--text-3);font-family:monospace;">${e.ocorrido_em || ''}</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-2);margin:0 0 6px;line-height:1.4;">${escapeHtml(e.descricao || '')}</p>
+        ${e.profissional ? `<div style="font-size:11px;color:var(--primary);font-weight:600;">👨‍⚕️ ${escapeHtml(e.profissional)} ${e.crmv ? '(' + escapeHtml(e.crmv) + ')' : ''} ${e.clinica ? '• ' + escapeHtml(e.clinica) : ''}</div>` : ''}
+        ${e.proxima_data ? `<div style="font-size:10.5px;color:#D97706;font-weight:700;margin-top:4px;">📅 Próximo retorno/dose: ${e.proxima_data}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPesoHistorico(eventos) {
+  const pesoList = eventos.filter(e => e.tipo === 'peso' || (e.dados && e.dados.peso_kg));
+  const container = document.getElementById('pesoHistoricoList');
+  if (!pesoList.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-3);font-size:12px;padding:8px;">Nenhuma pesagem gravada.</p>';
+    return;
+  }
+  container.innerHTML = pesoList.map(e => {
+    const val = (e.dados && e.dados.peso_kg) || parseFloat(e.descricao) || '--';
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);padding:10px 14px;border-radius:10px;border:1px solid var(--border);">
+        <span style="font-weight:700;font-size:13px;color:var(--text-1);">⚖️ ${val} kg</span>
+        <span style="font-size:11px;color:var(--text-3);">${e.ocorrido_em || ''}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAgenda(itens) {
+  const container = document.getElementById('agendaContainer');
+  if (!itens.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-3);padding:16px;font-size:12px;">Tudo em dia! Nenhuma dose pendente.</p>';
+    return;
+  }
+  container.innerHTML = itens.map(i => `
+    <div style="display:flex;align-items:center;gap:12px;background:var(--surface-2);padding:12px 14px;border-radius:12px;margin-bottom:8px;border-left:4px solid var(--primary);border:1px solid var(--border);">
+      <div style="font-size:20px;">📅</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:13px;color:var(--text-1);">${escapeHtml(i.titulo)}</div>
+        <div style="font-size:11px;color:#D97706;font-weight:700;">Data prevista: ${i.data_prevista}</div>
+        ${i.profissional ? `<div style="font-size:10.5px;color:var(--text-3);">${escapeHtml(i.profissional)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMarcos(marcos) {
+  const container = document.getElementById('marcosContainer');
+  if (!marcos.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-3);font-size:12px;padding:12px;">Conquistas aparecerão conforme os cuidados do pet!</p>';
+    return;
+  }
+  container.innerHTML = marcos.map(m => `
+    <div style="display:flex;align-items:center;gap:14px;background:var(--surface-2);padding:12px 14px;border-radius:14px;border:1px solid var(--border);">
+      <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#FEF3C7,#FDE68A);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+        ${m.icone || '🏆'}
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:800;font-size:13.5px;color:var(--text-1);">${escapeHtml(m.titulo)}</div>
+        <div style="font-size:11.5px;color:var(--text-2);line-height:1.4;">${escapeHtml(m.descricao || '')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFallbackTimeline() {
+  const container = document.getElementById('timelineContainer');
+  container.innerHTML = `
+    <div class="timeline-item">
+      <div class="timeline-icon">🚨</div>
+      <div style="flex:1;background:var(--surface-2);border-radius:12px;padding:12px;border:1px solid var(--border);">
+        <strong style="font-size:13px;">Resgate e Acolhimento</strong>
+        <p style="font-size:12px;color:var(--text-2);margin:4px 0 0;">Animal acolhido e examinado com triagem clínica completa em Natal/RN.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-icon">💉</div>
+      <div style="flex:1;background:var(--surface-2);border-radius:12px;padding:12px;border:1px solid var(--border);">
+        <strong style="font-size:13px;">Vacinação e Castração</strong>
+        <p style="font-size:12px;color:var(--text-2);margin:4px 0 0;">Protocolo de imunização e cirurgia de castração preventiva realizadas.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-icon">🏠</div>
+      <div style="flex:1;background:var(--surface-2);border-radius:12px;padding:12px;border:1px solid var(--border);">
+        <strong style="font-size:13px;">Adoção Responsável</strong>
+        <p style="font-size:12px;color:var(--text-2);margin:4px 0 0;">Termo assinado digitalmente e início da tutela responsável.</p>
+      </div>
+    </div>
+  `;
+}
+
+async function salvarRegistroAcompanhamento() {
+  const tipo = document.getElementById('modal-tipo').value;
+  const peso = document.getElementById('modal-peso').value;
+  const vacina = document.getElementById('modal-vacina-nome').value;
+  const vet = document.getElementById('modal-vet').value;
+  const proxima = document.getElementById('modal-proxima').value;
+  const obs = document.getElementById('modal-obs').value;
+
+  const btn = document.getElementById('btnSalvarAcomp');
+  btn.disabled = true;
+  btn.innerText = 'Gravando...';
+
+  const petIdToUse = currentPetData ? currentPetData.id : (petId || 4);
+
+  try {
+    await PatinhasAPI.registrarAcompanhamento(petIdToUse, {
+      tipo,
+      peso_kg: peso ? parseFloat(peso) : null,
+      vacina_nome: vacina,
+      veterinario: vet,
+      proxima_dose: proxima,
+      observacao: obs
+    });
+    alert('✅ Registro gravado no prontuário oficial com sucesso!');
+    fecharModalAcompanhamento();
+    initHub();
+  } catch (err) {
+    alert('Erro ao gravar: ' + (err.message || 'Tente novamente'));
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Gravar no Prontuário';
+  }
+}
+
+function copiarIndicacao() {
+  const cod = document.getElementById('codigoIndicacaoDisplay').innerText.trim();
+  const msg = `Oi! Adotei meu pet com todo carinho e acompanhamento de saúde vitalício no App Patinhas! Use meu código ${cod} para encontrar seu novo amigo: https://lucasaprigio.github.io/projeto-integrador-patinhas/?ref=${cod} 🐾❤️`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).then(() => {
+      alert('📋 Mensagem de convite copiada! Compartilhe no WhatsApp!');
+    }).catch(() => prompt('Copie sua mensagem:', msg));
+  } else {
+    prompt('Copie sua mensagem:', msg);
+  }
+}
+
+initHub();
 </script>
 </body>
 </html>

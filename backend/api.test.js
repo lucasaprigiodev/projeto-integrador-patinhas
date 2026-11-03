@@ -17,10 +17,14 @@ async function call(method, url, { token, body, headers } = {}) {
 }
 async function login(email, senha) { const r = await call('POST', '/api/auth/login', { body: { email, senha } }); return r.data.token; }
 
-let ong, lucas, maria;
+let ong, lucas, maria, protetor, admin;
 before(async () => {
   const { db, initDatabase } = require('./database');
   db.exec('PRAGMA foreign_keys = OFF;');
+  db.exec('DROP TABLE IF EXISTS indicacoes_adocao;');
+  db.exec('DROP TABLE IF EXISTS marcos_tutor;');
+  db.exec('DROP TABLE IF EXISTS prontuario_eventos;');
+  db.exec('DROP TABLE IF EXISTS custodias;');
   db.exec('DROP TABLE IF EXISTS mensagens;');
   db.exec('DROP TABLE IF EXISTS adocoes_matches;');
   db.exec('DROP TABLE IF EXISTS animais;');
@@ -33,6 +37,8 @@ before(async () => {
   ong = await login('admin@ong.com', 'admin');
   lucas = await login('lucas@ifrn.edu.br', '123456');
   maria = await login('maria@email.com', '123456');
+  protetor = await login('carlos@protetor.org', '123456');
+  admin = await login('admin@patinhas.org.br', 'admin123');
 });
 after(() => server.close());
 
@@ -286,5 +292,205 @@ describe('Performance (smoke)', () => {
   });
   test('PERF-05 /api/state escala com N+1 (3 queries por match)', async () => {
     const s = performance.now(); await call('GET', '/api/state'); console.log(`   /api/state ${(performance.now() - s).toFixed(1)}ms`);
+  });
+});
+
+describe('Módulo de Resgates & Triagem', () => {
+  test('RESG-01 protetor independente cadastra resgate com sucesso → 201 + custódia + prontuário inicial', async () => {
+    const r = await call('POST', '/api/resgates', {
+      token: protetor,
+      body: {
+        nome: 'Pitoco Resgatado',
+        especie: 'Cachorro',
+        raca: 'Vira-lata',
+        idade: '1 ano',
+        porte: 'Pequeno',
+        sexo: 'Macho',
+        local_resgate: 'Via Costeira, Natal/RN',
+        condicao_inicial: 'Levemente desidratado',
+        peso_atual_kg: 7.5,
+        foto_url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800'
+      }
+    });
+    assert.equal(r.status, 201);
+    assert.equal(r.data.animal.nome, 'Pitoco Resgatado');
+    assert.equal(r.data.animal.status, 'resgatado');
+    assert.ok(r.data.custodia_id > 0);
+  });
+
+  test('RESG-02 adotante comum não pode cadastrar resgate diretamente → 403', async () => {
+    const r = await call('POST', '/api/resgates', {
+      token: lucas,
+      body: { nome: 'Pet Inválido', foto_url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800' }
+    });
+    assert.equal(r.status, 403);
+  });
+
+  test('RESG-03 publicar animal para adoção após triagem → 200 + status disponivel + checklist', async () => {
+    const cad = await call('POST', '/api/resgates', {
+      token: protetor,
+      body: { nome: 'Floquinho', raca: 'Poodle', foto_url: 'https://images.unsplash.com/photo-1516371535707-512a1e83bb9a?w=800' }
+    });
+    const petId = cad.data.animal.id;
+
+    const pub = await call('POST', `/api/pets/${petId}/publicar`, {
+      token: protetor,
+      body: { pendencias_saude: 'Filhote: castração programada para os 6 meses' }
+    });
+    assert.equal(pub.status, 200);
+    assert.equal(pub.data.animal.status, 'disponivel');
+    assert.ok(pub.data.checklist);
+  });
+
+  test('RESG-04 ONG-B não pode publicar animal da ONG-A ou de outro protetor → 403', async () => {
+    const pub = await call('POST', '/api/pets/1/publicar', { token: protetor });
+    assert.equal(pub.status, 403);
+  });
+});
+
+describe('Módulo de Prontuário Veterinário & Histórico Clínico', () => {
+  test('PRONT-01 leitura pública do prontuário retorna linha do tempo e resumo clínico', async () => {
+    const r = await call('GET', '/api/pets/1/prontuario');
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.data.eventos));
+    assert.ok(r.data.eventos.length >= 5);
+    assert.equal(r.data.animal.nome, 'Buddy');
+    assert.equal(r.data.animal.castrado, true);
+    assert.equal(r.data.animal.vacinado, true);
+  });
+
+  test('PRONT-02 registrar vacina atualiza status de vacinado do animal → 201 + pet.vacinado=true', async () => {
+    const p = await call('POST', '/api/pets', {
+      token: ong,
+      body: { nome: 'Snoopy Teste', raca: 'Beagle', idade: '1 ano', foto_url: 'https://images.unsplash.com/photo-1505628346881-b72b27e84530?w=800', vacinado: 0 }
+    });
+    const petId = p.data.id;
+    assert.equal(p.data.vacinado, false);
+
+    const ev = await call('POST', `/api/pets/${petId}/prontuario`, {
+      token: ong,
+      body: {
+        tipo: 'vacina',
+        titulo: 'Vacina V10 Polivalente',
+        descricao: '1ª Dose aplicada',
+        ocorrido_em: '2024-05-20',
+        profissional: 'Dr. Roberto Silva',
+        crmv: 'CRMV/RN 1420',
+        clinica: 'VetCare'
+      }
+    });
+    assert.equal(ev.status, 201);
+
+    const petAtualizado = await call('GET', `/api/pets/${petId}`);
+    assert.equal(petAtualizado.data.vacinado, true);
+  });
+
+  test('PRONT-03 registrar peso atualiza peso_atual_kg do animal → 201', async () => {
+    const ev = await call('POST', '/api/pets/1/prontuario', {
+      token: ong,
+      body: {
+        tipo: 'peso',
+        titulo: 'Aferição de peso',
+        descricao: 'Pesagem de controle',
+        dados: { peso_kg: 30.5 },
+        ocorrido_em: '2024-06-01'
+      }
+    });
+    assert.equal(ev.status, 201);
+    const pet = await call('GET', '/api/pets/1');
+    assert.equal(pet.data.peso_atual_kg, 30.5);
+  });
+
+  test('PRONT-04 retificação auditável de evento anterior sem excluir o original → 201', async () => {
+    const pront = await call('GET', '/api/pets/1/prontuario');
+    const eventoOriginal = pront.data.eventos[0];
+
+    const ret = await call('POST', `/api/pets/1/prontuario/${eventoOriginal.id}/retificar`, {
+      token: ong,
+      body: {
+        motivo_retificacao: 'Digitação incorreta do lote da vacina no formulário',
+        titulo: 'Vacina V10 (Lote Corrigido)',
+        descricao: 'Lote retificado para LT-99002B'
+      }
+    });
+    assert.equal(ret.status, 201);
+    assert.equal(ret.data.evento_original_id, eventoOriginal.id);
+  });
+
+  test('PRONT-05 consulta da agenda médica retorna próximas doses e retornos', async () => {
+    const r = await call('GET', '/api/pets/1/agenda');
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.data.agenda));
+  });
+
+  test('PRONT-06 usuário sem autorização não pode alterar prontuário de pet alheio → 403', async () => {
+    const r = await call('POST', '/api/pets/1/prontuario', {
+      token: maria,
+      body: { tipo: 'observacao', titulo: 'Comentário aleatório' }
+    });
+    assert.equal(r.status, 403);
+  });
+});
+
+describe('Módulo Pós-Adoção Vitalício, Portal do Tutor & Engajamento', () => {
+  test('TUTOR-01 tutor consulta seus pets adotados e obtém RG Pet Digital → 200', async () => {
+    const r = await call('GET', '/api/meus-pets', { token: lucas });
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.data));
+    assert.ok(r.data.length >= 1);
+    const mia = r.data.find(p => p.nome === 'Mia');
+    assert.ok(mia, 'Mia não encontrada nos pets adotados do Lucas');
+    assert.ok(mia.rg_pet, 'RG Pet ausente');
+    assert.ok(mia.rg_pet.numero_registro.startsWith('RN-'));
+    assert.equal(mia.rg_pet.tutor_nome, 'Lucas Aprígio');
+    assert.ok(mia.dias_juntos >= 1);
+  });
+
+  test('TUTOR-02 tutor registra acompanhamento pós-adoção de peso e vacina → 201', async () => {
+    const r = await call('POST', '/api/meus-pets/10/acompanhamento', {
+      token: lucas,
+      body: {
+        tipo: 'peso',
+        peso_kg: 4.0,
+        observacao: 'Mia ganhou 200g de massa saudável com a nova ração úmida!'
+      }
+    });
+    assert.equal(r.status, 201);
+    assert.ok(r.data.evento_id > 0);
+
+    const pront = await call('GET', '/api/pets/10/prontuario');
+    const pesoEv = pront.data.eventos.find(e => e.tipo === 'peso' && e.titulo.includes('4 kg'));
+    assert.ok(pesoEv);
+  });
+
+  test('TUTOR-03 lista marcos e conquistas pós-adoção do tutor → 200', async () => {
+    const r = await call('GET', '/api/tutor/marcos', { token: lucas });
+    assert.equal(r.status, 200);
+    assert.ok(r.data.total_conquistas >= 1);
+    assert.ok(r.data.marcos.some(m => m.tipo === 'adocao_concluida'));
+  });
+
+  test('TUTOR-04 gera código de indicação de amigos para incentivo a novas adoções → 200', async () => {
+    const r = await call('GET', '/api/tutor/indicacao', { token: lucas });
+    assert.equal(r.status, 200);
+    assert.ok(r.data.codigo);
+    assert.ok(r.data.mensagem_pronta.includes('Patinhas'));
+  });
+
+  test('TUTOR-05 aprovar match de adoção transfere custódia e gera marcos automaticamente', async () => {
+    const apr = await call('PATCH', '/api/matches/2/status', {
+      token: ong,
+      body: { status: 'aprovado' }
+    });
+    assert.equal(apr.status, 200);
+
+    const meus = await call('GET', '/api/meus-pets', { token: maria });
+    assert.equal(meus.status, 200);
+    const bella = meus.data.find(p => p.id === 5);
+    assert.ok(bella, 'Bella não aparece nos pets de Maria após aprovação');
+    assert.ok(bella.rg_pet);
+
+    const marcosMaria = await call('GET', '/api/tutor/marcos', { token: maria });
+    assert.ok(marcosMaria.data.marcos.some(m => m.tipo === 'adocao_concluida' && m.animal_id === 5));
   });
 });

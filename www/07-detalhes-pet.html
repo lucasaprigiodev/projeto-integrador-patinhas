@@ -39,10 +39,10 @@
       </div>
     </div>
 
-    <!-- Tags -->
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;">
-      <span class="chip chip-primary">Vacinado</span>
-      <span class="chip chip-success">Castrado</span>
+    <!-- Tags Dinâmicas de Saúde e Perfil -->
+    <div id="petHealthChips" style="display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;">
+      <span class="chip chip-primary" id="chipVacinado">💉 Vacinado</span>
+      <span class="chip chip-success" id="chipCastrado">🩺 Castrado</span>
       <span class="chip chip-accent">Adora carinho</span>
       <span class="chip" id="petSizeChip">Porte Médio</span>
     </div>
@@ -68,6 +68,27 @@
 
     <h3 id="petAboutTitle" style="font-size:16px;font-weight:700;margin-bottom:10px;">Sobre o pet</h3>
     <p id="petAboutText" style="color:var(--text-2);line-height:1.7;font-size:14px;margin-bottom:20px;">Carregando histórico...</p>
+
+    <!-- Transparência de Saúde & Histórico de Resgate (Decisões de Transparência Completa) -->
+    <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:16px;margin-bottom:20px;border:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h3 style="font-size:15px;font-weight:800;color:var(--text-1);margin:0;">🩺 Prontuário & Resgate</h3>
+        <span id="transparenciaBadge" style="background:#ECFDF5;color:#047857;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;">✓ Verificado</span>
+      </div>
+      
+      <div id="boxResgateInfo" style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;line-height:1.5;">
+        <div id="txtLocalResgate" style="margin-bottom:4px;">📍 <strong>Local de Resgate:</strong> Natal/RN</div>
+        <div id="txtCondicaoResgate" style="margin-bottom:4px;">❤️ <strong>Acolhimento:</strong> Resgatado e recebido com atendimento veterinário especializado.</div>
+        <div id="txtChipInfo" style="font-family:monospace;font-size:11.5px;color:var(--primary);display:none;">🪪 Microchip: <span id="valMicrochip"></span></div>
+      </div>
+
+      <!-- Linha do Tempo Resumida do Prontuário -->
+      <div id="prontuarioResumoList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+
+      <a id="lnkVerProntuarioCompleto" href="12-acompanhamento.html" style="font-size:12px;font-weight:700;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:4px;">
+        <span>Ver histórico completo no RG Pet ➜</span>
+      </a>
+    </div>
 
     <!-- ONG -->
     <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface-2);border-radius:var(--radius-md);margin-bottom:20px;">
@@ -105,6 +126,47 @@ async function initPet() {
   if(currentPet.size) {
     document.getElementById('petSizeChip').innerText = currentPet.size;
     document.getElementById('petWeightStat').innerText = currentPet.size;
+  }
+
+  // Dados de Resgate e Saúde
+  if (currentPet.local_resgate) {
+    document.getElementById('txtLocalResgate').innerHTML = `📍 <strong>Local de Resgate:</strong> ${escapeHtml(currentPet.local_resgate)}`;
+  }
+  if (currentPet.condicao_inicial) {
+    document.getElementById('txtCondicaoResgate').innerHTML = `❤️ <strong>Acolhimento:</strong> ${escapeHtml(currentPet.condicao_inicial)}`;
+  }
+  if (currentPet.microchip) {
+    document.getElementById('txtChipInfo').style.display = 'block';
+    document.getElementById('valMicrochip').innerText = currentPet.microchip;
+  }
+  if (currentPet.vacinado === false) {
+    const chipV = document.getElementById('chipVacinado');
+    if (chipV) { chipV.innerText = '💉 Vacinação em andamento'; chipV.className = 'chip chip-accent'; }
+  }
+  if (currentPet.castrado === false) {
+    const chipC = document.getElementById('chipCastrado');
+    if (chipC) { chipC.innerText = '🩺 Castração programada'; chipC.className = 'chip chip-accent'; }
+  }
+
+  document.getElementById('lnkVerProntuarioCompleto').href = `12-acompanhamento.html?petId=${currentPet.id}`;
+
+  // Busca prontuário ao vivo na API
+  try {
+    const pront = await PatinhasAPI.getProntuario(currentPet.id);
+    if (pront && Array.isArray(pront.eventos) && pront.eventos.length > 0) {
+      const top3 = pront.eventos.slice(0, 3);
+      const iconMap = { vacina: '💉', castracao: '🩺', triagem: '📋', resgate: '🚨', consulta: '👨‍⚕️', peso: '⚖️', exame: '🔬' };
+      document.getElementById('prontuarioResumoList').innerHTML = top3.map(e => `
+        <div style="background:var(--surface);padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-size:12px;display:flex;justify-content:space-between;align-items:center;">
+          <span>${iconMap[e.tipo] || '🐾'} <strong>${escapeHtml(e.titulo)}</strong></span>
+          <span style="font-size:10.5px;color:var(--text-3);font-family:monospace;">${e.ocorrido_em || ''}</span>
+        </div>
+      `).join('');
+    } else {
+      document.getElementById('prontuarioResumoList').innerHTML = '<p style="font-size:11.5px;color:var(--text-3);margin:0;">Triagem clínica realizada com sucesso.</p>';
+    }
+  } catch (_) {
+    document.getElementById('prontuarioResumoList').innerHTML = '<p style="font-size:11.5px;color:var(--text-3);margin:0;">Histórico clínico registrado e disponível.</p>';
   }
 }
 
