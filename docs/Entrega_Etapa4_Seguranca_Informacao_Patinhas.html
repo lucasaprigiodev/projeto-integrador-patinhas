@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Atividade 4 – Segurança da Informação no Aplicativo Patinhas</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 15mm 16mm 15mm;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.5;
+      font-size: 9.8pt;
+      margin: 0;
+      padding: 0;
+    }
+    a {
+      color: #1d4ed8;
+      text-decoration: underline;
+      font-weight: 600;
+      word-break: break-all;
+    }
+    .header-banner {
+      border-bottom: 3px solid #ea580c;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .header-banner .inst {
+      font-size: 8.8pt;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .header-banner h1 {
+      font-size: 16pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 5px 0 2px 0;
+    }
+    .header-banner .sub {
+      font-size: 10pt;
+      color: #ea580c;
+      font-weight: 700;
+    }
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #ea580c;
+      border-radius: 6px;
+      padding: 9px 14px;
+      margin-bottom: 14px;
+      font-size: 9.2pt;
+    }
+    .meta-box p { margin: 2px 0; }
+    .links-card {
+      background: #eff6ff;
+      border: 1.5px solid #93c5fd;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+    }
+    .links-card h3 {
+      margin: 0 0 6px 0;
+      color: #1e3a8a;
+      font-size: 10.5pt;
+    }
+    h2 {
+      font-size: 12pt;
+      font-weight: 800;
+      color: #0f172a;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+    h3 {
+      font-size: 10.2pt;
+      font-weight: 700;
+      color: #c2410c;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+    p {
+      margin: 4px 0 8px 0;
+      text-align: justify;
+    }
+    ul {
+      margin: 4px 0 8px 0;
+      padding-left: 18px;
+    }
+    li { margin-bottom: 3px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0 12px 0;
+      font-size: 8.6pt;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+    code {
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+      font-size: 8.2pt;
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #b91c1c;
+    }
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 8px 11px;
+      border-radius: 6px;
+      font-size: 7.8pt;
+      overflow-x: auto;
+      line-height: 1.38;
+      margin: 6px 0 10px 0;
+      page-break-inside: avoid;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .risk-card {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #dc2626;
+      border-radius: 6px;
+      padding: 9px 12px;
+      margin-bottom: 10px;
+      page-break-inside: avoid;
+    }
+    .risk-card h4 {
+      margin: 0 0 6px 0;
+      font-size: 10pt;
+      color: #991b1b;
+    }
+    .test-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #059669;
+      border-radius: 6px;
+      padding: 9px 12px;
+      margin-bottom: 10px;
+      page-break-inside: avoid;
+    }
+    .test-card h4 {
+      margin: 0 0 6px 0;
+      font-size: 10pt;
+      color: #065f46;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .b-pass { background: #dcfce7; color: #166534; }
+    .b-crit { background: #fee2e2; color: #991b1b; }
+    .b-sec  { background: #dbeafe; color: #1e40af; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+  <div class="header-banner">
+    <div class="inst">Instituto Federal do Rio Grande do Norte — Campus Natal Zona Leste</div>
+    <h1>Projeto Integrador II: Patinhas — Atividade 4</h1>
+    <div class="sub">Relatório de Segurança e Preservação de Dados: Análise de Riscos, Implementação de Proteções e Testes</div>
+  </div>
+
+  <div class="meta-box">
+    <p><strong>Discente:</strong> Lucas Aprígio da Silva &nbsp;|&nbsp; <strong>Matrícula:</strong> 20232158060024 &nbsp;|&nbsp; <strong>Data:</strong> 19/11/2026</p>
+    <p><strong>Disciplina:</strong> Segurança e Preservação de Dados / Projeto Integrador II &nbsp;|&nbsp; <strong>Aplicação:</strong> Sistema Patinhas (App Mobile + Painel Web + API REST/SQLite)</p>
+  </div>
+
+  <div class="links-card">
+    <h3>🔗 Links Oficiais da Entrega (Código-Fonte Atualizado e Documentação)</h3>
+    <table style="margin: 4px 0 0 0; background: #fff;">
+      <thead>
+        <tr>
+          <th style="width:32%;">Artefato Entregue</th>
+          <th style="width:68%;">Endereço Clicável (GitHub / Documentação Interativa)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Repositório Completo (GitHub)</strong></td>
+          <td><a href="https://github.com/lucasaprigiodev/projeto-integrador-patinhas">https://github.com/lucasaprigiodev/projeto-integrador-patinhas</a></td>
+        </tr>
+        <tr>
+          <td><strong>API REST + HTTPS + SHA-256 + LGPD</strong></td>
+          <td>
+            <a href="https://github.com/lucasaprigiodev/projeto-integrador-patinhas/blob/main/backend/server.js">backend/server.js</a> &nbsp;|&nbsp;
+            <a href="https://github.com/lucasaprigiodev/projeto-integrador-patinhas/blob/main/backend/database.js">backend/database.js</a> &nbsp;|&nbsp;
+            <a href="https://github.com/lucasaprigiodev/projeto-integrador-patinhas/blob/main/backend/schema.sql">backend/schema.sql</a>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Segurança Android (Network Config)</strong></td>
+          <td>
+            <a href="https://github.com/lucasaprigiodev/projeto-integrador-patinhas/blob/main/android/app/src/main/res/xml/network_security_config.xml">network_security_config.xml</a> &nbsp;|&nbsp;
+            <a href="https://github.com/lucasaprigiodev/projeto-integrador-patinhas/blob/main/android/app/src/main/AndroidManifest.xml">AndroidManifest.xml</a>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Suíte Automatizada de Testes (QA/Sec)</strong></td>
+          <td><a href="https://github.com/lucasaprigiodev/projeto-integrador-patinhas/blob/main/backend/api.test.js">backend/api.test.js</a> (94 testes integrados)</td>
+        </tr>
+        <tr>
+          <td><strong>Swagger UI Online (OpenAPI 3.0.3)</strong></td>
+          <td><a href="https://lucasaprigiodev.github.io/projeto-integrador-patinhas/swagger.html">https://lucasaprigiodev.github.io/projeto-integrador-patinhas/swagger.html</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Etapa 1 – Identificação de Riscos e Vulnerabilidades</h2>
+  <p>
+    A partir da inspeção detalhada do código-fonte do aplicativo móvel (Capacitor/Android + HTML/JS em <code>www/</code>) e do servidor REST (<code>backend/server.js</code>, <code>backend/database.js</code> e <code>backend/schema.sql</code>) desenvolvido nas etapas anteriores, foram identificados <strong>três riscos concretos de segurança</strong> que ameaçavam a integridade, a confidencialidade e a conformidade do sistema com a LGPD (Lei nº 13.709/2018).
+  </p>
+
+  <div class="risk-card">
+    <h4><span class="badge b-crit">Risco 1 — Integridade</span> Ausência de Verificação Criptográfica em Termos de Adoção e Prontuários Clínicos</h4>
+    <ul>
+      <li><strong>Ameaça:</strong> Um agente mal-intencionado com acesso ao banco de dados, falha operacional ou tentativa de fraude altera silenciosamente cláusulas/assinaturas de um Termo de Adoção Responsável já assinado (<code>adocoes_matches</code>) ou modifica registros médicos vitais (vacinas, castrações, CRMV de veterinários em <code>prontuario_eventos</code>) sem deixar qualquer indício verificável.</li>
+      <li><strong>Vulnerabilidade:</strong> As tabelas <code>adocoes_matches</code> e <code>prontuario_eventos</code> armazenavam apenas texto simples para assinaturas e eventos clínicos, sem geração nem validação de resumo criptográfico (<em>hash SHA-256</em>) vinculando de forma determinística os dados e a sequência histórica dos registros.</li>
+      <li><strong>Impacto:</strong> Comprometimento direto da <strong>Integridade</strong> e do princípio de <strong>Não Repúdio</strong> de documentos jurídicos (termo de guarda responsável) e sanitários (carteira digital de saúde do pet), impossibilitando comprovar a autenticidade dos dados após sua emissão.</li>
+    </ul>
+  </div>
+
+  <div class="risk-card">
+    <h4><span class="badge b-crit">Risco 2 — Confidencialidade / LGPD</span> Exposição Indevida de Dados Pessoais (PII), Quebra de Acesso por Objeto (BOLA) e Senha em Texto Claro no Cliente</h4>
+    <ul>
+      <li><strong>Ameaça:</strong> Um usuário comum autenticado com perfil <code>adotante</code> consulta o endpoint legado <code>GET /api/state</code> para extrair dados pessoais de outros usuários e conversas privadas entre candidatos e ONGs; paralelamente, alguém com acesso ao armazenamento do dispositivo inspeciona o <code>localStorage</code> após um cadastro em modo offline.</li>
+      <li><strong>Vulnerabilidade:</strong> (a) O endpoint <code>GET /api/state</code> validava apenas a existência do JWT, retornando todos os registros de <code>adocoes_matches</code> e <code>mensagens</code> sem filtrar por <code>adotante_id</code> (<em>Broken Object Level Authorization — OWASP API1:2023</em>); (b) o campo <code>cpf</code> era exposto integralmente nas listagens e perfis; (c) no fallback offline de <code>03-cadastro-dados.html</code>, o campo <code>senha</code> era gravado em texto claro dentro da chave <code>local_registered_users</code> no <code>localStorage</code>; e (d) <code>09-chat-lista.html</code> interpolava textos sem escape HTML.</li>
+      <li><strong>Impacto:</strong> Grave violação à <strong>Confidencialidade</strong> de dados pessoais sensíveis (CPF, e-mail, telefone, histórico privado de chat e credenciais locais), expondo os usuários a engenharia social e descumprimento da LGPD.</li>
+    </ul>
+  </div>
+
+  <div class="risk-card">
+    <h4><span class="badge b-sec">Risco 3 — Transporte</span> Comunicação em Texto Claro no App Android, CORS Irrestrito e Ausência de Suporte TLS/HSTS</h4>
+    <ul>
+      <li><strong>Ameaça:</strong> Em redes Wi-Fi públicas ou ambientes compartilhados, um atacante realiza interceptação passiva (<em>Sniffing</em>) ou ataque <em>Man-in-the-Middle (MitM)</em> para capturar credenciais de login, tokens JWT e CPFs em trânsito, ou uma página web maliciosa dispara requisições autenticadas usando CORS permissivo.</li>
+      <li><strong>Vulnerabilidade:</strong> O arquivo <code>AndroidManifest.xml</code> habilitava globalmente <code>android:usesCleartextTraffic="true"</code> (permitindo tráfego HTTP não cifrado para qualquer domínio externo) e <code>android:allowBackup="true"</code> (permitindo extração de dados via ADB); no servidor Express, o middleware CORS utilizava <code>origin: true</code> cego para todas as rotas e inexistia inicialização HTTPS/TLS com cabeçalhos <code>Strict-Transport-Security</code>.</li>
+      <li><strong>Impacto:</strong> Perda de <strong>Confidencialidade</strong> e <strong>Integridade</strong> na comunicação entre cliente e servidor, permitindo sequestro de sessão (roubo de Bearer Token) e manipulação de pacotes em rede.</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <h2>Etapa 2 – Mecanismos de Segurança Implementados</h2>
+  <p>
+    Com base nos riscos mapeados, foram implementados mecanismos concretos de proteção distribuídos entre banco de dados, servidor API REST, interface Web e aplicativo Android:
+  </p>
+
+  <h3>2.1 Verificação Criptográfica de Integridade com SHA-256 (Mecanismo Principal)</h3>
+  <ul>
+    <li><strong>Selo SHA-256 no Termo de Adoção Responsável (<code>backend/database.js</code> &amp; <code>backend/server.js</code>):</strong> Ao assinar o contrato via <code>POST /api/matches/:id/assinar-termo</code>, o servidor gera um resumo criptográfico determinístico <code>hash_integridade_sha256</code> sobre os campos canônicos (versão do termo, <code>match_id</code>, <code>animal_id</code>, <code>adotante_id</code>, <code>assinatura_digital</code> e timestamp ISO). No cliente (<code>11-contrato.html</code> e <code>db.js</code>), a assinatura foi conectada diretamente à API com suporte à Web Crypto API (<code>crypto.subtle.digest('SHA-256', ...)</code>).</li>
+    <li><strong>Cadeia de Integridade SHA-256 (<em>Hash Chain</em>) no Prontuário Veterinário:</strong> Cada registro clínico inserido em <code>prontuario_eventos</code> armazena <code>hash_anterior</code> (apontando para o hash do evento anterior do animal ou <code>GENESIS</code>) e <code>hash_sha256</code> calculado sobre os dados clínicos (<code>insertProntuarioEventoSeguro</code>). Qualquer alteração ou remoção silenciosa de um registro passado invalida matematicamente toda a cadeia subsequente.</li>
+    <li><strong>Endpoints de Auditoria em Tempo Constant-Time (<code>crypto.timingSafeEqual</code>):</strong>
+      <ul>
+        <li><code>GET /api/matches/:id/integridade</code> — recalcula o SHA-256 do termo assinado e compara via <code>timingSafeEqual</code>, retornando <code>INTEGRO</code> ou <code>ADULTERADO</code>.</li>
+        <li><code>GET /api/pets/:id/prontuario/integridade</code> — percorre toda a cadeia histórica do pet verificando os vínculos <code>hash_anterior &rarr; hash_sha256</code>, integrado visualmente às telas <code>07-detalhes-pet.html</code> e <code>12-acompanhamento.html</code> com o botão interativo <strong>“🔍 Auditar”</strong>.</li>
+      </ul>
+    </li>
+  </ul>
+
+<pre><code>// Trecho real implementado em backend/database.js (Hash Chain SHA-256)
+function computeProntuarioSha256(evento, hashAnterior = 'GENESIS') {
+  const payloadCanonico = JSON.stringify({
+    animal_id: Number(evento.animal_id), autor_id: Number(evento.autor_id),
+    tipo: String(evento.tipo), titulo: String(evento.titulo || '').trim(),
+    descricao: evento.descricao ? String(evento.descricao).trim() : null,
+    ocorrido_em: String(evento.ocorrido_em || ''), profissional: evento.profissional || null,
+    crmv: evento.crmv || null, retifica_id: evento.retifica_id ? Number(evento.retifica_id) : null,
+    hash_anterior: hashAnterior || 'GENESIS'
+  });
+  return crypto.createHash('sha256').update(payloadCanonico, 'utf8').digest('hex');
+}</code></pre>
+
+  <h3>2.2 Proteção de Informações Sensíveis (LGPD), Isolamento BOLA e Correção XSS</h3>
+  <ul>
+    <li><strong>Minimização e Mascaramento de CPF (<code>maskCpf</code>):</strong> Todos os DTOs de resposta da API (<code>/auth/login</code>, <code>/auth/register</code>, <code>/auth/me</code>, <code>/users</code>, <code>/matches</code>, <code>/meus-pets</code>) e a sessão salva em <code>db.js</code> passaram a mascarar o documento no formato LGPD <code>***.456.789-**</code>, preservando a chave única no banco sem expor o dado completo em payloads de rede.</li>
+    <li><strong>Correção de BOLA em <code>GET /api/state</code>:</strong> A função <code>buildFullStatePayload(req.user)</code> passou a restringir <code>adotante</code> e <code>protetor</code> exclusivamente aos seus próprios matches e chats, eliminando a leitura cruzada de conversas e PII de terceiros.</li>
+    <li><strong>Eliminação de Senha em Claro no Cliente Offline:</strong> Em <code>03-cadastro-dados.html</code> e <code>db.js</code>, o objeto salvo no <code>localStorage</code> jamais contém o campo <code>senha</code> nem <code>senha_hash</code> (substituído pelo digest SHA-256 apenas quando em modo local offline). Além disso, corrigiu-se XSS via <code>escapeHtml()</code> em <code>09-chat-lista.html</code> e o método <code>PatinhasAPI.getAuthUser()</code> em <code>04-meu-perfil.html</code>.</li>
+  </ul>
+
+  <h3>2.3 Segurança de Transporte (HTTPS/TLS 1.2+), Android Network Config, CORS e Logs Forenses</h3>
+  <ul>
+    <li><strong>Política de Rede Segura no Android (<code>network_security_config.xml</code>):</strong> Desabilitado <code>usesCleartextTraffic="true"</code> global e ativado <code>cleartextTrafficPermitted="false"</code> para toda rede externa, permitindo HTTP apenas em loopback local de desenvolvimento (<code>localhost</code>, <code>127.0.0.1</code>, <code>10.0.2.2</code>) e bloqueando backups ADB via <code>android:allowBackup="false"</code>.</li>
+    <li><strong>Suporte Nativo HTTPS/TLS + HSTS + CORS Allowlist:</strong> O servidor <code>backend/server.js</code> suporta TLS 1.2+ nativo (<code>https.createServer</code> com script auxiliar <code>backend/generate-tls-cert.sh</code>), emite cabeçalhos <code>Strict-Transport-Security</code>, <code>Referrer-Policy</code> e <code>Permissions-Policy</code>, e aplica <em>allowlist</em> estrita em <code>TRUSTED_ORIGINS</code> bloqueando CORS com credenciais para origens externas não autorizadas em rotas autenticadas.</li>
+    <li><strong>Trilha de Auditoria Forense (<code>audit_logs</code>):</strong> Eventos de login, falha de autenticação, bloqueio <em>rate-limit</em> (HTTP 429), assinatura de contrato e verificações de integridade são gravados com selo SHA-256 e consultáveis por gestores em <code>GET /api/security/audit-logs</code>.</li>
+  </ul>
+
+  <h2>Etapa 3 – Testes Práticos e Validação</h2>
+  <p>
+    Todas as proteções implementadas foram submetidas a testes práticos automatizados na suíte <code>backend/api.test.js</code> (executada com <code>npm test</code> via <em>Node.js Test Runner</em> contra o servidor real e banco SQLite), atingindo <strong>94 testes aprovados em 13 suítes (0 falhas)</strong>. Abaixo estão detalhados os cenários práticos executados para a Atividade 4:
+  </p>
+
+  <div class="test-card">
+    <h4><span class="badge b-pass">PASSOU</span> Teste Prático 1 (<code>SEG4-01</code> &amp; <code>SEG4-02</code>) — Detecção de Adulteração via SHA-256 (Termo Digital e Prontuário)</h4>
+    <ul>
+      <li><strong>Objetivo:</strong> Verificar se a assinatura do Termo de Adoção gera um selo SHA-256 válido e se tanto o contrato quanto a cadeia de prontuário veterinário detectam imediatamente qualquer modificação direta feita no banco de dados fora dos fluxos oficiais da API.</li>
+      <li><strong>Procedimento:</strong> (1) Autenticou-se um adotante, realizou-se um match e assinou-se o termo via <code>POST /api/matches/:id/assinar-termo</code>, validando a integridade inicial em <code>GET /api/matches/:id/integridade</code> e <code>GET /api/pets/1/prontuario/integridade</code>. (2) Em seguida, simulou-se uma invasão executando comandos SQL <code>UPDATE</code> diretos no SQLite alterando <code>assinatura_digital</code> para <code>'Nome Adulterado'</code> e a descrição clínica de uma vacina para <code>'LAUDO FALSIFICADO VIA SQL'</code>, reconsultando os endpoints de auditoria.</li>
+      <li><strong>Resultado:</strong> Antes da simulação, ambos os endpoints retornaram HTTP <code>200</code> com <code>integridade_integra: true</code>, <code>status_verificacao: "INTEGRO"</code> e hashes hexadecimais de 64 caracteres (SHA-256). Imediatamente após o ataque SQL simulado, os endpoints retornaram <code>integridade_integra: false</code>, <code>status_verificacao: "ADULTERADO"</code> e apontaram o ID exato do evento violado (<code>eventos_adulterados</code>).</li>
+      <li><strong>Análise:</strong> O mecanismo comprova matematicamente a integridade dos registros críticos. Mesmo que um atacante burle a camada de aplicação e altere diretamente o arquivo <code>patinhas.sqlite</code>, a divergência entre o hash recalculado e a cadeia SHA-256 armazenada denuncia a fraude na hora.</li>
+    </ul>
+  </div>
+
+  <div class="test-card">
+    <h4><span class="badge b-pass">PASSOU</span> Teste Prático 2 (<code>SEG4-03</code> &amp; <code>SEG4-04</code>) — Contenção de Vazamento BOLA e Mascaramento LGPD</h4>
+    <ul>
+      <li><strong>Objetivo:</strong> Confirmar que usuários comuns não acessam processos ou chats de terceiros via <code>GET /api/state</code> e que CPFs e senhas em claro não são expostos pela API nem armazenados no cliente.</li>
+      <li><strong>Procedimento:</strong> Efetuou-se login como adotante (<code>lucas@ifrn.edu.br</code>, ID 2), requisitou-se <code>GET /api/state</code>, <code>GET /api/auth/me</code> e <code>GET /api/users</code> (como ONG), além de inspeção estática em <code>www/03-cadastro-dados.html</code>.</li>
+      <li><strong>Resultado:</strong> Todos os matches retornados em <code>/api/state</code> pertenceram exclusivamente ao usuário ID 2 (<code>adotante_id === 2</code>); os campos de CPF retornaram estritamente mascarados como <code>***.456.789-**</code>; e a verificação no frontend confirmou ausência completa de gravação de senha em texto claro no <code>localStorage</code>.</li>
+      <li><strong>Análise:</strong> A aplicação do princípio do menor privilégio e da minimização de dados (LGPD) elimina a exposição horizontal de dados pessoais sensíveis caso uma sessão de adotante seja consultada.</li>
+    </ul>
+  </div>
+
+  <div class="test-card">
+    <h4><span class="badge b-pass">PASSOU</span> Teste Prático 3 (<code>SEG4-05</code>, <code>SEG4-06</code> &amp; <code>SEG4-07</code>) — Transporte HTTPS/TLS, CORS, Política Android e Log Forense</h4>
+    <ul>
+      <li><strong>Objetivo:</strong> Validar que o servidor opera sobre TLS 1.2+ com cabeçalho HSTS, bloqueia CORS de origens externas em rotas autenticadas, registra trilha de auditoria e que o aplicativo Android compila com restrição contra tráfego HTTP externo em texto claro.</li>
+      <li><strong>Procedimento:</strong> (1) Gerou-se certificado X.509 RSA-2048 via OpenSSL e levantou-se instância <code>https.createServer</code> executando requisição HTTPS real. (2) Enviou-se cabeçalho <code>Origin: https://evil-attacker.example</code> para <code>GET /api/users</code>. (3) Consultou-se <code>GET /api/security/audit-logs</code> como adotante e como admin. (4) Executou-se <code>npx cap sync android &amp;&amp; ./gradlew assembleDebug</code> após alterar <code>AndroidManifest.xml</code>.</li>
+      <li><strong>Resultado:</strong> A conexão HTTPS negociou protocolo TLS real retornando HTTP <code>200</code> com <code>Strict-Transport-Security: max-age=31536000; includeSubDomains</code>; a rota autenticada omitiu <code>Access-Control-Allow-Origin</code> para origem não confiável; os logs de auditoria retornaram <code>403</code> para adotante e <code>200</code> com registros SHA-256 para admin; e o APK Android compilou sem erros (<code>BUILD SUCCESSFUL</code>).</li>
+      <li><strong>Análise:</strong> A combinação de transporte cifrado (TLS/HSTS + <code>network_security_config.xml</code>), restrição CORS e trilha imutável de auditoria fecha as brechas de interceptação em trânsito e provê rastreabilidade forense ao sistema.</li>
+    </ul>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28%;">Suíte / Bateria Executada</th>
+        <th style="width:16%;">Identificadores</th>
+        <th style="width:42%;">Escopo Coberto na Execução Automatizada</th>
+        <th style="width:14%;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Segurança Etapas 1–3 (Base + Hardening)</strong></td>
+        <td><code>SEC-01</code> a <code>SEC-26</code>, <code>BUG-01..03</code></td>
+        <td>JWT HMAC-SHA256, <code>alg=none</code>, Brute-Force 429, SQLi parametrizada, XSS, RBAC e Máquina de Estados</td>
+        <td><span class="badge b-pass">PASSOU (87/87)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Segurança Etapa 4 (Novos Controles)</strong></td>
+        <td><code>SEG4-01</code> a <code>SEG4-07</code></td>
+        <td>Integridade SHA-256 (Termo + Prontuário), ataque SQL simulado, BOLA, LGPD, HTTPS/TLS+HSTS, CORS e Android XML</td>
+        <td><span class="badge b-pass">PASSOU (7/7)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Total Consolidado (<code>npm test</code>)</strong></td>
+        <td><strong>13 Suítes</strong></td>
+        <td><strong>94 testes funcionais, de segurança, persistência, performance e OpenAPI 3.0</strong></td>
+        <td><span class="badge b-pass">94/94 OK</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>

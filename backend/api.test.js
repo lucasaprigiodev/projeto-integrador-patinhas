@@ -21,6 +21,7 @@ let ong, lucas, maria, protetor, admin;
 before(async () => {
   const { db, initDatabase } = require('./database');
   db.exec('PRAGMA foreign_keys = OFF;');
+  db.exec('DROP TABLE IF EXISTS audit_logs;');
   db.exec('DROP TABLE IF EXISTS indicacoes_adocao;');
   db.exec('DROP TABLE IF EXISTS marcos_tutor;');
   db.exec('DROP TABLE IF EXISTS prontuario_eventos;');
@@ -492,5 +493,153 @@ describe('Módulo Pós-Adoção Vitalício, Portal do Tutor & Engajamento', () =
 
     const marcosMaria = await call('GET', '/api/tutor/marcos', { token: maria });
     assert.ok(marcosMaria.data.marcos.some(m => m.tipo === 'adocao_concluida' && m.animal_id === 5));
+  });
+});
+
+describe('Atividade 4 – Segurança da Informação (SHA-256, LGPD, BOLA, TLS & Auditoria)', () => {
+  test('SEG4-01 assinatura digital do termo gera selo SHA-256 e detecta adulteração direta no SQLite', async () => {
+    const tk = (await call('POST', '/api/auth/register', {
+      body: { nome: 'Testador Seg4', email: `seg4_${Date.now()}@t.com`, cpf: '111.222.333-44', senha: 'abcd1234' }
+    })).data.token;
+    const pet = (await call('POST', '/api/pets', {
+      token: ong,
+      body: { nome: 'Pet Integridade', raca: 'SRD', idade: '1 ano', foto_url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800' }
+    })).data;
+    const match = (await call('POST', '/api/matches', { token: tk, body: { animal_id: pet.id } })).data;
+    await call('POST', `/api/matches/${match.id}/enviar-termo`, { token: ong });
+
+    const sign = await call('POST', `/api/matches/${match.id}/assinar-termo`, {
+      token: tk,
+      body: { assinatura_digital: 'Testador Seg4' }
+    });
+    assert.equal(sign.status, 200);
+    assert.match(sign.data.hash_integridade_sha256, /^[a-f0-9]{64}$/);
+
+    const checkOk = await call('GET', `/api/matches/${match.id}/integridade`, { token: tk });
+    assert.equal(checkOk.status, 200);
+    assert.equal(checkOk.data.integridade_integra, true);
+    assert.equal(checkOk.data.status_verificacao, 'INTEGRO');
+
+    // Ataque simulado: adulteração silenciosa diretamente no banco SQLite sem passar pela API
+    const { db } = require('./database');
+    db.prepare("UPDATE adocoes_matches SET assinatura_digital = 'Nome Adulterado' WHERE id = ?").run(match.id);
+
+    const checkTamper = await call('GET', `/api/matches/${match.id}/integridade`, { token: tk });
+    assert.equal(checkTamper.status, 200);
+    assert.equal(checkTamper.data.integridade_integra, false);
+    assert.equal(checkTamper.data.status_verificacao, 'ADULTERADO');
+  });
+
+  test('SEG4-02 cadeia de integridade SHA-256 no prontuário detecta alteração indevida de evento clínico', async () => {
+    const okRes = await call('GET', '/api/pets/1/prontuario/integridade');
+    assert.equal(okRes.status, 200);
+    assert.equal(okRes.data.integridade_integra, true);
+    assert.equal(okRes.data.status_verificacao, 'INTEGRO');
+    assert.match(okRes.data.selo_raiz_sha256, /^[a-f0-9]{64}$/);
+
+    // Ataque simulado: invasor altera descrição clínica diretamente no SQLite
+    const { db } = require('./database');
+    const targetEv = db.prepare('SELECT id, descricao FROM prontuario_eventos WHERE animal_id = 1 ORDER BY id ASC LIMIT 1').get();
+    db.prepare("UPDATE prontuario_eventos SET descricao = 'LAUDO FALSIFICADO VIA SQL' WHERE id = ?").run(targetEv.id);
+
+    const tamperRes = await call('GET', '/api/pets/1/prontuario/integridade');
+    assert.equal(tamperRes.status, 200);
+    assert.equal(tamperRes.data.integridade_integra, false);
+    assert.equal(tamperRes.data.status_verificacao, 'ADULTERADO');
+    assert.ok(tamperRes.data.eventos_adulterados.some(e => e.evento_id === targetEv.id));
+
+    // Restaura estado original para preservar consistência dos demais testes
+    db.prepare('UPDATE prontuario_eventos SET descricao = ? WHERE id = ?').run(targetEv.descricao, targetEv.id);
+  });
+
+  test('SEG4-03 correção BOLA em GET /api/state impede adotante de ler matches e chats de outros usuários', async () => {
+    const r = await call('GET', '/api/state', { token: lucas });
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.data.matches));
+    assert.ok(r.data.matches.every(m => m.adotante_id === 2), 'BOLA: adotante recebeu matches de terceiros em /api/state');
+  });
+
+  test('SEG4-04 proteção de PII (LGPD): CPF mascarado em toda API e ausência de senha em claro no cliente offline', async () => {
+    const me = await call('GET', '/api/auth/me', { token: lucas });
+    assert.equal(me.status, 200);
+    assert.equal(me.data.usuario.cpf, '***.456.789-**');
+
+    const users = await call('GET', '/api/users', { token: ong });
+    assert.equal(users.status, 200);
+    const lucasRow = users.data.find(u => u.email === 'lucas@ifrn.edu.br');
+    assert.equal(lucasRow.cpf, '***.456.789-**');
+
+    const fs = require('node:fs');
+    const regHtml = fs.readFileSync(path.join(__dirname, '../www/03-cadastro-dados.html'), 'utf8');
+    assert.ok(!/\{\s*id:\s*Date\.now\(\)[^}]*\bsenha\b\s*,/.test(regHtml), 'VULNERÁVEL: fallback grava senha em claro no localStorage');
+  });
+
+  test('SEG4-05 hardening de transporte: CORS bloqueia origem externa em rotas autenticadas + Android Network Security Config', async () => {
+    const rUsers = await call('GET', '/api/users', { token: ong, headers: { Origin: 'https://evil-attacker.example' } });
+    assert.equal(rUsers.headers.get('access-control-allow-origin'), null);
+
+    const rPets = await call('GET', '/api/pets');
+    assert.ok(rPets.headers.get('referrer-policy'));
+    assert.ok(rPets.headers.get('permissions-policy'));
+
+    const fs = require('node:fs');
+    const netXml = fs.readFileSync(path.join(__dirname, '../android/app/src/main/res/xml/network_security_config.xml'), 'utf8');
+    assert.ok(netXml.includes('cleartextTrafficPermitted="false"'));
+    const manifest = fs.readFileSync(path.join(__dirname, '../android/app/src/main/AndroidManifest.xml'), 'utf8');
+    assert.ok(manifest.includes('networkSecurityConfig="@xml/network_security_config"'));
+    assert.ok(manifest.includes('allowBackup="false"'));
+  });
+
+  test('SEG4-06 trilha de auditoria forense (/api/security/audit-logs) restrita a ONG/Admin com selo SHA-256', async () => {
+    const denied = await call('GET', '/api/security/audit-logs', { token: lucas });
+    assert.equal(denied.status, 403);
+
+    const allowed = await call('GET', '/api/security/audit-logs', { token: admin });
+    assert.equal(allowed.status, 200);
+    assert.ok(allowed.data.total >= 1);
+    assert.ok(allowed.data.logs.every(l => /^[a-f0-9]{64}$/.test(l.hash_sha256)));
+  });
+
+  test('SEG4-07 transporte HTTPS/TLS 1.2+ funcional com emissão de Strict-Transport-Security (HSTS)', async () => {
+    const https = require('node:https');
+    const { execSync } = require('node:child_process');
+    const fs = require('node:fs');
+    const os = require('node:os');
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'patinhas-tls-'));
+    const keyPath = path.join(tmpDir, 'key.pem');
+    const certPath = path.join(tmpDir, 'cert.pem');
+    execSync(`openssl req -x509 -newkey rsa:2048 -nodes -keyout "${keyPath}" -out "${certPath}" -days 1 -subj "/CN=127.0.0.1"`, { stdio: 'ignore' });
+
+    const tlsServer = https.createServer({ key: fs.readFileSync(keyPath), cert: fs.readFileSync(certPath), minVersion: 'TLSv1.2' }, app);
+    await new Promise(resolve => tlsServer.listen(0, '127.0.0.1', resolve));
+    const port = tlsServer.address().port;
+
+    let tlsResp;
+    try {
+      tlsResp = await new Promise((resolve, reject) => {
+        const req = https.request({
+          hostname: '127.0.0.1',
+          port,
+          path: '/api/pets',
+          method: 'GET',
+          rejectUnauthorized: false,
+          agent: false
+        }, res => {
+          const cipher = req.socket && req.socket.getCipher ? req.socket.getCipher() : null;
+          res.resume();
+          res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, cipher }));
+        });
+        req.on('error', reject);
+        req.end();
+      });
+    } finally {
+      if (typeof tlsServer.closeAllConnections === 'function') tlsServer.closeAllConnections();
+      await new Promise(resolve => tlsServer.close(() => resolve()));
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+
+    assert.equal(tlsResp.status, 200);
+    assert.ok(tlsResp.headers['strict-transport-security'] && tlsResp.headers['strict-transport-security'].includes('max-age=31536000'));
+    assert.ok(tlsResp.cipher && tlsResp.cipher.version && tlsResp.cipher.version.includes('TLS'), 'Conexão não utilizou protocolo TLS');
   });
 });

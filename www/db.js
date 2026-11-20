@@ -91,12 +91,28 @@ function setAuthSession(token, usuario) {
   try {
     if (token) localStorage.setItem('patinhas_jwt_token', token);
     if (usuario) {
-      localStorage.setItem('patinhas_user', JSON.stringify(usuario));
-      localStorage.setItem('userName', usuario.nome || 'Lucas Aprígio');
-      localStorage.setItem('userId', String(usuario.id || ''));
-      localStorage.setItem('isONG', (usuario.perfil === 'ong' || usuario.perfil === 'admin') ? 'true' : 'false');
+      const safeUser = { ...usuario };
+      delete safeUser.senha;
+      delete safeUser.senha_hash;
+      if (safeUser.cpf && !String(safeUser.cpf).includes('*')) {
+        const d = String(safeUser.cpf).replace(/\D/g, '');
+        safeUser.cpf = d.length === 11 ? `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**` : '***';
+      }
+      localStorage.setItem('patinhas_user', JSON.stringify(safeUser));
+      localStorage.setItem('userName', safeUser.nome || 'Lucas Aprígio');
+      localStorage.setItem('userId', String(safeUser.id || ''));
+      localStorage.setItem('isONG', (safeUser.perfil === 'ong' || safeUser.perfil === 'admin') ? 'true' : 'false');
     }
   } catch (_) {}
+}
+
+async function sha256Hex(text) {
+  if (typeof crypto !== 'undefined' && crypto.subtle && typeof TextEncoder !== 'undefined') {
+    const buf = new TextEncoder().encode(String(text));
+    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return '';
 }
 
 function clearAuthSession() {
@@ -339,6 +355,23 @@ const PatinhasAPI = {
 
   async getIndicacaoTutor() {
     return apiRequest('/tutor/indicacao', { method: 'GET' });
+  },
+
+  // --------------------------------------------------------------------------
+  // Segurança, Integridade Criptográfica SHA-256 e Auditoria (Etapa 4)
+  // --------------------------------------------------------------------------
+  sha256Hex,
+
+  async verificarIntegridadeProntuario(petId) {
+    return apiRequest(`/pets/${petId}/prontuario/integridade`, { method: 'GET' });
+  },
+
+  async verificarIntegridadeTermo(matchId) {
+    return apiRequest(`/matches/${matchId}/integridade`, { method: 'GET' });
+  },
+
+  async getAuditLogs() {
+    return apiRequest('/security/audit-logs', { method: 'GET' });
   }
 };
 

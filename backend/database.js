@@ -45,10 +45,113 @@ function verifyPassword(password, storedHash) {
   }
 }
 
+// ============================================================================
+// UTILITÁRIOS CRIPTOGRÁFICOS SHA-256 E PROTEÇÃO DE DADOS SENSÍVEIS (LGPD - Etapa 4)
+// ============================================================================
+function computeSha256(input) {
+  const normalized = typeof input === 'string' ? input : JSON.stringify(input);
+  return crypto.createHash('sha256').update(normalized, 'utf8').digest('hex');
+}
+
+function computeTermoSha256(match) {
+  const payloadCanônico = JSON.stringify({
+    versao_termo: 'PATINHAS-TERMO-v1',
+    match_id: Number(match.id),
+    animal_id: Number(match.animal_id),
+    adotante_id: Number(match.adotante_id),
+    assinatura_digital: String(match.assinatura_digital || '').trim(),
+    termo_assinado_em: String(match.termo_assinado_em || '')
+  });
+  return computeSha256(payloadCanônico);
+}
+
+function computeProntuarioSha256(evento, hashAnterior = 'GENESIS') {
+  const payloadCanônico = JSON.stringify({
+    animal_id: Number(evento.animal_id),
+    autor_id: Number(evento.autor_id),
+    tipo: String(evento.tipo),
+    titulo: String(evento.titulo || '').trim(),
+    descricao: evento.descricao ? String(evento.descricao).trim() : null,
+    ocorrido_em: String(evento.ocorrido_em || ''),
+    profissional: evento.profissional || null,
+    crmv: evento.crmv || null,
+    retifica_id: evento.retifica_id ? Number(evento.retifica_id) : null,
+    hash_anterior: hashAnterior || 'GENESIS'
+  });
+  return computeSha256(payloadCanônico);
+}
+
+function getUltimoHashProntuario(animalId) {
+  const last = db.prepare('SELECT hash_sha256 FROM prontuario_eventos WHERE animal_id = ? ORDER BY id DESC LIMIT 1').get(Number(animalId));
+  return (last && last.hash_sha256) ? last.hash_sha256 : 'GENESIS';
+}
+
+function maskCpf(cpf) {
+  if (!cpf) return null;
+  const digits = String(cpf).replace(/\D/g, '');
+  if (digits.length === 11) {
+    return `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`;
+  }
+  if (digits.length === 14) {
+    return `**.${digits.slice(2, 5)}.${digits.slice(5, 8)}/****-**`;
+  }
+  return '***';
+}
+
+function recordAuditLog({ evento, categoria = 'SEGURANCA', usuario_id = null, email_referencia = null, ip_origem = null, detalhes = null }) {
+  try {
+    const detalhesStr = detalhes ? (typeof detalhes === 'string' ? detalhes : JSON.stringify(detalhes)) : null;
+    const timestamp = new Date().toISOString();
+    const hash = computeSha256({ evento, categoria, usuario_id, email_referencia, ip_origem, detalhesStr, timestamp });
+    db.prepare(`
+      INSERT INTO audit_logs (evento, categoria, usuario_id, email_referencia, ip_origem, detalhes, hash_sha256, criado_em)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(evento, categoria, usuario_id, email_referencia, ip_origem, detalhesStr, hash, timestamp);
+  } catch (_) {}
+}
+
+function ensureSecurityColumns() {
+  const matchCols = db.prepare('PRAGMA table_info(adocoes_matches)').all().map(c => c.name);
+  if (!matchCols.includes('hash_integridade_sha256')) {
+    db.exec('ALTER TABLE adocoes_matches ADD COLUMN hash_integridade_sha256 TEXT;');
+  }
+  const prontCols = db.prepare('PRAGMA table_info(prontuario_eventos)').all().map(c => c.name);
+  if (!prontCols.includes('hash_anterior')) {
+    db.exec('ALTER TABLE prontuario_eventos ADD COLUMN hash_anterior TEXT;');
+  }
+  if (!prontCols.includes('hash_sha256')) {
+    db.exec('ALTER TABLE prontuario_eventos ADD COLUMN hash_sha256 TEXT;');
+  }
+}
+
+function sealExistingIntegrityRecords() {
+  // Garante selo SHA-256 em cadeia para todos os prontuários iniciais sem hash
+  const animaisComPendencia = db.prepare('SELECT DISTINCT animal_id FROM prontuario_eventos WHERE hash_sha256 IS NULL').all();
+  for (const row of animaisComPendencia) {
+    const eventos = db.prepare('SELECT * FROM prontuario_eventos WHERE animal_id = ? ORDER BY id ASC').all(row.animal_id);
+    let prevHash = 'GENESIS';
+    for (const ev of eventos) {
+      const currentHash = computeProntuarioSha256(ev, prevHash);
+      if (!ev.hash_sha256) {
+        db.prepare('UPDATE prontuario_eventos SET hash_anterior = ?, hash_sha256 = ? WHERE id = ?').run(prevHash, currentHash, ev.id);
+      }
+      prevHash = ev.hash_sha256 || currentHash;
+    }
+  }
+
+  // Garante selo SHA-256 nos termos já assinados durante o seed
+  const signedMatches = db.prepare('SELECT * FROM adocoes_matches WHERE termo_assinado = 1 AND hash_integridade_sha256 IS NULL').all();
+  for (const m of signedMatches) {
+    const digest = computeTermoSha256(m);
+    db.prepare('UPDATE adocoes_matches SET hash_integridade_sha256 = ? WHERE id = ?').run(digest, m.id);
+  }
+}
+
 // Executa o script DDL (schema.sql) e popula dados iniciais (Seeds) se vazio
 function initDatabase() {
   const schemaSql = fs.readFileSync(SCHEMA_PATH, 'utf-8');
   db.exec(schemaSql);
+  ensureSecurityColumns();
 
   const userCount = db.prepare('SELECT COUNT(*) as total FROM usuarios').get().total;
   if (userCount === 0) {
@@ -539,7 +642,10 @@ function initDatabase() {
     console.log('[DB] Usuário ONG:   admin@ong.com / admin');
     console.log('[DB] Protetor:      carlos@protetor.org / 123456');
     console.log('[DB] Usuários Teste: lucas@ifrn.edu.br / 123456 | maria@email.com / 123456');
+    sealExistingIntegrityRecords();
     db.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+  } else {
+    sealExistingIntegrityRecords();
   }
 }
 
@@ -550,5 +656,11 @@ module.exports = {
   DB_PATH,
   hashPassword,
   verifyPassword,
-  initDatabase
+  initDatabase,
+  computeSha256,
+  computeTermoSha256,
+  computeProntuarioSha256,
+  getUltimoHashProntuario,
+  maskCpf,
+  recordAuditLog
 };

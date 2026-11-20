@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "API REST Patinhas - Plataforma de Adoção Responsável",
-    "version": "3.0.0",
-    "description": "Documentação oficial OpenAPI 3.0 da Arquitetura Distribuída do **Projeto Integrador Patinhas (IFRN Campus Natal Zona Leste)**.\n\n### Arquitetura e Segurança\n- **Persistência**: Banco de dados relacional **SQLite** com integridade referencial (`PRAGMA foreign_keys = ON`) e transações ACID.\n- **Autenticação**: Baseada em **Token JWT (Bearer Token)** assinado via HMAC-SHA256 no endpoint `/api/auth/login` ou `/api/auth/register`.\n- **Controle de Acesso Baseado em Papel (RBAC)**:\n  - `adotante`: Pode visualizar animais disponíveis, registrar interesse (Match), enviar/ler mensagens nos seus próprios matches e **assinar digitalmente o Termo de Adoção Responsável**.\n  - `ong`: Pode cadastrar, editar e remover animais, listar todos os candidatos/matches, **enviar o Termo de Adoção Responsável**, aprovar ou rejeitar adoções e conversar com qualquer candidato.\n\n### Máquina de Estados do Fluxo de Adoção\n`pendente` ➔ `termo_enviado` (Ação exclusiva da ONG) ➔ `termo_assinado` (Ação exclusiva do Adotante titular) ➔ `aprovado` ou `rejeitado` (Ação exclusiva da ONG).",
+    "version": "3.1.0",
+    "description": "Documentação oficial OpenAPI 3.0 da Arquitetura Distribuída do **Projeto Integrador Patinhas (IFRN Campus Natal Zona Leste)**.\n\n### Arquitetura e Segurança (Etapa 4)\n- **Persistência**: Banco de dados relacional **SQLite** com integridade referencial (`PRAGMA foreign_keys = ON`) e transações ACID.\n- **Autenticação & Senhas**: Baseada em **Token JWT (Bearer Token)** assinado via HMAC-SHA256 e hashing de senhas com Scrypt + Salt aleatório individual.\n- **Integridade Criptográfica SHA-256**: Termos de Adoção assinados digitalmente e eventos do Prontuário Veterinário são selados em cadeia SHA-256 (`hash_anterior` -> `hash_sha256`), auditáveis em tempo real.\n- **Proteção LGPD**: Mascaramento automático de CPF (`***.XXX.XXX-**`) em listagens e isolamento estrito de dados (BOLA/IDOR).\n- **Controle de Acesso Baseado em Papel (RBAC)**: Perfis `adotante`, `protetor`, `ong` e `admin`.\n\n### Máquina de Estados do Fluxo de Adoção\n`pendente` ➔ `termo_enviado` (Ação exclusiva da ONG) ➔ `termo_assinado` (Ação exclusiva do Adotante titular + SHA-256) ➔ `aprovado` ou `rejeitado` (Ação exclusiva da ONG).",
     "contact": {
       "name": "Lucas Aprígio da Silva - IFRN Natal Zona Leste",
       "email": "lucas.aprigio@academico.ifrn.edu.br"
@@ -43,6 +43,10 @@
     {
       "name": "7. Pós-Adoção e Tutor Vitalício",
       "description": "RG Pet digital, acompanhamento continuado, agenda de vacinas, marcos e programa de indicação."
+    },
+    {
+      "name": "8. Segurança e Integridade SHA-256",
+      "description": "Verificação criptográfica SHA-256 de Termos de Adoção, auditoria em cadeia de Prontuários Veterinários e trilha de logs forenses."
     }
   ],
   "components": {
@@ -1957,6 +1961,95 @@
           },
           "401": {
             "description": "Não autorizado."
+          }
+        }
+      }
+    },
+    "/api/matches/{id}/integridade": {
+      "get": {
+        "tags": [
+          "8. Segurança e Integridade SHA-256"
+        ],
+        "summary": "Verificar integridade criptográfica (SHA-256) do Termo de Adoção assinado",
+        "description": "Recalcula o hash SHA-256 canônico da assinatura e compara via timingSafeEqual com o selo armazenado no banco de dados.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado da auditoria SHA-256 (INTEGRO, ADULTERADO ou PENDENTE_ASSINATURA)."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "403": {
+            "description": "Acesso negado à auditoria deste termo."
+          },
+          "404": {
+            "description": "Match não encontrado."
+          }
+        }
+      }
+    },
+    "/api/pets/{id}/prontuario/integridade": {
+      "get": {
+        "tags": [
+          "8. Segurança e Integridade SHA-256"
+        ],
+        "summary": "Auditar cadeia de integridade SHA-256 do Prontuário Veterinário",
+        "description": "Percorre toda a linha do tempo clínica do animal recalculando a cadeia SHA-256 (hash_anterior -> hash_sha256) para detectar qualquer adulteração.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Relatório criptográfico da integridade da cadeia clínica."
+          },
+          "404": {
+            "description": "Animal não encontrado."
+          }
+        }
+      }
+    },
+    "/api/security/audit-logs": {
+      "get": {
+        "tags": [
+          "8. Segurança e Integridade SHA-256"
+        ],
+        "summary": "Consultar trilha de auditoria forense de eventos de segurança (Exclusivo ONG / Admin)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Últimos 100 eventos de segurança registrados com hash SHA-256."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "403": {
+            "description": "Apenas ONG ou Admin."
           }
         }
       }

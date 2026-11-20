@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS animais (
     FOREIGN KEY (ong_id) REFERENCES usuarios(id) ON DELETE RESTRICT
 );
 
--- 3. TABELA DE ADOÇÕES / MATCHES (Fluxo de Estados da Adoção)
+-- 3. TABELA DE ADOÇÕES / MATCHES (Fluxo de Estados da Adoção + Integridade SHA-256)
 CREATE TABLE IF NOT EXISTS adocoes_matches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     animal_id INTEGER NOT NULL,
@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS adocoes_matches (
     termo_assinado INTEGER NOT NULL DEFAULT 0 CHECK(termo_assinado IN (0, 1)),
     assinatura_digital TEXT,
     termo_assinado_em DATETIME,
+    hash_integridade_sha256 TEXT,
     data_match TEXT NOT NULL,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (animal_id) REFERENCES animais(id) ON DELETE CASCADE,
@@ -118,11 +119,26 @@ CREATE TABLE IF NOT EXISTS prontuario_eventos (
     custo_centavos INTEGER DEFAULT 0,
     visibilidade TEXT NOT NULL DEFAULT 'publico' CHECK(visibilidade IN ('publico', 'tutor', 'interno')),
     retifica_id INTEGER,
+    hash_anterior TEXT,
+    hash_sha256 TEXT,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (animal_id) REFERENCES animais(id) ON DELETE CASCADE,
     FOREIGN KEY (custodia_id) REFERENCES custodias(id) ON DELETE SET NULL,
     FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE RESTRICT,
     FOREIGN KEY (retifica_id) REFERENCES prontuario_eventos(id) ON DELETE SET NULL
+);
+
+-- 9. TABELA DE LOGS DE AUDITORIA DE SEGURANÇA (Etapa 4: Preservação de Dados e Rastreabilidade)
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    evento TEXT NOT NULL,
+    categoria TEXT NOT NULL DEFAULT 'SEGURANCA',
+    usuario_id INTEGER,
+    email_referencia TEXT,
+    ip_origem TEXT,
+    detalhes TEXT,
+    hash_sha256 TEXT NOT NULL,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 7. TABELA DE MARCOS E CONQUISTAS DO TUTOR (Engajamento Pós-Adoção)
@@ -165,3 +181,4 @@ CREATE INDEX IF NOT EXISTS idx_prontuario_tipo ON prontuario_eventos(tipo);
 CREATE INDEX IF NOT EXISTS idx_prontuario_ocorrido ON prontuario_eventos(ocorrido_em);
 CREATE INDEX IF NOT EXISTS idx_marcos_tutor ON marcos_tutor(tutor_id, animal_id);
 CREATE INDEX IF NOT EXISTS idx_indicacoes_codigo ON indicacoes_adocao(codigo);
+CREATE INDEX IF NOT EXISTS idx_audit_evento ON audit_logs(evento);

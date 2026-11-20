@@ -7,8 +7,19 @@ const cors = require('cors');
 const compression = require('compression');
 const path = require('node:path');
 const fs = require('node:fs');
+const https = require('node:https');
 const crypto = require('node:crypto');
-const { db, DB_PATH, hashPassword, verifyPassword } = require('./database');
+const {
+  db,
+  DB_PATH,
+  hashPassword,
+  verifyPassword,
+  computeTermoSha256,
+  computeProntuarioSha256,
+  getUltimoHashProntuario,
+  maskCpf,
+  recordAuditLog
+} = require('./database');
 
 const app = express();
 
@@ -18,20 +29,56 @@ app.disable('x-powered-by');
 // Middleware de compressão de respostas HTTP (GZIP/Deflate)
 app.use(compression({ threshold: 512 }));
 
-// Cabeçalhos de Segurança HTTP (OWASP / Helmet-style)
+// Cabeçalhos de Segurança HTTP e Proteção de Transporte (OWASP / HSTS / CSP)
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
   res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' https: data:; img-src 'self' https: data: blob:;");
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
   next();
 });
 
-// Configuração de CORS Restrito e Seguro (compatível com navegadores, apps móveis e preflights)
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+// Configuração de CORS com Allowlist para Rotas Autenticadas e Sensíveis
+const TRUSTED_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)(:\d+)?$/,
+  /^capacitor:\/\/localhost$/,
+  /^ionic:\/\/localhost$/,
+  /^https:\/\/lucasaprigio(dev)?\.github\.io$/
+];
+
+function isTrustedOrigin(origin) {
+  if (!origin) return true;
+  return TRUSTED_ORIGINS.some(rx => rx.test(origin));
+}
+
+app.use(cors((req, callback) => {
+  const origin = req.headers.origin;
+  const isPublicCatalog = req.path.startsWith('/api/pets') && ['GET', 'OPTIONS'].includes(req.method) && !req.path.includes('integridade');
+
+  if (isTrustedOrigin(origin)) {
+    return callback(null, {
+      origin: true,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization']
+    });
+  }
+
+  // Origem externa não confiável: bloqueia credenciais e CORS em rotas sensíveis/autenticadas
+  if (isPublicCatalog && origin) {
+    return callback(null, {
+      origin: origin,
+      credentials: false,
+      methods: ['GET', 'OPTIONS'],
+      allowedHeaders: ['Content-Type']
+    });
+  }
+
+  return callback(null, { origin: false });
 }));
 
 app.use(express.json({ limit: '15mb' }));
@@ -61,6 +108,13 @@ function loginRateLimiter(req, res, next) {
   }
 
   if (record.count >= 10) {
+    recordAuditLog({
+      evento: 'RATE_LIMIT_BRUTE_FORCE',
+      categoria: 'AUTENTICACAO',
+      email_referencia: email,
+      ip_origem: ip,
+      detalhes: { tentativas: record.count }
+    });
     return res.status(429).json({
       erro: 'Muitas tentativas incorretas de autenticação para esta conta. Por segurança, aguarde 1 minuto.',
       codigo: 429
@@ -148,7 +202,7 @@ function authenticateToken(req, res, next) {
     });
   }
 
-  // Confirma se o usuário ainda existe no banco relacional
+  // Confirma se o usuário ainda existe no banco relacional (com mascaramento LGPD de CPF)
   const user = db.prepare('SELECT id, nome, cpf, telefone, email, perfil, avatar_url, criado_em FROM usuarios WHERE id = ?').get(decoded.id);
   if (!user) {
     return res.status(401).json({
@@ -157,8 +211,78 @@ function authenticateToken(req, res, next) {
     });
   }
 
-  req.user = user;
+  req.user = { ...user, cpf: maskCpf(user.cpf) };
   next();
+}
+
+function sanitizeUserDto(u) {
+  if (!u) return null;
+  return { ...u, cpf: maskCpf(u.cpf) };
+}
+
+// Registra evento no prontuário veterinário calculando automaticamente a cadeia SHA-256
+function insertProntuarioEventoSeguro({
+  animal_id, custodia_id = null, autor_id, tipo, titulo, descricao = null,
+  dados_json = null, ocorrido_em, proxima_data = null, profissional = null,
+  crmv = null, clinica = null, custo_centavos = 0, visibilidade = 'publico', retifica_id = null
+}) {
+  const hashAnterior = getUltimoHashProntuario(animal_id);
+  const hashSha256 = computeProntuarioSha256({
+    animal_id, autor_id, tipo, titulo, descricao, ocorrido_em, profissional, crmv, retifica_id
+  }, hashAnterior);
+
+  const result = db.prepare(`
+    INSERT INTO prontuario_eventos (
+      animal_id, custodia_id, autor_id, tipo, titulo, descricao, dados_json,
+      ocorrido_em, proxima_data, profissional, crmv, clinica, custo_centavos,
+      visibilidade, retifica_id, hash_anterior, hash_sha256
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    animal_id, custodia_id, autor_id, tipo, String(titulo).trim(),
+    descricao ? String(descricao).trim() : null,
+    dados_json, ocorrido_em, proxima_data, profissional, crmv, clinica,
+    custo_centavos, visibilidade, retifica_id, hashAnterior, hashSha256
+  );
+
+  return {
+    id: Number(result.lastInsertRowid),
+    hash_anterior: hashAnterior,
+    hash_sha256: hashSha256
+  };
+}
+
+// Recalcula e verifica toda a cadeia de integridade SHA-256 do prontuário de um animal
+function verifyProntuarioIntegrity(petId) {
+  const eventos = db.prepare('SELECT * FROM prontuario_eventos WHERE animal_id = ? ORDER BY id ASC').all(petId);
+  let expectedPrev = 'GENESIS';
+  const adulterados = [];
+
+  for (const ev of eventos) {
+    const recomputed = computeProntuarioSha256(ev, expectedPrev);
+    const linkOk = ev.hash_anterior === expectedPrev;
+    const hashOk = ev.hash_sha256 && ev.hash_sha256.length === recomputed.length &&
+      crypto.timingSafeEqual(Buffer.from(ev.hash_sha256), Buffer.from(recomputed));
+
+    if (!linkOk || !hashOk) {
+      adulterados.push({
+        evento_id: ev.id,
+        titulo: ev.titulo,
+        hash_armazenado: ev.hash_sha256 || null,
+        hash_recalculado: recomputed,
+        quebra_cadeia: !linkOk
+      });
+    }
+    expectedPrev = ev.hash_sha256 || recomputed;
+  }
+
+  return {
+    algoritmo: 'SHA-256 (Hash Chain)',
+    total_eventos_verificados: eventos.length,
+    integridade_integra: adulterados.length === 0,
+    selo_raiz_sha256: eventos.length > 0 ? (eventos[eventos.length - 1].hash_sha256 || expectedPrev) : null,
+    eventos_adulterados: adulterados
+  };
 }
 
 function requireRole(...allowedRoles) {
@@ -235,7 +359,8 @@ function formatPetRow(row) {
 function formatMatchRow(row) {
   if (!row) return null;
   const petRow = db.prepare('SELECT * FROM animais WHERE id = ?').get(row.animal_id);
-  const adopterRow = db.prepare('SELECT id, nome, email, telefone, cpf, avatar_url FROM usuarios WHERE id = ?').get(row.adotante_id);
+  const rawAdopter = db.prepare('SELECT id, nome, email, telefone, cpf, avatar_url FROM usuarios WHERE id = ?').get(row.adotante_id);
+  const adopterRow = sanitizeUserDto(rawAdopter);
   const msgRows = db.prepare('SELECT * FROM mensagens WHERE match_id = ? ORDER BY id ASC').all(row.id);
 
   const messages = msgRows.map(m => ({
@@ -263,6 +388,7 @@ function formatMatchRow(row) {
     termo_assinado: Boolean(row.termo_assinado),
     assinatura_digital: row.assinatura_digital,
     termo_assinado_em: row.termo_assinado_em,
+    hash_integridade_sha256: row.hash_integridade_sha256 || null,
     data_match: row.data_match,
     criado_em: row.criado_em,
     animal: formatPetRow(petRow),
@@ -334,8 +460,17 @@ app.post('/api/auth/register', (req, res) => {
     );
 
     const userId = Number(result.lastInsertRowid);
-    const newUser = db.prepare('SELECT id, nome, cpf, telefone, email, perfil, avatar_url, criado_em FROM usuarios WHERE id = ?').get(userId);
+    const rawNewUser = db.prepare('SELECT id, nome, cpf, telefone, email, perfil, avatar_url, criado_em FROM usuarios WHERE id = ?').get(userId);
+    const newUser = sanitizeUserDto(rawNewUser);
     const token = generateToken(newUser);
+
+    recordAuditLog({
+      evento: 'USUARIO_CADASTRADO',
+      categoria: 'AUTENTICACAO',
+      usuario_id: userId,
+      email_referencia: cleanEmail,
+      ip_origem: req.ip || req.socket.remoteAddress
+    });
 
     return res.status(201).json({
       mensagem: 'Usuário cadastrado com sucesso!',
@@ -366,6 +501,12 @@ app.post('/api/auth/login', loginRateLimiter, (req, res) => {
         req._loginRateRecord.count++;
         failedLoginAttempts.set(req._loginRateKey, req._loginRateRecord);
       }
+      recordAuditLog({
+        evento: 'LOGIN_FALHA',
+        categoria: 'AUTENTICACAO',
+        email_referencia: cleanEmail,
+        ip_origem: req.ip || req.socket.remoteAddress
+      });
       return res.status(401).json({
         erro: 'Credenciais inválidas. Verifique seu e-mail e senha.',
         codigo: 401
@@ -380,13 +521,21 @@ app.post('/api/auth/login', loginRateLimiter, (req, res) => {
     const usuario = {
       id: userRow.id,
       nome: userRow.nome,
-      cpf: userRow.cpf,
+      cpf: maskCpf(userRow.cpf),
       telefone: userRow.telefone,
       email: userRow.email,
       perfil: userRow.perfil,
       avatar_url: userRow.avatar_url,
       criado_em: userRow.criado_em
     };
+
+    recordAuditLog({
+      evento: 'LOGIN_SUCESSO',
+      categoria: 'AUTENTICACAO',
+      usuario_id: usuario.id,
+      email_referencia: usuario.email,
+      ip_origem: req.ip || req.socket.remoteAddress
+    });
 
     const token = generateToken(usuario);
     return res.status(200).json({
@@ -404,10 +553,10 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
   return res.status(200).json({ usuario: req.user });
 });
 
-// GET /api/users - Lista usuários (Exclusivo para perfil ONG e Admin)
+// GET /api/users - Lista usuários com mascaramento LGPD (Exclusivo para perfil ONG e Admin)
 app.get('/api/users', authenticateToken, requireRole('ong', 'admin'), (req, res) => {
   const users = db.prepare('SELECT id, nome, cpf, telefone, email, perfil, avatar_url, criado_em FROM usuarios ORDER BY id ASC').all();
-  return res.status(200).json(users);
+  return res.status(200).json(users.map(sanitizeUserDto));
 });
 
 // ============================================================================
@@ -801,12 +950,20 @@ app.post('/api/matches/:id/assinar-termo', authenticateToken, (req, res) => {
 
     const nowIso = new Date().toISOString();
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const assinaturaTrim = String(assinatura).trim();
+    const hashSha256 = computeTermoSha256({
+      id: matchId,
+      animal_id: match.animal_id,
+      adotante_id: match.adotante_id,
+      assinatura_digital: assinaturaTrim,
+      termo_assinado_em: nowIso
+    });
 
     db.prepare(`
       UPDATE adocoes_matches
-      SET status = 'termo_assinado', termo_assinado = 1, assinatura_digital = ?, termo_assinado_em = ?
+      SET status = 'termo_assinado', termo_assinado = 1, assinatura_digital = ?, termo_assinado_em = ?, hash_integridade_sha256 = ?
       WHERE id = ?
-    `).run(String(assinatura).trim(), nowIso, matchId);
+    `).run(assinaturaTrim, nowIso, hashSha256, matchId);
 
     db.prepare(`
       INSERT INTO mensagens (match_id, remetente_id, remetente_perfil, texto, is_termo, horario)
@@ -814,17 +971,76 @@ app.post('/api/matches/:id/assinar-termo', authenticateToken, (req, res) => {
     `).run(
       matchId,
       req.user.id,
-      `✅ Assinei digitalmente o Termo de Adoção Responsável como "${String(assinatura).trim()}". Aguardo a avaliação final da ONG!`,
+      `✅ Assinei digitalmente o Termo de Adoção Responsável como "${assinaturaTrim}" (Selo SHA-256: ${hashSha256.slice(0, 16)}...). Aguardo a avaliação final da ONG!`,
       nowTime
     );
 
+    recordAuditLog({
+      evento: 'ASSINATURA_TERMO_SHA256',
+      categoria: 'INTEGRIDADE',
+      usuario_id: req.user.id,
+      email_referencia: req.user.email,
+      ip_origem: req.ip || req.socket.remoteAddress,
+      detalhes: { match_id: matchId, animal_id: match.animal_id, hash_sha256: hashSha256 }
+    });
+
     const updated = db.prepare('SELECT * FROM adocoes_matches WHERE id = ?').get(matchId);
     return res.status(200).json({
-      mensagem: 'Termo de Adoção assinado digitalmente com sucesso!',
+      mensagem: 'Termo de Adoção assinado digitalmente com selo criptográfico SHA-256!',
+      hash_integridade_sha256: hashSha256,
       match: formatMatchRow(updated)
     });
   } catch (err) {
     return res.status(500).json({ erro: 'Erro ao assinar termo.', codigo: 500 });
+  }
+});
+
+// GET /api/matches/:id/integridade - Verificação criptográfica SHA-256 do Termo de Adoção Assinado
+app.get('/api/matches/:id/integridade', authenticateToken, (req, res) => {
+  try {
+    const matchId = Number(req.params.id);
+    if (Number.isNaN(matchId)) {
+      return res.status(400).json({ erro: 'ID do match inválido.', codigo: 400 });
+    }
+    const match = db.prepare('SELECT * FROM adocoes_matches WHERE id = ?').get(matchId);
+    if (!match) {
+      return res.status(404).json({ erro: 'Processo de adoção (Match) não encontrado.', codigo: 404 });
+    }
+
+    if (req.user.perfil !== 'ong' && req.user.perfil !== 'admin' && match.adotante_id !== req.user.id) {
+      return res.status(403).json({ erro: 'Acesso negado à auditoria deste termo.', codigo: 403 });
+    }
+
+    if (!match.termo_assinado) {
+      return res.status(200).json({
+        match_id: match.id,
+        animal_id: match.animal_id,
+        algoritmo: 'SHA-256',
+        integridade_integra: false,
+        status_verificacao: 'PENDENTE_ASSINATURA',
+        hash_armazenado: null,
+        hash_recalculado: null
+      });
+    }
+
+    const hashRecalculado = computeTermoSha256(match);
+    const hashArmazenado = match.hash_integridade_sha256 || '';
+    const integ = hashArmazenado.length === hashRecalculado.length &&
+      crypto.timingSafeEqual(Buffer.from(hashArmazenado), Buffer.from(hashRecalculado));
+
+    return res.status(200).json({
+      match_id: match.id,
+      animal_id: match.animal_id,
+      assinatura_digital: match.assinatura_digital,
+      termo_assinado_em: match.termo_assinado_em,
+      algoritmo: 'SHA-256',
+      hash_armazenado: hashArmazenado || null,
+      hash_recalculado: hashRecalculado,
+      integridade_integra: integ,
+      status_verificacao: integ ? 'INTEGRO' : 'ADULTERADO'
+    });
+  } catch (err) {
+    return res.status(500).json({ erro: 'Erro ao verificar integridade do termo.', codigo: 500 });
   }
 });
 
@@ -895,20 +1111,18 @@ app.patch('/api/matches/:id/status', authenticateToken, requireRole('ong', 'admi
       const novaCustodia = db.prepare(`INSERT INTO custodias (animal_id, responsavel_id, tipo, inicio) VALUES (?, ?, 'tutor', ?)`).run(pet.id, match.adotante_id, hojeData);
       const novaCustodiaId = Number(novaCustodia.lastInsertRowid);
 
-      // Registra evento de Adoção Oficial no Prontuário Clínico Vitalício
-      db.prepare(`
-        INSERT INTO prontuario_eventos (
-          animal_id, custodia_id, autor_id, tipo, titulo, descricao, dados_json, ocorrido_em, visibilidade
-        )
-        VALUES (?, ?, ?, 'adocao', 'Adoção Concluída Oficialmente', ?, ?, ?, 'publico')
-      `).run(
-        pet.id,
-        novaCustodiaId,
-        req.user.id,
-        `Processo de adoção formalmente concluído. Tutela transferida para o adotante.`,
-        JSON.stringify({ match_id: matchId, tutor_id: match.adotante_id }),
-        hojeData
-      );
+      // Registra evento de Adoção Oficial no Prontuário Clínico Vitalício com selo SHA-256
+      insertProntuarioEventoSeguro({
+        animal_id: pet.id,
+        custodia_id: novaCustodiaId,
+        autor_id: req.user.id,
+        tipo: 'adocao',
+        titulo: 'Adoção Concluída Oficialmente',
+        descricao: `Processo de adoção formalmente concluído. Tutela transferida para o adotante.`,
+        dados_json: JSON.stringify({ match_id: matchId, tutor_id: match.adotante_id }),
+        ocorrido_em: hojeData,
+        visibilidade: 'publico'
+      });
 
       // Concede o marco inicial de boas-vindas ao novo tutor
       try {
@@ -1137,27 +1351,32 @@ app.post('/api/resgates', authenticateToken, requireRole('ong', 'protetor', 'adm
     `).run(petId, req.user.id, custodiaTipo, data_resgate);
     const custodiaId = Number(custodiaResult.lastInsertRowid);
 
-    // 1º Evento de Prontuário: Registro de Resgate
-    db.prepare(`
-      INSERT INTO prontuario_eventos (
-        animal_id, custodia_id, autor_id, tipo, titulo, descricao, dados_json, ocorrido_em, visibilidade
-      )
-      VALUES (?, ?, ?, 'resgate', 'Resgate Registrado no Sistema', ?, ?, ?, 'publico')
-    `).run(
-      petId,
-      custodiaId,
-      req.user.id,
-      `Animal resgatado em ${local_resgate}. Condição inicial: ${condicao_inicial}`,
-      JSON.stringify({ local: local_resgate, origem: origem_resgate, condicao: condicao_inicial }),
-      data_resgate
-    );
+    // 1º Evento de Prontuário: Registro de Resgate (com Hash Chain SHA-256)
+    insertProntuarioEventoSeguro({
+      animal_id: petId,
+      custodia_id: custodiaId,
+      autor_id: req.user.id,
+      tipo: 'resgate',
+      titulo: 'Resgate Registrado no Sistema',
+      descricao: `Animal resgatado em ${local_resgate}. Condição inicial: ${condicao_inicial}`,
+      dados_json: JSON.stringify({ local: local_resgate, origem: origem_resgate, condicao: condicao_inicial }),
+      ocorrido_em: data_resgate,
+      visibilidade: 'publico'
+    });
 
-    // Se forneceu peso, registra o evento clínico
+    // Se forneceu peso, registra o evento clínico encadeado
     if (peso_atual_kg) {
-      db.prepare(`
-        INSERT INTO prontuario_eventos (animal_id, custodia_id, autor_id, tipo, titulo, descricao, dados_json, ocorrido_em, visibilidade)
-        VALUES (?, ?, ?, 'peso', 'Pesagem na Entrada / Triagem', ?, ?, ?, 'publico')
-      `).run(petId, custodiaId, req.user.id, `Peso inicial aferido: ${peso_atual_kg} kg`, JSON.stringify({ peso_kg: peso_atual_kg }), data_resgate);
+      insertProntuarioEventoSeguro({
+        animal_id: petId,
+        custodia_id: custodiaId,
+        autor_id: req.user.id,
+        tipo: 'peso',
+        titulo: 'Pesagem na Entrada / Triagem',
+        descricao: `Peso inicial aferido: ${peso_atual_kg} kg`,
+        dados_json: JSON.stringify({ peso_kg: peso_atual_kg }),
+        ocorrido_em: data_resgate,
+        visibilidade: 'publico'
+      });
     }
 
     const createdPet = db.prepare('SELECT * FROM animais WHERE id = ?').get(petId);
@@ -1245,6 +1464,8 @@ app.get('/api/pets/:id/prontuario', (req, res) => {
       custo_centavos: (isManager) ? e.custo_centavos : undefined,
       visibilidade: e.visibilidade,
       retifica_id: e.retifica_id,
+      hash_anterior: e.hash_anterior || null,
+      hash_sha256: e.hash_sha256 || null,
       autor: { id: e.autor_id, nome: e.autor_nome, perfil: e.autor_perfil },
       criado_em: e.criado_em
     }));
@@ -1256,6 +1477,8 @@ app.get('/api/pets/:id/prontuario', (req, res) => {
       WHERE c.animal_id = ?
       ORDER BY c.inicio ASC
     `).all(petId);
+
+    const integridadeResumo = verifyProntuarioIntegrity(petId);
 
     return res.status(200).json({
       animal: {
@@ -1270,6 +1493,7 @@ app.get('/api/pets/:id/prontuario', (req, res) => {
         peso_atual_kg: pet.peso_atual_kg ? Number(pet.peso_atual_kg) : null,
         pendencias_saude: pet.pendencias_saude
       },
+      integridade: integridadeResumo,
       total_eventos: events.length,
       eventos: events,
       custodias: custodias.map(c => ({
@@ -1283,6 +1507,34 @@ app.get('/api/pets/:id/prontuario', (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ erro: 'Erro ao carregar prontuário do animal.', codigo: 500 });
+  }
+});
+
+// GET /api/pets/:id/prontuario/integridade - Auditoria criptográfica da cadeia SHA-256 do prontuário
+app.get('/api/pets/:id/prontuario/integridade', (req, res) => {
+  try {
+    const petId = Number(req.params.id);
+    if (Number.isNaN(petId)) return res.status(400).json({ erro: 'ID do animal inválido.', codigo: 400 });
+
+    const pet = db.prepare('SELECT id, nome FROM animais WHERE id = ?').get(petId);
+    if (!pet) return res.status(404).json({ erro: 'Animal não encontrado.', codigo: 404 });
+
+    const relatorio = verifyProntuarioIntegrity(petId);
+    recordAuditLog({
+      evento: relatorio.integridade_integra ? 'AUDITORIA_PRONTUARIO_OK' : 'AUDITORIA_PRONTUARIO_ADULTERADO',
+      categoria: 'INTEGRIDADE',
+      ip_origem: req.ip || req.socket.remoteAddress,
+      detalhes: { animal_id: petId, integra: relatorio.integridade_integra, adulterados: relatorio.eventos_adulterados.length }
+    });
+
+    return res.status(200).json({
+      animal_id: pet.id,
+      animal_nome: pet.nome,
+      ...relatorio,
+      status_verificacao: relatorio.integridade_integra ? 'INTEGRO' : 'ADULTERADO'
+    });
+  } catch (err) {
+    return res.status(500).json({ erro: 'Erro ao auditar integridade do prontuário.', codigo: 500 });
   }
 });
 
@@ -1339,21 +1591,22 @@ app.post('/api/pets/:id/prontuario', authenticateToken, (req, res) => {
     const activeCustodia = db.prepare('SELECT id FROM custodias WHERE animal_id = ? AND fim IS NULL').get(petId);
     const custodiaId = activeCustodia ? activeCustodia.id : null;
 
-    const insertStmt = db.prepare(`
-      INSERT INTO prontuario_eventos (
-        animal_id, custodia_id, autor_id, tipo, titulo, descricao, dados_json,
-        ocorrido_em, proxima_data, profissional, crmv, clinica, custo_centavos, visibilidade
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = insertStmt.run(
-      petId, custodiaId, req.user.id, body.tipo, String(body.titulo).trim(),
-      body.descricao ? String(body.descricao).trim() : null,
-      dados_json, ocorrido_em, proxima_data, profissional, crmv, clinica, custo_centavos, visibilidade
-    );
-
-    const eventoId = Number(result.lastInsertRowid);
+    const { id: eventoId } = insertProntuarioEventoSeguro({
+      animal_id: petId,
+      custodia_id: custodiaId,
+      autor_id: req.user.id,
+      tipo: body.tipo,
+      titulo: String(body.titulo).trim(),
+      descricao: body.descricao ? String(body.descricao).trim() : null,
+      dados_json,
+      ocorrido_em,
+      proxima_data,
+      profissional,
+      crmv,
+      clinica,
+      custo_centavos,
+      visibilidade
+    });
 
     // Efeitos colaterais clínicos em animais
     if (body.tipo === 'castracao') {
@@ -1423,35 +1676,28 @@ app.post('/api/pets/:id/prontuario/:eventoId/retificar', authenticateToken, (req
       return res.status(400).json({ erro: 'O campo "motivo_retificacao" é obrigatório para registrar a retificação auditável.', codigo: 400 });
     }
 
-    const insertStmt = db.prepare(`
-      INSERT INTO prontuario_eventos (
-        animal_id, custodia_id, autor_id, tipo, titulo, descricao, dados_json,
-        ocorrido_em, profissional, crmv, clinica, custo_centavos, visibilidade, retifica_id
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = insertStmt.run(
-      petId,
-      original.custodia_id,
-      req.user.id,
-      original.tipo,
-      titulo ? `[RETIFICAÇÃO] ${titulo}` : `[RETIFICAÇÃO] ${original.titulo}`,
-      descricao ? `${descricao} (Motivo: ${motivo_retificacao})` : `${original.descricao} (Retificado: ${motivo_retificacao})`,
-      dados ? JSON.stringify(dados) : original.dados_json,
-      new Date().toISOString().split('T')[0],
-      original.profissional,
-      original.crmv,
-      original.clinica,
-      original.custo_centavos,
-      original.visibilidade,
-      eventoId
-    );
+    const { id: retId, hash_sha256: retHash } = insertProntuarioEventoSeguro({
+      animal_id: petId,
+      custodia_id: original.custodia_id,
+      autor_id: req.user.id,
+      tipo: original.tipo,
+      titulo: titulo ? `[RETIFICAÇÃO] ${titulo}` : `[RETIFICAÇÃO] ${original.titulo}`,
+      descricao: descricao ? `${descricao} (Motivo: ${motivo_retificacao})` : `${original.descricao} (Retificado: ${motivo_retificacao})`,
+      dados_json: dados ? JSON.stringify(dados) : original.dados_json,
+      ocorrido_em: new Date().toISOString().split('T')[0],
+      profissional: original.profissional,
+      crmv: original.crmv,
+      clinica: original.clinica,
+      custo_centavos: original.custo_centavos,
+      visibilidade: original.visibilidade,
+      retifica_id: eventoId
+    });
 
     return res.status(201).json({
       mensagem: 'Retificação registrada como novo evento auditado com sucesso!',
-      evento_retificador_id: Number(result.lastInsertRowid),
-      evento_original_id: eventoId
+      evento_retificador_id: retId,
+      evento_original_id: eventoId,
+      hash_sha256: retHash
     });
   } catch (err) {
     return res.status(500).json({ erro: 'Erro ao processar retificação.', codigo: 500 });
@@ -1542,7 +1788,7 @@ app.get('/api/meus-pets', authenticateToken, (req, res) => {
           numero_registro: `RN-${String(p.animal_id).padStart(5, '0')}-${new Date().getFullYear()}`,
           microchip: p.microchip || 'Não microchipado',
           tutor_nome: req.user.nome,
-          tutor_cpf: req.user.cpf || 'Cadastrado no App',
+          tutor_cpf: req.user.cpf || 'Protegido (LGPD)',
           emissao: p.termo_assinado_em || p.criado_em,
           orgao_emissor: 'Registro Digital Patinhas RN'
         },
@@ -1609,27 +1855,25 @@ app.post('/api/meus-pets/:id/acompanhamento', authenticateToken, (req, res) => {
       dadosJson = { veterinario, clinica, retorno: proxima_dose };
     }
 
-    const insertEvent = db.prepare(`
-      INSERT INTO prontuario_eventos (
-        animal_id, custodia_id, autor_id, tipo, titulo, descricao, dados_json,
-        ocorrido_em, proxima_data, profissional, clinica, visibilidade
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'publico')
-    `);
-
-    const result = insertEvent.run(
-      petId, custodiaId, req.user.id, tipoEvento, titulo,
-      observacao || `Acompanhamento pós-adoção registrado pelo tutor ${req.user.nome}`,
-      JSON.stringify(dadosJson),
-      dataEvento,
-      proxima_dose || null,
-      veterinario || null,
-      clinica || null
-    );
+    const { id: acompId, hash_sha256: acompHash } = insertProntuarioEventoSeguro({
+      animal_id: petId,
+      custodia_id: custodiaId,
+      autor_id: req.user.id,
+      tipo: tipoEvento,
+      titulo,
+      descricao: observacao || `Acompanhamento pós-adoção registrado pelo tutor ${req.user.nome}`,
+      dados_json: JSON.stringify(dadosJson),
+      ocorrido_em: dataEvento,
+      proxima_data: proxima_dose || null,
+      profissional: veterinario || null,
+      clinica: clinica || null,
+      visibilidade: 'publico'
+    });
 
     return res.status(201).json({
       mensagem: 'Acompanhamento registrado com sucesso!',
-      evento_id: Number(result.lastInsertRowid)
+      evento_id: acompId,
+      hash_sha256: acompHash
     });
   } catch (err) {
     return res.status(500).json({ erro: 'Erro ao registrar acompanhamento.', codigo: 500 });
@@ -1668,8 +1912,8 @@ app.get('/api/tutor/indicacao', authenticateToken, (req, res) => {
 
     return res.status(200).json({
       codigo: indicacao.codigo,
-      link_compartilhamento: `https://lucasaprigio.github.io/projeto-integrador-patinhas/?ref=${indicacao.codigo}`,
-      mensagem_pronta: `Oi! Adotei meu pet com todo amor e acompanhamento de saúde no App Patinhas. Use meu código de indicação ${indicacao.codigo} para encontrar seu novo melhor amigo: https://lucasaprigio.github.io/projeto-integrador-patinhas/?ref=${indicacao.codigo} 🐾❤️`,
+      link_compartilhamento: `https://lucasaprigiodev.github.io/projeto-integrador-patinhas/?ref=${indicacao.codigo}`,
+      mensagem_pronta: `Oi! Adotei meu pet com todo amor e acompanhamento de saúde no App Patinhas. Use meu código de indicação ${indicacao.codigo} para encontrar seu novo melhor amigo: https://lucasaprigiodev.github.io/projeto-integrador-patinhas/?ref=${indicacao.codigo} 🐾❤️`,
       status: indicacao.status
     });
   } catch (err) {
@@ -1678,11 +1922,39 @@ app.get('/api/tutor/indicacao', authenticateToken, (req, res) => {
 });
 
 // ============================================================================
-// 6. PONTE DE SINCRONIZAÇÃO DE ESTADO COMPLETO (/api/state) PROTEGIDA
+// 5.1 LOGS DE AUDITORIA FORENSE DE SEGURANÇA (Etapa 4)
 // ============================================================================
-function buildFullStatePayload() {
+// GET /api/security/audit-logs - Lista eventos de segurança (Exclusivo ONG / Admin)
+app.get('/api/security/audit-logs', authenticateToken, requireRole('ong', 'admin'), (req, res) => {
+  try {
+    const logs = db.prepare('SELECT id, evento, categoria, usuario_id, email_referencia, ip_origem, detalhes, hash_sha256, criado_em FROM audit_logs ORDER BY id DESC LIMIT 100').all();
+    return res.status(200).json({
+      total: logs.length,
+      logs
+    });
+  } catch (err) {
+    return res.status(500).json({ erro: 'Erro ao consultar logs de auditoria.', codigo: 500 });
+  }
+});
+
+// ============================================================================
+// 6. PONTE DE SINCRONIZAÇÃO DE ESTADO COMPLETO (/api/state) PROTEGIDA (BOLA Fix)
+// ============================================================================
+function buildFullStatePayload(reqUser = null) {
   const petRows = db.prepare('SELECT * FROM animais ORDER BY id ASC').all();
-  const matchRows = db.prepare('SELECT * FROM adocoes_matches ORDER BY id ASC').all();
+  let matchRows = [];
+  if (reqUser && (reqUser.perfil === 'ong' || reqUser.perfil === 'admin')) {
+    matchRows = db.prepare('SELECT * FROM adocoes_matches ORDER BY id ASC').all();
+  } else if (reqUser && reqUser.perfil === 'protetor') {
+    matchRows = db.prepare(`
+      SELECT m.* FROM adocoes_matches m
+      JOIN animais a ON m.animal_id = a.id
+      WHERE m.adotante_id = ? OR a.ong_id = ?
+      ORDER BY m.id ASC
+    `).all(reqUser.id, reqUser.id);
+  } else if (reqUser) {
+    matchRows = db.prepare('SELECT * FROM adocoes_matches WHERE adotante_id = ? ORDER BY id ASC').all(reqUser.id);
+  }
   const formattedMatches = matchRows.map(formatMatchRow);
   const flatChats = [];
   for (const m of formattedMatches) {
@@ -1707,10 +1979,10 @@ function buildFullStatePayload() {
   };
 }
 
-// GET /api/state - Requer autenticação (SEC-12)
+// GET /api/state - Requer autenticação e aplica isolamento de dados por usuário (BOLA/LGPD)
 app.get('/api/state', authenticateToken, (req, res) => {
   try {
-    return res.status(200).json(buildFullStatePayload());
+    return res.status(200).json(buildFullStatePayload(req.user));
   } catch (err) {
     return res.status(500).json({ erro: 'Erro ao carregar estado do banco.' });
   }
@@ -1857,7 +2129,7 @@ app.put('/api/state', authenticateToken, (req, res) => {
 
     return res.status(200).json({
       sucesso: true,
-      ...buildFullStatePayload()
+      ...buildFullStatePayload(req.user)
     });
   } catch (err) {
     return res.status(500).json({ erro: 'Erro ao sincronizar estado no banco SQLite.' });
@@ -1933,14 +2205,33 @@ if (fs.existsSync(WWW_PATH)) {
 }
 
 const PORT = process.env.PORT || 3000;
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'server.key');
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'server.cert');
+
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log('====================================================================');
-    console.log(`🐾 Servidor REST API Patinhas rodando em: http://localhost:${PORT}`);
-    console.log(`📄 Documentação OpenAPI (Swagger UI):     http://localhost:${PORT}/api-docs`);
-    console.log(`🗄️  Banco de Dados Relacional SQLite:      ${DB_PATH}`);
-    console.log('====================================================================');
-  });
+  const hasCerts = fs.existsSync(SSL_KEY_PATH) && fs.existsSync(SSL_CERT_PATH);
+  if (process.env.USE_HTTPS === 'true' && hasCerts) {
+    const tlsOptions = {
+      key: fs.readFileSync(SSL_KEY_PATH),
+      cert: fs.readFileSync(SSL_CERT_PATH),
+      minVersion: 'TLSv1.2'
+    };
+    https.createServer(tlsOptions, app).listen(PORT, () => {
+      console.log('====================================================================');
+      console.log(`🔒 Servidor HTTPS/TLS REST API Patinhas em: https://localhost:${PORT}`);
+      console.log(`📄 Documentação OpenAPI (Swagger UI):      https://localhost:${PORT}/api-docs`);
+      console.log(`🗄️  Banco de Dados Relacional SQLite:       ${DB_PATH}`);
+      console.log('====================================================================');
+    });
+  } else {
+    app.listen(PORT, () => {
+      console.log('====================================================================');
+      console.log(`🐾 Servidor REST API Patinhas rodando em: http://localhost:${PORT}`);
+      console.log(`📄 Documentação OpenAPI (Swagger UI):     http://localhost:${PORT}/api-docs`);
+      console.log(`🗄️  Banco de Dados Relacional SQLite:      ${DB_PATH}`);
+      console.log('====================================================================');
+    });
+  }
 }
 
 module.exports = app;

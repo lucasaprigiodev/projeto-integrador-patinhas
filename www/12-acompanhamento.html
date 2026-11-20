@@ -137,6 +137,14 @@
 
     <!-- ABA 1: PRONTUÁRIO & LINHA DO TEMPO CLÍNICA -->
     <div id="hubSection-prontuario">
+      <!-- Banner de Auditoria Criptográfica SHA-256 (Segurança & Preservação de Dados) -->
+      <div id="boxIntegridadeSha256" style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="min-width:0;">
+          <div id="txtIntegridadeStatus" style="font-size:12px;font-weight:800;color:#065F46;">🔒 Prontuário Protegido (SHA-256)</div>
+          <div id="txtIntegridadeHash" style="font-size:10px;font-family:monospace;color:#047857;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Selo em verificação...</div>
+        </div>
+        <button onclick="auditarIntegridadeAgora()" style="background:#059669;color:white;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">🔍 Auditar</button>
+      </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <h3 style="font-size:14px;font-weight:800;color:var(--text-1);">Linha do Tempo Clínica & Resgate</h3>
         <span id="totalEventosBadge" class="badge-pill" style="background:#EEF2FF;color:#4338CA;">0 eventos</span>
@@ -305,6 +313,7 @@ async function initHub() {
       const prontData = await PatinhasAPI.getProntuario(resolvedPetId);
       if (prontData && Array.isArray(prontData.eventos)) {
         currentProntuario = prontData;
+        atualizarBannerIntegridade(prontData.integridade);
         renderTimeline(prontData.eventos);
         renderPesoHistorico(prontData.eventos);
       }
@@ -365,10 +374,49 @@ function renderTimeline(eventos) {
         </div>
         <p style="font-size:12px;color:var(--text-2);margin:0 0 6px;line-height:1.4;">${escapeHtml(e.descricao || '')}</p>
         ${e.profissional ? `<div style="font-size:11px;color:var(--primary);font-weight:600;">👨‍⚕️ ${escapeHtml(e.profissional)} ${e.crmv ? '(' + escapeHtml(e.crmv) + ')' : ''} ${e.clinica ? '• ' + escapeHtml(e.clinica) : ''}</div>` : ''}
-        ${e.proxima_data ? `<div style="font-size:10.5px;color:#D97706;font-weight:700;margin-top:4px;">📅 Próximo retorno/dose: ${e.proxima_data}</div>` : ''}
+        ${e.proxima_data ? `<div style="font-size:10.5px;color:#D97706;font-weight:700;margin-top:4px;">📅 Próximo retorno/dose: ${escapeHtml(e.proxima_data)}</div>` : ''}
+        ${e.hash_sha256 ? `<div style="font-size:9.5px;color:#059669;font-family:monospace;margin-top:5px;">🔒 SHA-256: ${escapeHtml(e.hash_sha256.slice(0, 18))}…</div>` : ''}
       </div>
     </div>
   `).join('');
+}
+
+function atualizarBannerIntegridade(integ) {
+  const box = document.getElementById('boxIntegridadeSha256');
+  const txtSt = document.getElementById('txtIntegridadeStatus');
+  const txtHash = document.getElementById('txtIntegridadeHash');
+  if (!box || !integ) return;
+
+  if (integ.integridade_integra) {
+    box.style.background = '#ECFDF5';
+    box.style.borderColor = '#A7F3D0';
+    txtSt.style.color = '#065F46';
+    txtSt.innerText = `🔒 Cadeia SHA-256 Verificada (${integ.total_eventos_verificados} registros íntegros)`;
+    txtHash.style.color = '#047857';
+    txtHash.innerText = `Raiz: ${integ.selo_raiz_sha256 || 'N/A'}`;
+  } else {
+    box.style.background = '#FEF2F2';
+    box.style.borderColor = '#FECACA';
+    txtSt.style.color = '#991B1B';
+    txtSt.innerText = `⚠️ Alerta: Alteração não autorizada detectada em ${integ.eventos_adulterados.length} registro(s)!`;
+    txtHash.style.color = '#B91C1C';
+    txtHash.innerText = `Inconsistência na cadeia de integridade SHA-256`;
+  }
+}
+
+async function auditarIntegridadeAgora() {
+  const targetPetId = (currentPetData && currentPetData.id) || petId || 1;
+  try {
+    const res = await PatinhasAPI.verificarIntegridadeProntuario(targetPetId);
+    atualizarBannerIntegridade(res);
+    if (res.integridade_integra) {
+      alert(`✅ AUDITORIA SHA-256 APROVADA!\n\nAlgoritmo: ${res.algoritmo}\nEventos verificados: ${res.total_eventos_verificados}\nStatus: ${res.status_verificacao}\nSelo Raiz:\n${res.selo_raiz_sha256}`);
+    } else {
+      alert(`⚠️ ALERTA DE ADULTERAÇÃO DETECTADO!\n\nEventos comprometidos: ${res.eventos_adulterados.map(a => a.evento_id).join(', ')}`);
+    }
+  } catch (err) {
+    alert('Não foi possível conectar ao servidor para auditar: ' + (err.message || 'Offline'));
+  }
 }
 
 function renderPesoHistorico(eventos) {
@@ -489,7 +537,7 @@ async function salvarRegistroAcompanhamento() {
 
 function copiarIndicacao() {
   const cod = document.getElementById('codigoIndicacaoDisplay').innerText.trim();
-  const msg = `Oi! Adotei meu pet com todo carinho e acompanhamento de saúde vitalício no App Patinhas! Use meu código ${cod} para encontrar seu novo amigo: https://lucasaprigio.github.io/projeto-integrador-patinhas/?ref=${cod} 🐾❤️`;
+  const msg = `Oi! Adotei meu pet com todo carinho e acompanhamento de saúde vitalício no App Patinhas! Use meu código ${cod} para encontrar seu novo amigo: https://lucasaprigiodev.github.io/projeto-integrador-patinhas/?ref=${cod} 🐾❤️`;
   if (navigator.clipboard) {
     navigator.clipboard.writeText(msg).then(() => {
       alert('📋 Mensagem de convite copiada! Compartilhe no WhatsApp!');

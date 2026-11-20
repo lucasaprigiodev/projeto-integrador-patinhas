@@ -131,37 +131,65 @@ async function assinar() {
 
     const btn = document.getElementById('btnAssinar');
     btn.disabled = true;
-    btn.innerHTML = '<span>⏳</span> Gravando Assinatura Digital...';
+    btn.innerHTML = '<span>⏳</span> Selando Assinatura com SHA-256...';
 
     try {
-        if(!currentDb) currentDb = await loadDb();
-        const json = currentDb;
+        const authUser = (window.PatinhasAPI && PatinhasAPI.getAuthUser()) || null;
+        const signerName = (authUser && authUser.nome) || (currentMatch && currentMatch.userName) || localStorage.getItem('userName') || 'Adotante Patinhas';
+        let signedViaApi = false;
 
-        if(currentMatch) {
-            currentMatch.status = 'termo_assinado';
-            currentMatch.termoAssinado = true;
-            currentMatch.termoAssinadoEm = new Date().toISOString();
-        } else if(matchId) {
-            const m = (json.matches || []).find(x => x.id == matchId);
-            if(m) {
-                m.status = 'termo_assinado';
-                m.termoAssinado = true;
-                m.termoAssinadoEm = new Date().toISOString();
+        if (matchId && window.PatinhasAPI && PatinhasAPI.getAuthToken()) {
+            try {
+                const resp = await PatinhasAPI.assinarTermo(matchId, signerName);
+                if (resp && resp.hash_integridade_sha256) {
+                    localStorage.setItem('termoHash_' + matchId, resp.hash_integridade_sha256);
+                }
+                signedViaApi = true;
+            } catch (apiErr) {
+                if (apiErr.status && apiErr.status < 500) {
+                    alert('⚠️ ' + (apiErr.message || 'Não foi possível assinar este termo.'));
+                    btn.disabled = false;
+                    btn.innerHTML = '✍️ Assinar Digitalmente';
+                    return;
+                }
             }
         }
 
-        // Adiciona mensagem no chat de confirmação
-        if(matchId) {
-            if(!json.chats) json.chats = [];
-            json.chats.push({
-                matchId: matchId,
-                sender: 'user',
-                text: '✍️ Termo de Adoção Responsável assinado digitalmente com sucesso! Concordo com todas as cláusulas e com o período de adaptação de 7 dias.',
-                time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
-            });
+        if (!signedViaApi) {
+            if(!currentDb) currentDb = await loadDb();
+            const json = currentDb;
+            const nowIso = new Date().toISOString();
+            const localDigest = window.PatinhasAPI && PatinhasAPI.sha256Hex
+                ? await PatinhasAPI.sha256Hex(`${matchId}:${signerName}:${nowIso}`)
+                : '';
+
+            if(currentMatch) {
+                currentMatch.status = 'termo_assinado';
+                currentMatch.termoAssinado = true;
+                currentMatch.termoAssinadoEm = nowIso;
+                currentMatch.hash_integridade_sha256 = localDigest;
+            } else if(matchId) {
+                const m = (json.matches || []).find(x => x.id == matchId);
+                if(m) {
+                    m.status = 'termo_assinado';
+                    m.termoAssinado = true;
+                    m.termoAssinadoEm = nowIso;
+                    m.hash_integridade_sha256 = localDigest;
+                }
+            }
+
+            if(matchId) {
+                if(!json.chats) json.chats = [];
+                json.chats.push({
+                    matchId: matchId,
+                    sender: 'user',
+                    text: `✍️ Termo de Adoção Responsável assinado digitalmente com sucesso! (Selo SHA-256: ${localDigest.slice(0, 12)}...)`,
+                    time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+                });
+            }
+            await saveDb(json);
         }
 
-        await saveDb(json);
         localStorage.setItem('termoAssinado_' + matchId, 'true');
 
         const resolvedPetId = currentMatch ? currentMatch.petId : petId;

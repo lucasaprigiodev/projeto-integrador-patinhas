@@ -134,9 +134,12 @@ async function registrarUsuario() {
       return;
     }
 
-    // Fallback local caso o servidor local não esteja ativo
+    // Fallback local seguro caso o servidor local não esteja ativo (nunca armazena senha em texto claro)
     const localUsers = JSON.parse(localStorage.getItem('local_registered_users') || '[]');
-    const newUser = { id: Date.now(), nome, cpf, telefone, email, senha, perfil: perfilEscolhido };
+    const digits = String(cpf).replace(/\D/g, '');
+    const cpfMasked = digits.length === 11 ? `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**` : '***';
+    const senhaDigest = window.PatinhasAPI && PatinhasAPI.sha256Hex ? await PatinhasAPI.sha256Hex(senha) : '';
+    const newUser = { id: Date.now(), nome, cpf: cpfMasked, telefone, email, senha_digest_sha256: senhaDigest, perfil: 'adotante' };
     localUsers.push(newUser);
     localStorage.setItem('local_registered_users', JSON.stringify(localUsers));
     PatinhasAPI.setAuthSession('offline-jwt-' + newUser.id, newUser);
